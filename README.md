@@ -1,5 +1,3 @@
-
-
 # 🧭 cleansh – Sanitize Your Terminal Output, Securely.
 
 > A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in development so expect bugs and please do report them.
@@ -34,6 +32,86 @@ This version of `cleansh` focuses on providing essential sanitization features w
 
 -----
 
+## 1.5 🚀 Usage Examples
+
+`cleansh` is designed to integrate seamlessly into your command-line workflow. Here are some common ways to use it:
+
+### Basic Sanitization (Piping from `stdin`)
+
+Pipe the output of any command directly into `cleansh`. The sanitized content will be printed to your terminal.
+
+**Example: Sanitizing a sensitive echo message**
+
+```powershell
+# On Windows (PowerShell)
+echo "My email is test@example.com and my IP is 192.168.1.1." | .\target\release\cleansh.exe
+
+# On Linux/macOS (Bash/Zsh)
+echo "My email is test@example.com and my IP is 192.168.1.1." | ./target/release/cleansh
+```
+
+**Example: Cleaning `docker logs` before sharing**
+
+```bash
+docker logs my-sensitive-container | cleansh
+```
+
+**Example: Sanitizing `kubectl logs` output**
+
+```bash
+kubectl logs my-pod-with-secrets | cleansh
+```
+
+### Copying to Clipboard (`-c` or `--clipboard`)
+
+Sanitize output and instantly copy the result to your system's clipboard.
+
+```bash
+git config --list | cleansh -c
+```
+
+### Showing a Diff View (`-d` or `--diff`)
+
+See exactly what `cleansh` changed with a clear, colored diff.
+
+```bash
+cat /var/log/app/errors.log | cleansh -d
+```
+
+### Loading Custom Redaction Rules (`--config <path>`)
+
+Apply your own specific patterns for redaction by providing a path to a custom YAML configuration file.
+
+```bash
+cat my_sensitive_data.txt | cleansh --config /path/to/my_custom_rules.yaml
+```
+
+### Outputting to a File (`-o <path>`)
+
+Instead of printing to `stdout`, save the sanitized content directly to a file.
+
+```bash
+my-script-with-secrets.sh | cleansh -o safe_output.log
+```
+
+### Reading Input from a File
+
+You can also provide a file as input using standard shell redirection.
+
+```bash
+cleansh < raw_log_file.txt
+```
+
+### Combining Flags
+
+Flags can be combined for powerful workflows. For example, sanitize, show diff, and save to a file:
+
+```bash
+my-command-output | cleansh -d -o sanitized_output.txt
+```
+
+-----
+
 ## 2\. 🧱 Project Structure
 
 The `cleansh` codebase is thoughtfully organized for clarity, modularity, and maintainability, adhering to best practices for Rust projects.
@@ -41,25 +119,25 @@ The `cleansh` codebase is thoughtfully organized for clarity, modularity, and ma
 ```
 cleansh/
 ├── src/
-│   ├── main.rs                 # CLI entrypoint, argument parsing, high-level orchestration
-│   ├── commands/
-│   │   └── cleansh.rs          # Main CLI logic, handles command execution, config loading, and flag processing
-│   ├── tools/
-│   │   └── sanitize_shell.rs   # Core sanitization engine: contains all regex definitions, redaction logic, and path normalization
-│   ├── config/                 # (New: Consider this as a module for config handling)
-│   │   └── mod.rs              # Logic for loading default and user-defined rules
-│   ├── ui/                     # (New: Consider this as a module for UI handling)
-│   │   ├── mod.rs              # Public UI functions
-│   │   ├── output_format.rs    # Handles all terminal output formatting (summaries, diffs, messages)
-│   │   └── theme.rs            # Manages color themes and styling
-│   └── tests/                  # Unit tests for individual components
+│   ├── main.rs                 # CLI entrypoint, argument parsing, high-level orchestration
+│   ├── commands/
+│   │   └── cleansh.rs          # Main CLI logic, handles command execution, config loading, and flag processing
+│   ├── tools/
+│   │   └── sanitize_shell.rs   # Core sanitization engine: contains all regex definitions, redaction logic, and path normalization
+│   ├── config/                 # (New: Consider this as a module for config handling)
+│   │   └── mod.rs              # Logic for loading default and user-defined rules
+│   ├── ui/                     # (New: Consider this as a module for UI handling)
+│   │   ├── mod.rs              # Public UI functions
+│   │   ├── output_format.rs    # Handles all terminal output formatting (summaries, diffs, messages)
+│   │   └── theme.rs            # Manages color themes and styling
+│   └── tests/                  # Unit tests for individual components
 ├── config/
-│   └── default_rules.yaml      # Embedded immutable default redaction rules
-├── .env                        # Runtime configuration settings (local development)
+│   └── default_rules.yaml      # Embedded immutable default redaction rules
+├── .env                        # Runtime configuration settings (local development)
 ├── .gitignore
-├── Cargo.toml                  # Rust project manifest
-├── README.md                   # This file
-├── LICENSE (MIT)               # MIT License file
+├── Cargo.toml                  # Rust project manifest
+├── README.md                   # This file
+├── LICENSE (MIT)               # MIT License file
 ```
 
 -----
@@ -170,11 +248,13 @@ A comprehensive testing strategy ensures the reliability and correctness of `cle
 
 ## 7\. 🚀 Packaging & Distribution
 
-`cleansh` is designed for seamless cross-platform deployment and ease of installation.
+`cleansh` is designed for seamless cross-platform deployment and ease of installation, catering to both Rust developers and general users.
 
-### 📦 Preferred Method: Prebuilt Cross-Platform Binaries via `cargo-dist`
+### Installation
 
-The recommended installation method leverages `cargo-dist` for robust, pre-built binaries, ensuring a smooth experience for all users.
+#### 📦 Recommended: Prebuilt Cross-Platform Binaries via `cargo-dist`
+
+The easiest way to get `cleansh` for most users is by using our pre-built binaries. These are automatically generated for various operating systems (Windows, macOS, Linux) when a new release is tagged.
 
 **One-line Install (Linux/macOS):**
 
@@ -182,18 +262,45 @@ The recommended installation method leverages `cargo-dist` for robust, pre-built
 curl -sSf https://cleansh.sh/install.sh | sh
 ```
 
-**(Note: `https://cleansh.sh/install.sh` is a placeholder. Update with your actual distribution script URL.)**
+**(Note: `https://cleansh.sh/install.sh` is a placeholder. Update with your actual distribution script URL once available\!)**
 
-**Build and Distribution Commands:**
+#### For Rust Developers: Install from Crates.io
+
+If you have the Rust toolchain installed, you can quickly install `cleansh` directly from [crates.io](https://crates.io/):
 
 ```bash
-cargo install cargo-dist
-cargo dist init
+cargo install cleansh
+```
+
+#### Building from Source
+
+To build `cleansh` from its source code, you'll need the Rust toolchain installed.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/KarmaYama/cleansh.git
+    cd cleansh
+    ```
+2.  **Build in release mode (recommended for performance):**
+    ```bash
+    cargo build --release
+    ```
+    The executable will be located at `target/release/cleansh` (or `cleansh.exe` on Windows).
+3.  **Run tests (optional, but recommended):**
+    ```bash
+    cargo test
+    ```
+
+### Distribution Automation
+
+We leverage `cargo-dist` to streamline the release process.
+After setting up `cargo-dist` (using `cargo dist init`), you can build distribution archives with:
+
+```bash
 cargo dist build
 ```
 
-
-> **Alternative:** For Rust developers, `cleansh` can also be installed directly from `crates.io` using `cargo install cleansh`.
+This generates packages ready for release to platforms like GitHub Releases.
 
 -----
 
@@ -224,14 +331,14 @@ keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
 
 `cleansh` is engineered with a "secure by default" mindset, embodying several key security principles:
 
-| Feature                   | Security Principle                                 |
-| :------------------------ | :------------------------------------------------- |
-| No runtime evaluations    | All redaction logic is static and regex-based, preventing arbitrary code execution from external inputs. |
-| No external network calls | `cleansh` operates entirely locally, with no HTTP/cloud dependencies or telemetry. Your data stays private. |
-| Immutable default rules   | The core redaction rule-set is embedded at compile time and cannot be altered without recompilation, ensuring integrity. |
-| Path redaction built-in   | Automatically prevents the unintentional leakage of personal filesystem details by normalizing paths. |
-| YAML sandboxed parsing    | User-defined YAML config files are strictly parsed for declarative rules; no execution capabilities are allowed. |
-| Clipboard output opt-in   | Copying to clipboard is an explicit opt-in action (`-c` flag), not a default, to prevent silent data transfer. |
+| Feature                   | Security Principle                                                                                                          |
+| :------------------------ | :-------------------------------------------------------------------------------------------------------------------------- |
+| No runtime evaluations    | All redaction logic is static and regex-based, preventing arbitrary code execution from external inputs.                      |
+| No external network calls | `cleansh` operates entirely locally, with no HTTP/cloud dependencies or telemetry. Your data stays private.                 |
+| Immutable default rules   | The core redaction rule-set is embedded at compile time and cannot be altered without recompilation, ensuring integrity.    |
+| Path redaction built-in   | Automatically prevents the unintentional leakage of personal filesystem details by normalizing paths.                       |
+| YAML sandboxed parsing    | User-defined YAML config files are strictly parsed for declarative rules; no execution capabilities are allowed.            |
+| Clipboard output opt-in   | Copying to clipboard is an explicit opt-in action (`-c` flag), not a default, to prevent silent data transfer.              |
 
 -----
 
@@ -249,18 +356,19 @@ As `cleansh` evolves, we envision expanding its utility and integration capabili
 
 ## 🧵 Summary of Technology Stack
 
-| Area               | Stack/Choice                                  |
-| :----------------- | :-------------------------------------------- |
-| Language           | Rust                                          |
-| Config Format      | `.env` + Optional YAML                        |
-| CLI Parsing        | `clap` with derives                           |
-| Regex Engine       | `regex` crate                                 |
-| ANSI Stripping     | `strip-ansi-escapes`                          |
-| Diff Generation    | `dissimilar`                                  |
-| Clipboard          | `arboard`                                   |
-| Logging            | `log` + `env_logger`                          |
-| Error Handling     | `anyhow` + `thiserror`                        |
-| Installation       | `cargo-dist` + curl script / `cargo install`  |
-| License            | MIT                                           |
+| Area              | Stack/Choice                                  |
+| :---------------- | :-------------------------------------------- |
+| Language          | Rust                                          |
+| Config Format     | `.env` + Optional YAML                        |
+| CLI Parsing       | `clap` with derives                           |
+| Regex Engine      | `regex` crate                                 |
+| ANSI Stripping    | `strip-ansi-escapes`                          |
+| Diff Generation   | `dissimilar`                                  |
+| Clipboard         | `arboard`                                     |
+| Logging           | `log` + `env_logger`                          |
+| Error Handling    | `anyhow` + `thiserror`                        |
+| Installation      | `cargo-dist` + curl script / `cargo install`  |
+| License           | MIT                                           |
 
 -----
+
