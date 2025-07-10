@@ -1,0 +1,11 @@
+[theme]
+info = "white"
+debug = "brightblack italic"
+warn = "yellow bold"
+error = "red bold"
+success = "green bold"
+highlight = "magenta bold underline"
+dim = "brightblack"
+diff_added = "green bold"
+diff_removed = "red bold"
+diff_unchanged = "brightblack"

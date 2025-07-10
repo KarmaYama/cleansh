@@ -1,135 +1,72 @@
 // src/commands/cleansh.rs
 
 use anyhow::{Context, Result};
-use copypasta::{ClipboardContext, ClipboardProvider};
-use log::{debug, error, info, trace, warn};
-use std::fs;
-use std::io::{self, Write};
-use std::path::PathBuf;
-
+use arboard::Clipboard;
 use crate::config;
 use crate::tools::sanitize_shell;
-use crate::ui::{self, OutputTheme};
+use crate::ui::output_format;
+use crate::ui::theme::{ThemeEntry, ThemeStyle};
+use log::{debug, error, info}; // Removed trace, it's unused
+use std::fs;
+use std::io; // Removed `Write` as it's not directly used here
+use std::path::PathBuf;
+use std::collections::HashMap;
 
-/// Executes the core cleansh sanitization logic.
-///
-/// This function orchestrates the entire process: loading rules, compiling them,
-/// sanitizing the input content, and handling all various output methods
-/// (diff view, clipboard, file output, or stdout).
-///
-/// # Arguments
-/// * `input_content` - The raw string content to be sanitized.
-/// * `clipboard_enabled` - If true, the sanitized content is copied to the clipboard.
-/// * `diff_enabled` - If true, a diff view highlighting changes is printed to stderr.
-/// * `config_path` - Optional path to a user-defined YAML configuration file.
-/// * `output_path` - Optional path to a file where the sanitized content should be written.
+/// The main entry point for the `cleansh` command.
 pub fn run_cleansh(
     input_content: &str,
     clipboard_enabled: bool,
     diff_enabled: bool,
     config_path: Option<PathBuf>,
     output_path: Option<PathBuf>,
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
 ) -> Result<()> {
-    info!("Starting cleansh command execution.");
-    debug!("Clipboard enabled: {}", clipboard_enabled);
-    debug!("Diff enabled: {}", diff_enabled);
-    debug!("Config path: {:?}", config_path);
-    debug!("Output path: {:?}", output_path);
+    info!("Starting cleansh command.");
+    debug!("Clipboard: {}, Diff: {}", clipboard_enabled, diff_enabled);
 
-    // Get the default UI theme for consistent output formatting.
-    let theme = OutputTheme::default();
-
-    // 1. Load and Merge Redaction Rules
-    info!("Loading default redaction rules...");
-    let default_rules_config = config::load_default_rules()
-        .context("Failed to load default redaction rules.")?;
-    debug!("Default rules loaded: {} rules.", default_rules_config.rules.len());
-
-    let final_rules_config = if let Some(path) = config_path {
-        info!("Loading user-defined redaction rules from: {}", path.display());
-        let user_rules_config = config::load_user_rules(&path)
-            .with_context(|| format!("Failed to load user-defined rules from: {}", path.display()))?;
-        debug!("User-defined rules loaded: {} rules.", user_rules_config.rules.len());
-        
-        info!("Merging user-defined rules with default rules.");
-        let merged_rules = config::merge_rules(default_rules_config, Some(user_rules_config));
-        debug!("Total rules after merge: {} rules.", merged_rules.rules.len());
-        merged_rules
+    // 1. Load and merge rules
+    let default_cfg = config::load_default_rules().context("Loading default rules")?;
+    let merged_cfg = if let Some(p) = config_path {
+        let user = config::load_user_rules(&p).context("Loading user rules")?;
+        config::merge_rules(default_cfg, Some(user))
     } else {
-        info!("No custom config specified. Using default rules only.");
-        default_rules_config
+        default_cfg
     };
+    let compiled = sanitize_shell::compile_rules(merged_cfg).context("Compiling rules")?;
 
-    // 2. Compile Redaction Rules
-    info!("Compiling redaction rules...");
-    let compiled_rules = sanitize_shell::compile_rules(final_rules_config)
-        .context("Failed to compile redaction rules.")?;
-    debug!("Successfully compiled {} redaction rules.", compiled_rules.len());
-    trace!("Compiled rules: {:?}", compiled_rules);
+    // 2. Sanitize
+    let (sanitized, summary) = sanitize_shell::sanitize_content(input_content, &compiled);
 
-    // 3. Perform Sanitization
-    info!("Sanitizing content...");
-    let (sanitized_content, redaction_summary_items) =
-        sanitize_shell::sanitize_content(input_content, &compiled_rules);
-    info!("Content sanitization complete. {} redactions made.", redaction_summary_items.len());
+    // 3. Print summary or info
+    output_format::print_redaction_summary(&mut io::stdout(), &summary, theme_map);
 
-    // 4. Handle Output Modes
-
-    // Always print a summary of redactions if any were made.
-    if !redaction_summary_items.is_empty() {
-        ui::print_redaction_summary(&redaction_summary_items, &theme);
-    } else {
-        ui::print_info_message("No sensitive information detected for redaction.", &theme);
-    }
-
-
-    // Handle diff view
+    // 4. Diff
     if diff_enabled {
-        info!("Generating and printing diff view.");
-        ui::print_diff_view(input_content, &sanitized_content, &theme);
+        output_format::print_diff_view(&mut io::stdout(), input_content, &sanitized, theme_map);
     }
 
-    // Handle clipboard output
+    // 5. Clipboard
     if clipboard_enabled {
-        info!("Attempting to copy sanitized content to clipboard.");
-        match ClipboardContext::new() {
-            Ok(mut ctx) => {
-                if let Err(e) = ctx.set_contents(sanitized_content.clone()) {
-                    error!("Failed to copy to clipboard: {}", e);
-                    ui::print_error_message(
-                        &format!("Failed to copy to clipboard: {}", e),
-                        &theme,
-                    );
-                } else {
-                    ui::print_success_message("Sanitized content copied to clipboard.", &theme);
-                }
+        match Clipboard::new() {
+            Ok(mut cb) => {
+                cb.set_text(sanitized.clone()).ok();
+                output_format::print_success_message(&mut io::stdout(), "Copied to clipboard.", theme_map);
             }
             Err(e) => {
-                error!("Could not access clipboard: {}", e);
-                ui::print_error_message(
-                    &format!("Could not access clipboard: {}", e),
-                    &theme,
-                );
+                error!("Clipboard error: {}", e);
+                output_format::print_error_message(&mut io::stderr(), "Failed to access clipboard.", theme_map);
             }
         }
     }
 
-    // Handle file output or stdout output (mutually exclusive)
+    // 6. File or stdout
     if let Some(path) = output_path {
-        info!("Writing sanitized content to file: {}", path.display());
-        fs::write(&path, &sanitized_content)
-            .with_context(|| format!("Failed to write sanitized content to file: {}", path.display()))?;
-        ui::print_success_message(
-            &format!("Sanitized content written to: {}", path.display()),
-            &theme,
-        );
+        fs::write(&path, &sanitized).context("Writing output file")?;
+        output_format::print_success_message(&mut io::stdout(), "Written to file.", theme_map);
     } else if !diff_enabled {
-        // Only print to stdout if not redirecting to file AND diff view is not the primary output.
-        // If diff is enabled, the diff is the stdout output, not the raw sanitized content.
-        info!("Printing sanitized content to stdout.");
-        ui::print_content(&sanitized_content);
+        output_format::print_content(&mut io::stdout(), &sanitized);
     }
 
-    info!("cleansh command execution finished.");
+    info!("cleansh finished.");
     Ok(())
 }

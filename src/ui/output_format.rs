@@ -1,233 +1,124 @@
 // src/ui/output_format.rs
-
-use crate::ui::theme::OutputTheme;
-use comfy_table::{presets::UTF8_FULL, Table};
-use diffy::{diff, Patch};
+use crate::config::RedactionSummaryItem;
+use crate::ui::theme::{ThemeEntry, ThemeStyle}; // Removed ThemeColor, as it's not directly used
 use owo_colors::OwoColorize;
-use std::io::{self, Write};
-use log::{info, warn, error}; // Used for internal logging of output actions
+use std::collections::HashMap;
+use std::io::Write;
+use dissimilar;
 
-
-/// Prints a general informational message to stdout using the theme's info style.
-pub fn print_info_message(message: &str, theme: &OutputTheme) {
-    let _ = writeln!(io::stdout(), "{}", message.fg_rgb(theme.info.fg_color.unwrap().rgb()));
-    info!("Printed info message: {}", message);
+/// Prints the content to the given writer.
+pub fn print_content<W: Write>(writer: &mut W, content: &str) {
+    let _ = write!(writer, "{}", content);
 }
 
-/// Prints a success message to stdout using the theme's success style.
-pub fn print_success_message(message: &str, theme: &OutputTheme) {
-    let _ = writeln!(io::stdout(), "{}", message.fg_rgb(theme.success.fg_color.unwrap().rgb()).bold());
-    info!("Printed success message: {}", message);
+/// Helper to get a styled string based on the theme.
+/// Returns an owned String that implements Display.
+fn get_styled_text(
+    text: &str,
+    entry: ThemeEntry,
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+) -> String {
+    if let Some(style) = theme_map.get(&entry) {
+        if let Some(color) = &style.fg {
+            return text.color(color.to_ansi_color()).to_string(); // Convert to owned String
+        }
+    }
+    // Fallback if no specific style or color is found
+    text.color(owo_colors::AnsiColors::White).to_string() // Convert to owned String
 }
 
-/// Prints a warning message to stderr using the theme's warning style.
-pub fn print_warning_message(message: &str, theme: &OutputTheme) {
-    let _ = writeln!(io::stderr(), "{}", message.fg_rgb(theme.warn.fg_color.unwrap().rgb()).bold());
-    warn!("Printed warning message: {}", message);
+/// Prints a success message to the given writer, styled by the theme.
+pub fn print_success_message<W: Write>(
+    writer: &mut W,
+    message: &str,
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+) {
+    let styled_message = get_styled_text(&format!("✅ {}\n", message), ThemeEntry::Success, theme_map);
+    let _ = write!(writer, "{}", styled_message);
 }
 
-/// Prints an error message to stderr using the theme's error style.
-pub fn print_error_message(message: &str, theme: &OutputTheme) {
-    let _ = writeln!(io::stderr(), "{}", message.fg_rgb(theme.error.fg_color.unwrap().rgb()).bold());
-    error!("Printed error message: {}", message);
+/// Prints an informational message to the given writer, styled by the theme.
+pub fn print_info_message<W: Write>( // Corrected: removed extra 'fn'
+    writer: &mut W,
+    message: &str,
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+) {
+    let styled_message = get_styled_text(&format!("ℹ️ {}\n", message), ThemeEntry::Info, theme_map);
+    let _ = write!(writer, "{}", styled_message);
 }
 
-/// Prints content (e.g., sanitized output) to stdout.
-/// This is the primary way `cleansh` outputs its results.
-pub fn print_content(content: &str) {
-    let _ = write!(io::stdout(), "{}", content);
+/// Prints an error message to the given writer, styled by the theme.
+pub fn print_error_message<W: Write>(
+    writer: &mut W,
+    message: &str,
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+) {
+    let styled_message = get_styled_text(&format!("❌ ERROR: {}\n", message), ThemeEntry::Error, theme_map);
+    let _ = write!(writer, "{}", styled_message);
 }
 
-/// Represents a single item to be displayed in a redaction summary table.
-/// This struct makes it easy to pass structured data to the table printer.
-pub struct RedactionSummaryItem<'a> {
-    pub rule_name: &'a str,
-    pub original_text: &'a str,
-    pub sanitized_text: &'a str,
+/// Prints a warning message to the given writer, styled by the theme.
+pub fn print_warn_message<W: Write>( // Corrected: removed extra 'fn'
+    writer: &mut W,
+    message: &str,
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+) {
+    let styled_message = get_styled_text(&format!("⚠️ WARNING: {}\n", message), ThemeEntry::Warn, theme_map);
+    let _ = write!(writer, "{}", styled_message);
 }
 
-/// Prints a tabular summary of redactions made.
-pub fn print_redaction_summary(items: &[RedactionSummaryItem], theme: &OutputTheme) {
-    if items.is_empty() {
-        print_info_message("No redactions were performed.", theme);
+/// Prints a summary of redactions made.
+pub fn print_redaction_summary<W: Write>(
+    writer: &mut W,
+    summary: &[RedactionSummaryItem],
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+) {
+    if summary.is_empty() {
+        let _ = write!(writer, "\n{}\n", get_styled_text("No redactions applied.", ThemeEntry::Info, theme_map));
         return;
     }
 
-    let mut table = Table::new();
-    table
-        .load_preset(UTF8_FULL)
-        .set_header(vec![
-            "Rule",
-            "Original Text (Snippet)",
-            "Sanitized Text (Snippet)",
-        ])
-        .set_header_style(theme.highlight); // Apply header style
+    let header = get_styled_text("\n--- Redaction Summary ---", ThemeEntry::Header, theme_map);
+    let _ = writeln!(writer, "{}", header);
 
-    for item in items {
-        table.add_row(vec![
-            item.rule_name.fg_rgb(theme.dim.fg_color.unwrap().rgb()).to_string(),
-            // Truncate original text for table readability if it's too long
-            format!("{}",
-                item.original_text.fg_rgb(theme.diff_removed.fg_color.unwrap().rgb()).dimmed(),
-            ),
-            format!("{}",
-                item.sanitized_text.fg_rgb(theme.diff_added.fg_color.unwrap().rgb()).bold(),
-            ),
-        ]);
+    for item in summary {
+        let rule_name_styled = get_styled_text(&item.rule_name, ThemeEntry::SummaryRuleName, theme_map);
+        let occurrences_styled = get_styled_text(
+            &format!(" ({} occurrences)", item.occurrences),
+            ThemeEntry::SummaryOccurrences,
+            theme_map,
+        );
+        let _ = writeln!(writer, "{}{}", rule_name_styled, occurrences_styled);
     }
-
-    let _ = writeln!(io::stdout(), "\n{}", table);
-    info!("Printed redaction summary table.");
+    let _ = writeln!(writer, "{}\n", get_styled_text("-------------------------", ThemeEntry::Header, theme_map));
 }
 
-/// Prints a side-by-side or unified diff view of the original and sanitized content.
-pub fn print_diff_view(original: &str, sanitized: &str, theme: &OutputTheme) {
-    print_info_message("--- Diff View of Redactions ---", theme);
+/// Prints a diff view of the original and sanitized content.
+pub fn print_diff_view<W: Write>(
+    writer: &mut W,
+    original_content: &str,
+    sanitized_content: &str,
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+) {
+    let diff_header = get_styled_text("\n--- Diff View ---", ThemeEntry::DiffHeader, theme_map);
+    let _ = writeln!(writer, "{}", diff_header);
 
-    let patch = diff(original, sanitized);
-    for line in Patch::unified(&patch).lines() {
-        if line.starts_with('+') {
-            let _ = writeln!(io::stdout(), "{}", line.fg_rgb(theme.diff_added.fg_color.unwrap().rgb()));
-        } else if line.starts_with('-') {
-            let _ = writeln!(io::stdout(), "{}", line.fg_rgb(theme.diff_removed.fg_color.unwrap().rgb()));
-        } else {
-            let _ = writeln!(io::stdout(), "{}", line.fg_rgb(theme.diff_unchanged.fg_color.unwrap().rgb()));
-        }
-    }
-    info!("Printed diff view.");
-}
+    let diff = dissimilar::diff(original_content, sanitized_content);
 
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::ui::theme::OutputTheme; // Need to import theme for tests
-    use std::cell::RefCell;
-
-    // A mock stdout/stderr to capture output for testing
-    struct MockWriter {
-        buffer: RefCell<Vec<u8>>,
-    }
-
-    impl MockWriter {
-        fn new() -> Self {
-            MockWriter {
-                buffer: RefCell::new(Vec::new()),
+    for change in diff {
+        match change {
+            dissimilar::Chunk::Equal(s) => {
+                let _ = write!(writer, " {}", s); // No styling for equal parts
+            }
+            dissimilar::Chunk::Delete(s) => {
+                let styled_deleted = get_styled_text(&format!("-{}", s), ThemeEntry::DiffRemoved, theme_map);
+                let _ = write!(writer, "{}", styled_deleted);
+            }
+            dissimilar::Chunk::Insert(s) => {
+                let styled_inserted = get_styled_text(&format!("+{}", s), ThemeEntry::DiffAdded, theme_map);
+                let _ = write!(writer, "{}", styled_inserted);
             }
         }
-        fn to_string(&self) -> String {
-            String::from_utf8(self.buffer.borrow().clone()).unwrap()
-        }
     }
-
-    impl Write for MockWriter {
-        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-            self.buffer.borrow_mut().extend_from_slice(buf);
-            Ok(buf.len())
-        }
-        fn flush(&mut self) -> io::Result<()> {
-            Ok(())
-        }
-    }
-
-    // Override stdio for tests
-    macro_rules! with_mock_io {
-        ($body:expr) => {{
-            let mut mock_stdout = MockWriter::new();
-            let original_stdout = io::stdout();
-            let _guard_stdout = io::set_print(Some(Box::new(&mut mock_stdout))).unwrap();
-
-            let mut mock_stderr = MockWriter::new();
-            let original_stderr = io::stderr();
-            let _guard_stderr = io::set_print(Some(Box::new(&mut mock_stderr))).unwrap();
-
-            let result = { $body };
-
-            // Restore original stdout/stderr (important!)
-            io::set_print(Some(original_stdout)).unwrap();
-            io::set_print(Some(original_stderr)).unwrap();
-
-            (result, mock_stdout.to_string(), mock_stderr.to_string())
-        }};
-    }
-
-
-    #[test]
-    fn test_print_info_message() {
-        let theme = OutputTheme::default();
-        let (_result, stdout, _stderr) = with_mock_io!({
-            print_info_message("Test info", &theme);
-        });
-        assert!(stdout.contains("Test info"));
-        // Check for basic ANSI escape codes for color (exact color code might vary by terminal)
-        assert!(stdout.contains("\x1b[37mTest info\x1b[0m")); // Default white color
-    }
-
-    #[test]
-    fn test_print_error_message() {
-        let theme = OutputTheme::default();
-        let (_result, _stdout, stderr) = with_mock_io!({
-            print_error_message("Test error", &theme);
-        });
-        assert!(stderr.contains("Test error"));
-        assert!(stderr.contains("\x1b[31mTest error\x1b[0m")); // Default red color
-    }
-
-    #[test]
-    fn test_print_content() {
-        let (_result, stdout, _stderr) = with_mock_io!({
-            print_content("Raw output content");
-        });
-        assert_eq!(stdout, "Raw output content");
-    }
-
-    #[test]
-    fn test_print_redaction_summary_empty() {
-        let theme = OutputTheme::default();
-        let (_result, stdout, _stderr) = with_mock_io!({
-            print_redaction_summary(&[], &theme);
-        });
-        assert!(stdout.contains("No redactions were performed."));
-    }
-
-    #[test]
-    fn test_print_redaction_summary_with_items() {
-        let theme = OutputTheme::default();
-        let items = vec![
-            RedactionSummaryItem {
-                rule_name: "email",
-                original_text: "test@example.com",
-                sanitized_text: "[EMAIL_REDACTED]",
-            },
-            RedactionSummaryItem {
-                rule_name: "ip",
-                original_text: "192.168.1.1",
-                sanitized_text: "[IPV4_REDACTED]",
-            },
-        ];
-        let (_result, stdout, _stderr) = with_mock_io!({
-            print_redaction_summary(&items, &theme);
-        });
-        assert!(stdout.contains("Rule"));
-        assert!(stdout.contains("Original Text (Snippet)"));
-        assert!(stdout.contains("Sanitized Text (Snippet)"));
-        assert!(stdout.contains("email"));
-        assert!(stdout.contains("[EMAIL_REDACTED]"));
-        assert!(stdout.contains("192.168.1.1"));
-        assert!(stdout.contains("[IPV4_REDACTED]"));
-    }
-
-    #[test]
-    fn test_print_diff_view() {
-        let theme = OutputTheme::default();
-        let original = "Line 1\nLine 2 sensitive\nLine 3";
-        let sanitized = "Line 1\nLine 2 [REDACTED]\nLine 3";
-        let (_result, stdout, _stderr) = with_mock_io!({
-            print_diff_view(original, sanitized, &theme);
-        });
-        assert!(stdout.contains("--- Diff View of Redactions ---"));
-        assert!(stdout.contains("- Line 2 sensitive"));
-        assert!(stdout.contains("+ Line 2 [REDACTED]"));
-        assert!(stdout.contains("Line 1")); // Unchanged line
-    }
+    let _ = writeln!(writer, "\n{}", get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map));
 }

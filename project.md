@@ -1,20 +1,31 @@
-cleansh/
-├── src/
-│   ├── main.rs
-│   ├── config.rs
-│   ├── logger.rs
-│   ├── commands/
-│   │   └── cleansh.rs
-│   ├── tools/
-│   │   └── sanitize_shell.rs
-│   └── ui/                     # NEW: All UI-related logic
-│       ├── mod.rs              # Exports UI components
-│       └── theme.rs            # Defines colors, styles, table formatting
-│       └── output_format.rs    # Functions for printing structured data (tables, lists, diffs)
-├── config/
-│   └── default_rules.yaml
-├── .env
-├── .gitignore
-├── Cargo.toml
-├── README.md
-├── LICENSE (MIT)
+```Cleansh
+📁 /
+├── 📁 config
+│   └── 📄 default_rules.yaml
+├── 📁 src
+│   ├── 📁 commands
+│   │   ├── 📄 cleansh.rs
+│   │   └── 📄 mod.rs
+│   ├── 📁 tools
+│   │   ├── 📄 mod.rs
+│   │   └── 📄 sanitize_shell.rs
+│   ├── 📁 ui
+│   │   ├── 📄 mod.rs
+│   │   ├── 📄 output_format.rs
+│   │   └── 📄 theme.rs
+│   ├── 📄 config.rs
+│   ├── 📄 logger.rs
+│   └── 📄 main.rs
+├── 📁 target
+├── 📁 tests
+│   └── 📄 cleansh_integration.rs
+├── 📄 .env
+├── 📄 .gitignore
+├── 📄 Cargo.lock
+├── 📄 Cargo.toml
+├── 📄 cleansh_scope.md
+├── 📄 Cleansh.toml
+├── 📄 LICENSE
+├── 📄 project.md
+└── 📄 README.md
+```

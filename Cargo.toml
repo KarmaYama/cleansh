@@ -1,10 +1,10 @@
 [package]
 name = "cleansh"
 version = "0.1.0"
-edition = "2025" 
+edition = "2024"
 description = "Sanitize your terminal output. One tool. One purpose."
 license = "MIT"
-repository = "https://github.com/KarmaYama/cleansh" 
+repository = "https://github.com/KarmaYama/cleansh"
 readme = "README.md"
 categories = ["command-line-utilities", "security", "productivity"]
 keywords = ["cli", "security", "redact", "sanitize", "clipboard", "privacy"]
@@ -20,10 +20,10 @@ serde_yaml = "0.9"
 
 # Core Sanitization Logic
 regex = "1.10"
-strip-ansi-escapes = "0.1"
+strip-ansi-escapes = "0.2.1"
 
 # Clipboard Interaction
-copypasta = "0.8" # Cross-platform clipboard access (automatically enables OS-specific features)
+arboard = "3.4.0" 
 
 # Logging
 log = "0.4"
@@ -37,12 +37,18 @@ thiserror = "1.0"
 owo-colors = "3.5"
 comfy-table = "7.0"
 diffy = "0.3"
+dissimilar = "1.0.8"
+
+# For file system operations and temporary files in tests (if not already listed in dev-dependencies)
+# If walkdir is used, it should be here too.
+dirs = "5.0" 
+once_cell = "1.19" 
 
 [dev-dependencies]
-# Add any dependencies here that are only used for development or testing, e.g.:
-# assert_cmd = "2.0"
-# predicates = "3.0"
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.10" 
 
 # Target specific dependencies (if needed, e.g., for Windows-specific features)
-# [target.'cfg(windows)'.dependencies]
-# winapi = "0.3"
+[target.'cfg(windows)'.dependencies]
+winapi = "0.3"

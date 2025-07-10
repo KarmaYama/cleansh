@@ -3,19 +3,23 @@
 // Standard library imports for I/O and path manipulation
 use std::io::{self, Read};
 use std::path::PathBuf;
+use std::fs;
+use std::process::exit;
+use std::collections::HashMap; // Needed for Theme map
 
-// Third-party crate imports for CLI parsing, logging, and error handling
-use anyhow::{Context, Result}; // For robust error propagation and context
-use clap::Parser; // For declarative command-line argument parsing
-use log::{debug, info}; // For structured logging
+// Third‑party crate imports for CLI parsing, logging, and error handling
+use anyhow::{Context, Result};
+use clap::Parser;
+use log::{debug, info};
 
 // Internal module imports. These modules will be defined within the `src` directory
-// and contain the specialized logic for configuration, logging, and command execution.
-mod commands; // Contains the core CLI logic and command handlers (e.g., cleansh command)
-mod config;   // Handles loading and merging redaction rules
-mod logger;   // Manages the application's logging setup
+mod commands;
+mod config;
+mod logger;
+mod tools;
+mod ui;
 
-/// cleansh - A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing.
+/// cleansh - A high‑trust, single‑purpose CLI tool that sanitizes terminal output for safe sharing.
 ///
 /// Secure by default. Zero config required. Extendable when needed.
 ///
@@ -29,84 +33,108 @@ mod logger;   // Manages the application's logging setup
 #[derive(Parser, Debug)]
 #[command(
     author = "Cleansh Technologies LLC",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     about = "Sanitize your terminal output. One tool. One purpose.",
     long_about = "cleansh is a robust and secure command-line utility designed to redact sensitive information from your terminal output before sharing. It supports masking emails, IP addresses, various tokens (JWTs, AWS, GCP), SSH keys, hex secrets, and normalizing absolute paths. Secure by default, zero config required, and extendable when needed."
 )]
 struct Cli {
     /// Copy the sanitized result to the system clipboard.
-    /// This flag makes the clipboard action opt-in, enhancing security by default.
+    /// Short flag is `-c` (unique).
     #[arg(short, long, help = "Copy the sanitized result to the system clipboard.")]
     clipboard: bool,
 
     /// Show a detailed diff view highlighting all redactions made to the input.
-    /// This helps users understand what was changed.
+    /// Short flag is `-d`.
     #[arg(short, long, help = "Show a detailed diff view highlighting redactions.")]
     diff: bool,
 
     /// Specify a custom YAML configuration file for redaction rules.
-    /// These rules will be merged with or override the default embedded rules.
-    #[arg(short, long, value_name = "FILE", help = "Load a custom YAML configuration file for redaction rules.")]
+    /// **Long-only** `--config` (no short) to avoid conflicts.
+    #[arg(long, value_name = "FILE", help = "Load a custom YAML configuration file for redaction rules.")]
     config: Option<PathBuf>,
 
-    /// Output the sanitized content to a specified file instead of printing to standard output.
-    #[arg(short, long, value_name = "FILE", help = "Output the sanitized content to a specified file instead of stdout.")]
+    /// Output the sanitized content to a specified file instead of printing to stdout.
+    /// Short flag is `-o`.
+    #[arg(short = 'o', long, value_name = "FILE", help = "Output the sanitized content to a specified file instead of stdout.")]
     out: Option<PathBuf>,
 
     /// Enable debug logging for more verbose output.
-    /// This flag overrides the `LOG_LEVEL` environment variable if set to a higher verbosity.
     #[arg(long, help = "Enable debug logging for more verbose output.")]
     debug: bool,
 
-    /// Optional input file path. If not provided, cleansh reads from standard input (stdin).
-    /// This allows for flexible input sources.
+    /// Optional input file path. Reads from stdin if not provided.
     #[arg(value_name = "INPUT", help = "Optional input file to read from. Reads from stdin if not provided.")]
     input_file: Option<PathBuf>,
+
+    /// Specify a custom YAML theme file for output styling.
+    #[arg(long, value_name = "FILE", help = "Load a custom YAML theme file for output styling.")]
+    theme: Option<PathBuf>,
 }
 
-/// The main entry point for the cleansh application.
-///
-/// This function initializes the logger, parses command-line arguments,
-/// determines the input source (stdin or file), and then delegates
-/// the core sanitization logic to the `commands::cleansh` module.
 fn main() -> Result<()> {
-    // 1. Initialize the logger.
-    // The `debug` flag from CLI arguments directly controls the logger's verbosity.
-    logger::init_logger(Cli::parse().debug); // Parse args once to get `debug` flag for logger init
-
-    // Re-parse arguments for full processing after logger is initialized.
-    // Clap is efficient enough that parsing twice here is negligible, but it cleanly separates
-    // logger setup from main logic.
+    // Parse arguments once and store them.
     let cli = Cli::parse();
 
-    info!("cleansh started. Version: {}", clap::crate_version!());
+    // 1. Initialize the logger.
+    // If `--debug` is enabled, and RUST_LOG is not already set, set it to "debug".
+    // Because `set_var` is marked unsafe in this toolchain, wrap it accordingly.
+    if cli.debug && std::env::var("RUST_LOG").is_err() {
+        // Safety: We are setting an environment variable that is not used by other parts
+        // of the program in a way that would cause unsoundness. This is a common pattern
+        // for configuring logging.
+        unsafe {
+            std::env::set_var("RUST_LOG", "debug");
+        }
+    }
+    logger::init_logger();
+
+    info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
     debug!("Parsed CLI arguments: {:?}", cli);
+
+    // Load theme from file or use embedded defaults
+    let theme_map: HashMap<ui::theme::ThemeEntry, ui::theme::ThemeStyle> =
+        if let Some(theme_path) = cli.theme {
+            ui::theme::ThemeStyle::load_from_file(&theme_path)
+                .unwrap_or_else(|e| {
+                    log::warn!("Failed to load custom theme from {}: {}. Falling back to default white theme.", theme_path.display(), e);
+                    ui::theme::ThemeStyle::default_theme_map()
+                })
+        } else {
+            // Fallback to a default theme (all white, or a predefined simple one)
+            ui::theme::ThemeStyle::default_theme_map()
+        };
+
 
     // 2. Determine the input source and read content.
     let mut input_content = String::new();
     if let Some(input_path) = cli.input_file {
         info!("Reading input from file: {}", input_path.display());
-        // Use `std::fs::read_to_string` for convenience to read the entire file.
-        input_content = std::fs::read_to_string(&input_path)
+        input_content = fs::read_to_string(&input_path)
             .with_context(|| format!("Failed to read input from file: {}", input_path.display()))?;
     } else {
         info!("Reading input from stdin...");
-        // Read all available data from standard input until EOF.
         io::stdin()
             .read_to_string(&mut input_content)
             .context("Failed to read input from stdin")?;
     }
 
     // 3. Delegate the core sanitization workflow.
-    // All specific logic for sanitization, output formatting, diffing,
-    // and clipboard operations is handled within `commands::cleansh::run_cleansh`.
-    commands::cleansh::run_cleansh(
+    if let Err(e) = commands::cleansh::run_cleansh(
         &input_content,
         cli.clipboard,
         cli.diff,
         cli.config,
         cli.out,
-    )?;
+        &theme_map, // Pass the loaded theme map
+    ) {
+        // Print a user‑friendly error message (now styled)
+        ui::output_format::print_error_message(
+            &mut io::stderr(),
+            &format!("An error occurred: {}", e),
+            &theme_map, // Pass the theme map for error messages
+        );
+        exit(1);
+    }
 
     info!("cleansh finished successfully.");
     Ok(())
