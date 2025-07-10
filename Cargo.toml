@@ -1,0 +1,48 @@
+[package]
+name = "cleansh"
+version = "0.1.0"
+edition = "2025" 
+description = "Sanitize your terminal output. One tool. One purpose."
+license = "MIT"
+repository = "https://github.com/KarmaYama/cleansh" 
+readme = "README.md"
+categories = ["command-line-utilities", "security", "productivity"]
+keywords = ["cli", "security", "redact", "sanitize", "clipboard", "privacy"]
+
+[dependencies]
+# CLI Argument Parsing
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Configuration Management
+dotenvy = "0.15"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+
+# Core Sanitization Logic
+regex = "1.10"
+strip-ansi-escapes = "0.1"
+
+# Clipboard Interaction
+copypasta = "0.8" # Cross-platform clipboard access (automatically enables OS-specific features)
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# UI / Output Layer (for beautiful, structured, color-coded output)
+owo-colors = "3.5"
+comfy-table = "7.0"
+diffy = "0.3"
+
+[dev-dependencies]
+# Add any dependencies here that are only used for development or testing, e.g.:
+# assert_cmd = "2.0"
+# predicates = "3.0"
+
+# Target specific dependencies (if needed, e.g., for Windows-specific features)
+# [target.'cfg(windows)'.dependencies]
+# winapi = "0.3"

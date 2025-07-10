@@ -1,0 +1,32 @@
+# .gitignore
+
+# Standard Rust project ignores
+/target/
+/Cargo.lock
+/.idea/
+.vscode/
+*.swp
+*.bak
+*.swo
+*.swn
+
+# OS-specific generated files
+.DS_Store
+Thumbs.db
+
+# Environment variables file - CRITICAL: DO NOT COMMIT SENSITIVE DATA
+.env
+
+# Output files from cleansh
+/result.txt # If --out result.txt is used
+/output.log # If logging outputs to a file
+
+# cargo-dist output directory
+/dist/
+
+# Test-related artifacts (if any specific ones emerge beyond target/)
+/tmp/ # Or any specific temporary test file directories
+
+# Backup files (common for editors)
+*~
+.#*

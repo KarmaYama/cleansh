@@ -1,0 +1,58 @@
+# config/default_rules.yaml
+
+rules:
+  - name: "email"
+    pattern: "([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})"
+    replace_with: "[EMAIL_REDACTED]"
+    description: "Standard email address pattern."
+
+  - name: "ipv4_address"
+    pattern: "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
+    replace_with: "[IPV4_REDACTED]"
+    description: "Standard IPv4 address pattern."
+
+  - name: "jwt_token"
+    pattern: "(ey[a-zA-Z0-9-_=]+\\.[a-zA-Z0-9-_=]+\\.[a-zA-Z0-9-_=]+)"
+    replace_with: "[JWT_REDACTED]"
+    description: "JSON Web Token (JWT) pattern."
+
+  - name: "aws_access_key"
+    pattern: "(AKIA[0-9A-Z]{16})"
+    replace_with: "[AWS_ACCESS_KEY_REDACTED]"
+    description: "AWS Access Key ID pattern (e.g., AKIA...)."
+
+  - name: "aws_secret_key"
+    pattern: "(?i)(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])"
+    replace_with: "[AWS_SECRET_KEY_REDACTED]"
+    description: "AWS Secret Access Key pattern (40 characters base64-like string). Case-insensitive, avoids partial matches within longer strings."
+
+  - name: "gcp_api_key"
+    pattern: "(AIza[0-9A-Za-z-_]{35})"
+    replace_with: "[GCP_API_KEY_REDACTED]"
+    description: "Google Cloud Platform API Key pattern (AIza...). Matches common structure."
+
+  - name: "ssh_private_key_rsa"
+    pattern: "BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----.*?-----END (RSA|DSA|EC|OPENSSH) PRIVATE KEY"
+    replace_with: "[SSH_PRIVATE_KEY_REDACTED]"
+    description: "Detects common SSH private key blocks (RSA, DSA, EC, OPENSSH). Matches multiline."
+    multiline: true # Special flag for multiline regex patterns
+
+  - name: "generic_hex_secret_32"
+    pattern: "\\b[0-9a-fA-F]{32}\\b"
+    replace_with: "[HEX_SECRET_32_REDACTED]"
+    description: "Common 32-character hexadecimal secret pattern (e.g., API keys, hashes). Matches whole words."
+
+  - name: "generic_hex_secret_64"
+    pattern: "\\b[0-9a-fA-F]{64}\\b"
+    replace_with: "[HEX_SECRET_64_REDACTED]"
+    description: "Common 64-character hexadecimal secret pattern (e.g., API keys, hashes). Matches whole words."
+
+  - name: "absolute_linux_path"
+    pattern: "(/home/[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*)"
+    replace_with: "~$1" # This needs special handling in sanitize_shell.rs (e.g., /home/user -> ~/user)
+    description: "Linux/Unix absolute path starting with /home/ followed by username."
+
+  - name: "absolute_macos_path"
+    pattern: "(/Users/[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*)"
+    replace_with: "~$1" # This needs special handling in sanitize_shell.rs (e.g., /Users/user -> ~/user)
+    description: "macOS absolute path starting with /Users/ followed by username."
