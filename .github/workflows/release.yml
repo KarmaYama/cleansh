@@ -1,0 +1,79 @@
+# .github/workflows/release.yml
+name: Release
+on:
+  push:
+    # Build a release whenever a new tag is pushed.
+    # The default tag pattern for cargo-dist is `v*`.
+    tags:
+      - 'v*'
+  workflow_dispatch: # Allows manual triggering of the workflow from the GitHub UI
+
+env:
+  # This token is automatically provided by GitHub Actions for workflows triggered by pushes.
+  # It has permissions to create GitHub Releases and upload assets.
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  # The cargo-dist command to build all the releases.
+  # This uses a matrix strategy to run builds for different platforms.
+  cleansh_build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # We target all platforms that cargo-dist supports out of the box.
+      # You can customize this list if you only want to release for a subset.
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-dist
+        run: cargo install cargo-dist --locked
+      - name: Run cargo dist
+        # The `dist` command will build your binaries for the current platform
+        # and prepare them for uploading.
+        # `--tag v${{ github.ref_name }}` ensures the assets are linked to the specific tag.
+        run: cargo dist dist --tag v${{ github.ref_name }}
+          # The `dist-build-install` command is an alternative if you want to
+          # test the installation locally in the CI environment (e.g. for `cargo install`).
+          # For a basic release, `dist` is sufficient.
+          # For more advanced scenarios, see cargo-dist's documentation.
+
+  # The cargo-dist command to upload the release assets to GitHub.
+  cleansh_upload:
+    runs-on: ubuntu-latest
+    needs: [cleansh_build] # Ensure builds are complete before uploading
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-dist
+        run: cargo install cargo-dist --locked
+      - name: Run cargo dist upload
+        # The `upload` command takes the assets built in the `cleansh_build` job
+        # and uploads them to the GitHub Release associated with the pushed tag.
+        run: cargo dist upload --tag v${{ github.ref_name }}
+          # The `dist-upload-check` command is an alternative if you want to
+          # perform a dry-run check without actually uploading.
