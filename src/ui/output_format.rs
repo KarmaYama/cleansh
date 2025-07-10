@@ -43,7 +43,7 @@ pub fn print_info_message<W: Write>( // Corrected: removed extra 'fn'
     message: &str,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
 ) {
-    let styled_message = get_styled_text(&format!("ℹ️ {}\n", message), ThemeEntry::Info, theme_map);
+    let styled_message = get_styled_text(&format!("{}\n", message), ThemeEntry::Info, theme_map);
     let _ = write!(writer, "{}", styled_message);
 }
 

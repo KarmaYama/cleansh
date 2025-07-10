@@ -42,6 +42,8 @@ fn test_basic_sanitization() -> Result<()> {
 
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
 
+    // The info message about reading from stdin is now part of the output
+    assert!(stripped.contains("ℹ️ Reading input from stdin...\n"));
     assert!(stripped.contains("--- Redaction Summary ---"));
     assert!(stripped.contains("email (1 occurrences)"));
     assert!(stripped.contains("ipv4_address (1 occurrences)"));
@@ -76,6 +78,8 @@ fn test_clipboard_output() -> Result<()> {
 
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
 
+    // The info message about reading from stdin is now part of the output
+    assert!(stripped.contains("ℹ️ Reading input from stdin...\n"));
     assert!(stripped.contains("--- Redaction Summary ---"));
     assert!(stripped.contains("jwt_token (1 occurrences)")); // Still expect JWT to be counted
     assert!(stripped.contains("-------------------------\n\n")); // Assert the ending sequence of the summary
@@ -111,6 +115,8 @@ fn test_diff_view() -> Result<()> {
     // And it is wrapped in Diff View headers.
     let expected_diff_content = "  Old IP: -10.0.0.1. New IP: 192.168.1.1+[IPV4_REDACTED]. New IP: [IPV4_REDACTED] ."; // Exact match from debug output
 
+    // The info message about reading from stdin is now part of the output
+    assert!(stripped.contains("ℹ️ Reading input from stdin...\n"));
     assert!(stripped.contains("--- Redaction Summary ---"));
     assert!(stripped.contains("ipv4_address (2 occurrences)"));
     assert!(stripped.contains("-------------------------\n\n")); // Check for summary footer
@@ -158,6 +164,8 @@ fn test_output_to_file() -> Result<()> {
         .clone();
 
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
+    // The info message about reading from stdin is now part of the output
+    assert!(stripped.contains("ℹ️ Reading input from stdin...\n"));
     assert!(stripped.contains("--- Redaction Summary ---"));
     assert!(stripped.contains("✅ Written to file."));
     assert!(stripped.contains("email (1 occurrences)"));
@@ -201,6 +209,9 @@ rules:
 
     let stripped_output = strip_ansi(&String::from_utf8_lossy(&output));
 
+    // The info message about reading from stdin and loading config are now part of the output
+    assert!(stripped_output.contains("ℹ️ Reading input from stdin...\n"));
+    assert!(stripped_output.contains(&format!("ℹ️ Loading custom rules from: {}\n", config_path)));
     assert!(stripped_output.contains("--- Redaction Summary ---"));
     assert!(stripped_output.contains("custom_secret (1 occurrences)"));
     assert!(stripped_output.contains("email (1 occurrences)")); // Still counts email if it matches the *overridden* email rule
@@ -237,6 +248,8 @@ fn test_absolute_path_redaction() -> Result<()> {
 
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
 
+    // The info message about reading from stdin is now part of the output
+    assert!(stripped.contains("ℹ️ Reading input from stdin...\n"));
     assert!(stripped.contains("--- Redaction Summary ---"));
     assert!(stripped.contains("absolute_linux_path (1 occurrences)"));
     assert!(stripped.contains("absolute_macos_path (1 occurrences)"));
@@ -258,6 +271,9 @@ fn test_absolute_path_redaction() -> Result<()> {
 fn test_no_redactions() -> Result<()> {
     let input = "This is a clean string with no sensitive information.";
 
+    // FIX APPLIED HERE: Updated expected_full_output to include the new info message
+    let expected_full_output = format!("ℹ️ Reading input from stdin...\n\nNo redactions applied.\n{}", input);
+
     let output = run_cleansh_command(input, &[])
         .assert()
         .success()
@@ -267,8 +283,6 @@ fn test_no_redactions() -> Result<()> {
 
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
 
-    // Based on output_format.rs and common CLI behavior, this seems most robust
-    let expected_full_output = format!("\nNo redactions applied.\n{}", input);
     assert_eq!(stripped.trim_end(), expected_full_output.trim_end());
 
     Ok(())

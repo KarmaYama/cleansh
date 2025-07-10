@@ -1,5 +1,3 @@
-// src/main.rs
-
 // Standard library imports for I/O and path manipulation
 use std::io::{self, Read};
 use std::path::PathBuf;
@@ -96,6 +94,12 @@ fn main() -> Result<()> {
         if let Some(theme_path) = cli.theme {
             ui::theme::ThemeStyle::load_from_file(&theme_path)
                 .unwrap_or_else(|e| {
+                    // Use print_warn_message for user-facing warning
+                    ui::output_format::print_warn_message(
+                        &mut io::stderr(),
+                        &format!("Failed to load custom theme from {}: {}. Falling back to default white theme.", theme_path.display(), e),
+                        &ui::theme::ThemeStyle::default_theme_map(), // Use default theme for this warning message
+                    );
                     log::warn!("Failed to load custom theme from {}: {}. Falling back to default white theme.", theme_path.display(), e);
                     ui::theme::ThemeStyle::default_theme_map()
                 })
@@ -109,10 +113,20 @@ fn main() -> Result<()> {
     let mut input_content = String::new();
     if let Some(input_path) = cli.input_file {
         info!("Reading input from file: {}", input_path.display());
+        ui::output_format::print_info_message( // Use print_info_message
+            &mut io::stdout(),
+            &format!("Reading input from file: {}", input_path.display()),
+            &theme_map,
+        );
         input_content = fs::read_to_string(&input_path)
             .with_context(|| format!("Failed to read input from file: {}", input_path.display()))?;
     } else {
         info!("Reading input from stdin...");
+        ui::output_format::print_info_message( // Use print_info_message
+            &mut io::stdout(),
+            "Reading input from stdin...",
+            &theme_map,
+        );
         io::stdin()
             .read_to_string(&mut input_content)
             .context("Failed to read input from stdin")?;
