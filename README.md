@@ -257,7 +257,7 @@ As `cleansh` evolves, we envision expanding its utility and integration capabili
 | Regex Engine       | `regex` crate                                 |
 | ANSI Stripping     | `strip-ansi-escapes`                          |
 | Diff Generation    | `dissimilar`                                  |
-| Clipboard          | `copypasta`                                   |
+| Clipboard          | `arboard`                                   |
 | Logging            | `log` + `env_logger`                          |
 | Error Handling     | `anyhow` + `thiserror`                        |
 | Installation       | `cargo-dist` + curl script / `cargo install`  |
