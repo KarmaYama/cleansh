@@ -1,4 +1,4 @@
-# 🧭 cleansh – Sanitize Your Terminal Output, Securely.
+# 🧭 Cleansh – Sanitize Your Terminal Output, Securely.
 
 > A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in development so expect bugs and please do report them.
 
