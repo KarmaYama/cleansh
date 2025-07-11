@@ -88,9 +88,17 @@ jobs:
         env:
           RUSTFLAGS: '-C target-cpu=native'
         run: |
+          # Determine target triple for Linux vs. macOS
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            TARGET="x86_64-apple-darwin"
+          else
+            TARGET="x86_64-unknown-linux-gnu"
+          fi
+
           ~/.cargo/bin/dist build \
             --tag ${{ github.ref_name }} \
-            --ci github
+            --ci github \
+            --target $TARGET
 
       - name: Build & package release (Windows)
         if: matrix.os == 'windows-latest'
@@ -98,6 +106,8 @@ jobs:
         env:
           RUSTFLAGS: '-C target-cpu=native'
         run: |
+          $TARGET = "x86_64-pc-windows-msvc"
           dist build `
             --tag ${{ github.ref_name }} `
-            --ci github
+            --ci github `
+            --target $TARGET
