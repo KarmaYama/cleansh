@@ -87,27 +87,26 @@ jobs:
         shell: bash
         env:
           RUSTFLAGS: '-C target-cpu=native'
+          # Explicitly set CARGO_BUILD_TARGET to ensure cargo-dist knows the target
+          CARGO_BUILD_TARGET: |
+            ${{ matrix.os == 'macos-latest' && 'x86_64-apple-darwin' || '' }}
+            ${{ matrix.os == 'ubuntu-latest' && 'x86_64-unknown-linux-gnu' || '' }}
         run: |
-          # Determine target triple for Linux vs. macOS
-          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            TARGET="x86_64-apple-darwin"
-          else
-            TARGET="x86_64-unknown-linux-gnu"
-          fi
-
+          # The target is now set via CARGO_BUILD_TARGET env var
           ~/.cargo/bin/dist build \
             --tag ${{ github.ref_name }} \
             --ci github \
-            --target $TARGET
+            --artifacts all
 
       - name: Build & package release (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         env:
           RUSTFLAGS: '-C target-cpu=native'
+          CARGO_BUILD_TARGET: 'x86_64-pc-windows-msvc'
         run: |
-          $TARGET = "x86_64-pc-windows-msvc"
+          # The target is now set via CARGO_BUILD_TARGET env var
           dist build `
             --tag ${{ github.ref_name }} `
             --ci github `
-            --target $TARGET
+            --artifacts all
