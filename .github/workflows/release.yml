@@ -88,11 +88,26 @@ jobs:
         env:
           RUSTFLAGS: '-C target-cpu=native'
         run: |
-          # Rely on cargo-dist's automatic host target detection when --artifacts is not specified.
-          # The --ci github flag should tell it to prepare release artifacts for the current host.
+          # Determine the *actual* target triple for the current runner.
+          # This ensures we provide the correct target to cargo-dist.
+          TARGET=""
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            # Check for ARM64 (M1) or x86_64 (Intel) macOS runners
+            if [[ "$(uname -m)" == "arm64" ]]; then
+              TARGET="aarch64-apple-darwin"
+            else
+              TARGET="x86_64-apple-darwin"
+            fi
+          else # ubuntu-latest
+            TARGET="x86_64-unknown-linux-gnu"
+          fi
+
+          # Explicitly provide --target and --artifacts all, as cargo-dist seems to require it.
           ~/.cargo/bin/dist build \
             --tag ${{ github.ref_name }} \
-            --ci github
+            --ci github \
+            --target "$TARGET" \
+            --artifacts all
 
       - name: Build & package release (Windows)
         if: matrix.os == 'windows-latest'
@@ -100,7 +115,10 @@ jobs:
         env:
           RUSTFLAGS: '-C target-cpu=native'
         run: |
-          # Rely on cargo-dist's automatic host target detection.
+          $TARGET = "x86_64-pc-windows-msvc"
+          # Explicitly provide --target and --artifacts all, as cargo-dist seems to require it.
           dist build `
             --tag ${{ github.ref_name }} `
-            --ci github
+            --ci github `
+            --target $TARGET `
+            --artifacts all
