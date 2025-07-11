@@ -11,21 +11,27 @@ env:
 
 jobs:
   cleansh_build:
-    name: Build & Package for multiple targets
+    name: Build & Package for ${{ matrix.target }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        target: [
-          "x86_64-unknown-linux-gnu",
-          "aarch64-unknown-linux-gnu",
-          "x86_64-apple-darwin",
-          "aarch64-apple-darwin",
-          "x86_64-pc-windows-msvc"
-        ]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
     defaults:
       run:
         working-directory: .
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,14 +44,14 @@ jobs:
           components: clippy, rustfmt
 
       - name: Install system dependencies (macOS)
-        if: runner.os == 'macOS'
+        if: matrix.os == 'macos-latest'
         run: |
           brew update
           brew install openssl@1.1 pkg-config
         shell: bash
 
       - name: Install system dependencies (Linux)
-        if: runner.os == 'Linux'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y pkg-config libssl-dev
@@ -65,39 +71,40 @@ jobs:
 
       - name: Install dist (Unix)
         if: runner.os != 'Windows'
-        run: |
-          cargo install cargo-dist --locked --force
+        run: cargo install cargo-dist --locked --force
         shell: bash
 
       - name: Install dist (Windows)
         if: runner.os == 'Windows'
-        run: |
-          cargo install cargo-dist --locked --force
+        run: cargo install cargo-dist --locked --force
         shell: pwsh
 
       - name: Verify dist binary (Unix)
         if: runner.os != 'Windows'
-        shell: bash
         run: |
           echo "--- Verifying 'dist' binary ---"
           ls -lh ~/.cargo/bin/
           ~/.cargo/bin/dist --version
+        shell: bash
 
       - name: Verify dist binary (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
         run: |
           Write-Host "--- Verifying 'dist' binary ---"
           Get-Command dist -ErrorAction Stop
           dist --version
+        shell: pwsh
 
-      - name: Build & package release for ${{ matrix.target }}
+      - name: Build & package release (Unix)
+        if: runner.os != 'Windows'
+        run: ~/.cargo/bin/dist build --tag ${{ github.ref_name }} --target ${{ matrix.target }} --ci
         shell: bash
-        run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            dist build --tag ${{ github.ref_name }} --target ${{ matrix.target }}
-          else
-            ~/.cargo/bin/dist build --tag ${{ github.ref_name }} --target ${{ matrix.target }}
-          fi
+        env:
+          RUSTFLAGS: '-C target-cpu=native'
+
+      - name: Build & package release (Windows)
+        if: runner.os == 'Windows'
+        run: dist build --tag ${{ github.ref_name }} --target ${{ matrix.target }} --ci
+        shell: pwsh
         env:
           RUSTFLAGS: '-C target-cpu=native'
