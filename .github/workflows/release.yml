@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Add cargo bin to GITHUB_PATH
+      - name: Add cargo bin to PATH
         run: echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
 
       - name: Setup Rust toolchain
@@ -59,53 +59,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install and verify cargo-dist (Unix)
+      - name: Install cargo-dist (Unix)
         if: runner.os != 'Windows'
+        run: |
+          cargo install cargo-dist --locked --force
         shell: bash
-        run: |
-          export PATH="${HOME}/.cargo/bin:$PATH"
-          cargo install cargo-dist --locked --force
-          echo "PATH: $PATH"
-          # Verify the standalone plugin binary
-          if ! command -v dist; then
-            echo "Error: 'dist' binary not found"
-            exit 1
-          fi
-          # Verify cargo subcommand
-          if ! cargo dist --help | grep -q "Usage:"; then
-            echo "Error: 'cargo dist' subcommand unavailable"
-            exit 1
-          fi
 
-      - name: Install and verify cargo-dist (Windows)
+      - name: Install cargo-dist (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
         run: |
-          $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
           cargo install cargo-dist --locked --force
-          # Verify the standalone plugin binary
-          if (-not (Get-Command dist -ErrorAction SilentlyContinue)) {
-            Write-Error "'dist' binary not found"
-            exit 1
-          }
-          # Verify the cargo subcommand
-          if (-not (cargo dist --help | Select-String -Pattern 'Usage:')) {
-            Write-Error "'cargo dist' subcommand unavailable"
-            exit 1
-          }
+        shell: pwsh
 
       - name: Build & package releases (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: |
-          export PATH="${HOME}/.cargo/bin:$PATH"
-          cargo dist --tag ${{ github.ref_name }}
+        run: cargo dist --tag ${{ github.ref_name }}
         env:
           RUSTFLAGS: '-C target-cpu=native'
 
       - name: Build & package releases (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: |
-          $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
-          cargo dist --tag ${{ github.ref_name }}
+        run: cargo dist --tag ${{ github.ref_name }}
