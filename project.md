@@ -1,4 +1,4 @@
-```plaintext
+```Cleansh
 📁 /
 ├── 📁 .github
 │   └── 📁 workflows

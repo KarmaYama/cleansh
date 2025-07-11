@@ -1,0 +1,33 @@
+# dist-manifest.toml
+
+[package]
+name        = "cleansh"
+version     = "0.1.0"
+description = "Sanitize your terminal output. One tool. One purpose."
+license     = "MIT"
+repository  = "https://github.com/KarmaYama/cleansh"
+
+[build]
+# Which profiles to include (default: ["release"])
+profiles = ["release"]
+
+[targets]
+# Explicit build targets (defaults to your host triples)
+triples = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+  "x86_64-pc-windows-msvc",
+]
+
+[archive]
+# Formats per platform (defaults: tar.gz on Unix, zip on Windows)
+formats = ["tar.gz", "zip"]
+
+[assets]
+# Extra files to bundle alongside the binary
+files = [
+  "README.md",
+  "LICENSE",
+]

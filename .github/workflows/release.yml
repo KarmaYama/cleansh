@@ -2,13 +2,11 @@ name: Release
 
 on:
   push:
-    # Build a release whenever a new tag matching v* is pushed.
     tags:
-      - 'v*'
+      - 'v*'  
   workflow_dispatch:
 
 env:
-  # GitHub token for creating releases and uploading assets
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
@@ -25,9 +23,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Add cargo bin to PATH
+      - name: Add cargo bin to GITHUB_PATH
         run: echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
-        uses: actions/checkout@v4
 
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -48,7 +45,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libssl-dev
 
-      - name: Cache Cargo registry & build
+      - name: Cache Cargo registry & build artifacts
         uses: actions/cache@v4
         with:
           path: |
@@ -60,23 +57,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install cargo-dist
-        run: cargo install cargo-dist --locked
-
-      - name: Verify cargo-dist
+      - name: Install and verify cargo-dist
         run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cargo install cargo-dist --locked --force
           echo "PATH: $PATH"
           if ! command -v cargo-dist; then
             echo "Error: cargo-dist not found"
             exit 1
           fi
-          if ! cargo dist --help | grep -q build; then
+          cargo dist --help | grep -q build || {
             echo "Error: 'cargo dist build' unavailable"
             exit 1
-          fi
+          }
 
       - name: Build & package releases
-        run: cargo dist build --tag ${{ github.ref_name }}
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cargo dist build --tag ${{ github.ref_name }}
         env:
           RUSTFLAGS: '-C target-cpu=native'
 
@@ -91,21 +89,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Add cargo bin to GITHUB_PATH
+        run: echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
+
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
 
-      - name: Install cargo-dist
-        run: cargo install cargo-dist --locked
-
-      - name: Verify cargo-dist
+      - name: Install and verify cargo-dist
         run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cargo install cargo-dist --locked --force
           if ! command -v cargo-dist; then
             echo "Error: cargo-dist not found"
             exit 1
           fi
 
       - name: Upload release assets
-        run: cargo dist upload --tag ${{ github.ref_name }}
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cargo dist upload --tag ${{ github.ref_name }}
