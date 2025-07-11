@@ -66,23 +66,31 @@ jobs:
           export PATH="${HOME}/.cargo/bin:$PATH"
           cargo install cargo-dist --locked --force
           echo "PATH: $PATH"
-          if ! command -v cargo-dist; then
-            echo "Error: cargo-dist not found"
+          # Verify the standalone plugin binary
+          if ! command -v dist; then
+            echo "Error: 'dist' binary not found"
             exit 1
           fi
-          cargo dist --help | grep -q build || {
-            echo "Error: 'cargo dist build' unavailable"
+          # Verify cargo subcommand
+          if ! cargo dist --help | grep -q "Usage:"; then
+            echo "Error: 'cargo dist' subcommand unavailable"
             exit 1
-          }
+          fi
 
       - name: Install and verify cargo-dist (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $env:Path = "$env:USERPROFILE\\.cargo\\bin;" + $env:Path
+          $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
           cargo install cargo-dist --locked --force
-          if (-not (Get-Command cargo-dist -ErrorAction SilentlyContinue)) {
-            Write-Error 'cargo-dist not found'
+          # Verify the standalone plugin binary
+          if (-not (Get-Command dist -ErrorAction SilentlyContinue)) {
+            Write-Error "'dist' binary not found"
+            exit 1
+          }
+          # Verify the cargo subcommand
+          if (-not (cargo dist --help | Select-String -Pattern 'Usage:')) {
+            Write-Error "'cargo dist' subcommand unavailable"
             exit 1
           }
 
@@ -91,7 +99,7 @@ jobs:
         shell: bash
         run: |
           export PATH="${HOME}/.cargo/bin:$PATH"
-          cargo dist build --tag ${{ github.ref_name }}
+          cargo dist --tag ${{ github.ref_name }}
         env:
           RUSTFLAGS: '-C target-cpu=native'
 
@@ -99,61 +107,5 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $env:Path = "$env:USERPROFILE\\.cargo\\bin;" + $env:Path
-          cargo dist build --tag ${{ github.ref_name }}
-
-  cleansh_upload:
-    name: Upload Release Assets
-    runs-on: ubuntu-latest
-    needs: cleansh_build
-    defaults:
-      run:
-        working-directory: .
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Add cargo bin to GITHUB_PATH
-        run: echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Setup Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      - name: Install and verify cargo-dist (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          export PATH="${HOME}/.cargo/bin:$PATH"
-          cargo install cargo-dist --locked --force
-          if ! command -v cargo-dist; then
-            echo "Error: cargo-dist not found"
-            exit 1
-          fi
-
-      - name: Install and verify cargo-dist (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $env:Path = "$env:USERPROFILE\\.cargo\\bin;" + $env:Path
-          cargo install cargo-dist --locked --force
-          if (-not (Get-Command cargo-dist -ErrorAction SilentlyContinue)) {
-            Write-Error 'cargo-dist not found'
-            exit 1
-          }
-
-      - name: Upload release assets (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          export PATH="${HOME}/.cargo/bin:$PATH"
-          cargo dist upload --tag ${{ github.ref_name }}
-
-      - name: Upload release assets (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $env:Path = "$env:USERPROFILE\\.cargo\\bin;" + $env:Path
-          cargo dist upload --tag ${{ github.ref_name }}
+          $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
+          cargo dist --tag ${{ github.ref_name }}
