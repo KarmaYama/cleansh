@@ -11,7 +11,7 @@ env:
 
 jobs:
   plan:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     outputs:
       manifest: ${{ steps.plan-step.outputs.manifest }}
       tag-flag: ${{ steps.plan-step.outputs.tag-flag }}
@@ -52,7 +52,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.plan.outputs.manifest).ci.github.artifacts_matrix }}
-    runs-on: ${{ matrix.runner }}
+    # Map any Ubuntu runner to ubuntu-latest; leave others as-is
+    runs-on: ${{ matrix.runner == 'ubuntu-20.04' && 'ubuntu-latest' || matrix.runner }}
     container: ${{ matrix.container.image || null }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,7 +97,7 @@ jobs:
 
   build-global:
     needs: [plan, build-local]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST: target/distrib/global-dist-manifest.json
@@ -137,7 +138,7 @@ jobs:
 
   host:
     needs: [plan, build-local, build-global]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TAG_FLAG: ${{ needs.plan.outputs.tag-flag }}
@@ -178,7 +179,7 @@ jobs:
 
   announce:
     needs: host
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
