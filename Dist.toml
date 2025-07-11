@@ -26,3 +26,6 @@ prerelease = false
 
 [dist]
 build-command = "cargo build --release"
+
+[ci.github]
+runner = "ubuntu-latest"
