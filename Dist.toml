@@ -6,7 +6,13 @@ license     = "MIT"
 repository  = "https://github.com/KarmaYama/cleansh"
 
 [build]
-profiles = ["release"]
+targets  = [
+  "x86_64-unknown-linux-gnu",   
+  "x86_64-pc-windows-msvc",     
+  "x86_64-apple-darwin",        
+  "aarch64-apple-darwin"        
+]
+profiles   = ["release"]
 signatures = false
 changelog  = false
 
@@ -21,6 +27,6 @@ files = [
 ]
 
 [release]
-publish = true
-draft = false
+publish    = true
+draft      = false
 prerelease = false
