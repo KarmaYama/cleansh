@@ -87,11 +87,11 @@ jobs:
       - name: Build & package releases (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: ~/.cargo/bin/dist --tag ${{ github.ref_name }}
+        run: ~/.cargo/bin/dist build --tag ${{ github.ref_name }}
         env:
           RUSTFLAGS: '-C target-cpu=native'
 
       - name: Build & package releases (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: dist --tag ${{ github.ref_name }}
+        run: dist build --tag ${{ github.ref_name }}
