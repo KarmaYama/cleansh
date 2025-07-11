@@ -30,3 +30,5 @@ Thumbs.db
 # Backup files (common for editors)
 *~
 .#*
+
+/website/node_modules/

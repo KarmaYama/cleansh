@@ -1,0 +1,29 @@
+/* Custom styles for enterprise feel and animations */
+body {
+  font-family: 'Inter', sans-serif;
+}
+.font-mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.fade-in.appear {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Simple diff highlighting for the demo */
+.diff-added {
+  color: #6EE7B7; /* Green for added content */
+}
+.diff-removed {
+  color: #F87171; /* Red for removed content */
+  text-decoration: line-through;
+}
+/* Adjusting placeholder text color for dark mode inputs */
+input::placeholder, textarea::placeholder {
+  color: #6B7280; /* gray-500 */
+  opacity: 1; /* Firefox default is less */
+}

@@ -216,11 +216,56 @@ keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
 | Config format   | .env + optional YAML               |
 | CLI parsing     | `clap` with derives                |
 | Regex engine    | `regex` crate                      |
-| Clipboard       | `copypasta`                        |
+| Clipboard       | `arboard`                        |
 | Logging         | `log` + `env_logger`               |
 | Error handling  | `anyhow` + `thiserror`             |
 | Install method  | `cargo-dist` + curl script or `cargo install` |
 | License         | MIT                                |
 
 ```
-```
+
+future updates
+
+
+---
+
+## Phased Development: Plugin System + New File Type
+
+Let's break down how we can build this out logically, tackling the core challenges step by step. This keeps the project manageable while aiming for that powerful long-term vision:
+
+### Phase 1: Core Plugin Infrastructure & Rule Extension
+
+This phase focuses on establishing the foundation for plugins and expanding the types of redaction you can perform. This avoids the complexity of file parsing initially, letting you get the plugin mechanism right.
+
+* **1A. Design the Plugin Interface:** Define how plugins will interact with `cleansh`. This means deciding:
+    * **What data flows in and out of a plugin?** (e.g., text content, redaction rules, metadata).
+    * **How are plugins loaded?** (e.g., dynamically loaded libraries, separate executables communicating via IPC). Rust has excellent support for dynamic linking, which could be a strong candidate.
+    * **What capabilities can a plugin have?** (e.g., adding/modifying regex rules, custom redaction logic, specific output formatting).
+* **1B. Implement Basic Rule Plugins:** Create a simple example plugin that just adds a new custom redaction rule (perhaps using the existing `regex` crate or a slightly more complex Rust-native regex capability). This validates your plugin loading and rule merging mechanisms.
+* **1C. Develop Initial "Sanitized Document Format" (SDF) Definition:**
+    * **Start Simple:** Begin by defining a **text-based, structured format** (like a YAML or JSON schema) that `cleansh` can output.
+    * **Core Elements:** At a minimum, it should include the **sanitized content** and a **redaction summary/log** (what was redacted, where).
+    * **Future-Proofing:** Think about placeholders for future metadata (original filename, timestamps, sanitization parameters).
+    * **`cleansh`'s New Output Mode:** Modify `cleansh` to output this SDF instead of just plain text when a specific flag is used (e.g., `--format sdf`).
+
+### Phase 2: Input/Output Transformation Plugins (Document Handling)
+
+Once your core plugin system is solid and `cleansh` can output your new SDF, you can introduce plugins that handle different document types.
+
+* **2A. Input Plugin Interface for Document Parsing:** Define an interface for plugins that take a specific document type (e.g., PDF file path) and output **plain text** that `cleansh` can then sanitize. This decouples the parsing logic from `cleansh`'s core.
+* **2B. Implement a "PDF Text Extraction" Plugin:** This would be your first big challenge here. The plugin would use a Rust PDF parsing library (like `pdf-extract` or bindings to `poppler`/`pdfium`) to extract raw text from a PDF. It would then output this text, perhaps along with some basic structural markers, in a format `cleansh` expects.
+* **2C. Output Plugin Interface for Document Reconstruction/Transformation:** Define an interface for plugins that take `cleansh`'s **SDF output** and transform it into another format. This could be:
+    * Generating a *new*, redacted PDF from the SDF.
+    * Converting the SDF into a sanitized Word document.
+    * Exporting to a specialized database format.
+* **2D. Implement an "SDF to Redacted PDF" Plugin (Optional, Advanced):** This would be the most complex, as it involves not just text extraction but potentially re-rendering a PDF with redactions. A simpler initial approach might be an "SDF to Redacted Markdown" or "SDF to Redacted TXT with Markers" plugin.
+
+### Phase 3: Advanced Plugin Capabilities & External Regex Engines
+
+With the foundation in place, you can explore more sophisticated integrations.
+
+* **3A. Custom Redaction Logic Plugins:** Allow plugins to provide entirely custom sanitization logic that goes beyond simple regex (e.g., context-aware redaction, AI-driven anonymization).
+* **3B. External Regex Engine Plugin:** If a specific use case truly demands it, design a plugin that allows `cleansh` to offload complex pattern matching to an external, more specialized regex engine (e.g., one optimized for very large inputs, or specific pattern types). This keeps `cleansh`'s core simple, as you desired.
+
+---
+

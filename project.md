@@ -1,5 +1,8 @@
-```Cleansh
+```plaintext
 📁 /
+├── 📁 .github
+│   └── 📁 workflows
+│       └── 📄 release.yml
 ├── 📁 config
 │   └── 📄 default_rules.yaml
 ├── 📁 src
@@ -16,9 +19,11 @@
 │   ├── 📄 config.rs
 │   ├── 📄 logger.rs
 │   └── 📄 main.rs
-├── 📁 target
 ├── 📁 tests
 │   └── 📄 cleansh_integration.rs
+├── 📁 website
+│   ├── 📄 index.html
+│   └── 📄 styles.css
 ├── 📄 .env
 ├── 📄 .gitignore
 ├── 📄 Cargo.lock
