@@ -23,11 +23,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Removed explicit `Add cargo bin to PATH` here.
-      # actions-rs/toolchain generally handles this.
-      # If issues persist, consider adding it *after* toolchain setup
-      # but before cargo install, though it shouldn't be strictly necessary.
-
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -65,62 +60,38 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cargo install cargo-dist --locked --force
-          # Explicitly re-add cargo bin to PATH after install and source bashrc/profile if they exist
-          # This is a belt-and-suspenders approach to ensure shell re-evaluates PATH
-          # while the GITHUB_PATH mechanism should technically handle it for future steps.
-          # Forcing a reload here might bridge a gap if Cargo's internal caching is an issue.
-          echo "${HOME}/.cargo/bin" >> $GITHUB_PATH # Ensure it's there persistently
-          # Try to force shell to re-evaluate (often not needed for GITHUB_PATH but can help with caching)
-          [ -f ~/.bashrc ] && source ~/.bashrc || true
-          [ -f ~/.profile ] && source ~/.profile || true
         shell: bash
 
       - name: Install cargo-dist (Windows)
         if: runner.os == 'Windows'
         run: |
           cargo install cargo-dist --locked --force
-          # For PowerShell, appending to GITHUB_PATH is sufficient for persistence.
-          # No direct equivalent of sourcing profile for immediate effect needed like bash,
-          # as environment changes tend to be more immediate within a pwsh step.
-          echo "${HOME}\.cargo\bin" >> $GITHUB_PATH
         shell: pwsh
 
-      # --- DEBUGGING STEPS (KEEP THESE!) ---
-      - name: Debug PATH and cargo-dist (Unix)
+      - name: Verify cargo-dist installation (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          echo "--- Current PATH (Unix) ---"
-          echo $PATH
-          echo "--- Locate 'dist' binary (Unix) ---"
-          which dist || echo "'dist' binary not found in PATH"
-          echo "--- List Cargo subcommands (Unix) ---"
-          cargo --list
-          echo "--- Attempt to run cargo dist help (Unix) ---"
-          cargo dist --help || echo "Failed to run 'cargo dist --help'"
+          echo "--- Verifying cargo-dist binary ---"
+          ls -l ~/.cargo/bin/
+          ~/.cargo/bin/cargo-dist --version
 
-      - name: Debug PATH and cargo-dist (Windows)
+      - name: Verify cargo-dist installation (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Write-Host "--- Current PATH (Windows) ---"
-          Get-Item Env:Path
-          Write-Host "--- Locate 'dist' binary (Windows) ---"
-          Get-Command dist -ErrorAction SilentlyContinue | ForEach-Object { $_.Path } || Write-Host "'dist' binary not found in PATH"
-          Write-Host "--- List Cargo subcommands (Windows) ---"
-          cargo --list
-          Write-Host "--- Attempt to run cargo dist help (Windows) ---"
-          cargo dist --help || Write-Host "Failed to run 'cargo dist --help'"
-      # --- DEBUGGING STEPS END HERE ---
+          Write-Host "--- Verifying cargo-dist binary ---"
+          Get-Command cargo-dist -ErrorAction Stop
+          cargo-dist --version
 
       - name: Build & package releases (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: cargo dist --tag ${{ github.ref_name }}
+        run: ~/.cargo/bin/cargo-dist --tag ${{ github.ref_name }}
         env:
           RUSTFLAGS: '-C target-cpu=native'
 
       - name: Build & package releases (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cargo dist --tag ${{ github.ref_name }}
+        run: cargo-dist --tag ${{ github.ref_name }}
