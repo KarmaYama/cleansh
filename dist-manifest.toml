@@ -1,5 +1,3 @@
-# dist-manifest.toml
-
 [package]
 name        = "cleansh"
 version     = "0.1.0"
@@ -8,29 +6,15 @@ license     = "MIT"
 repository  = "https://github.com/KarmaYama/cleansh"
 
 [build]
-# Use the optimized release profile
 profiles = ["release"]
-# Optionally sign artifacts or attach changelogs (disabled here)
 signatures = false
 changelog  = false
 
-[targets]
-triples = [
-  "x86_64-unknown-linux-gnu",
-  "aarch64-unknown-linux-gnu",
-  "x86_64-apple-darwin",
-  "aarch64-apple-darwin",
-  "x86_64-pc-windows-msvc",
-]
-
 [archive]
-# Format all builds into both .tar.gz and .zip for cross-platform compatibility
 formats = ["tar.gz", "zip"]
-# Optionally, set this to true if you want each format built for every platform
 all-platforms = true
 
 [assets]
-# Add the CLI binary automatically
 include-binaries = true
 files = [
   "README.md",
@@ -38,8 +22,6 @@ files = [
 ]
 
 [release]
-# Whether to publish to GitHub Releases by default
 publish = true
-# Optional: Include GitHub Release draft setting
 draft = false
 prerelease = false
