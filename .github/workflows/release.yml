@@ -25,6 +25,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Add cargo bin to PATH
+        run: echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
+        uses: actions/checkout@v4
+
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
