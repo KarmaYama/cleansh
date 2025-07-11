@@ -8,11 +8,13 @@ license     = "MIT"
 repository  = "https://github.com/KarmaYama/cleansh"
 
 [build]
-# Which profiles to include (default: ["release"])
+# Use the optimized release profile
 profiles = ["release"]
+# Optionally sign artifacts or attach changelogs (disabled here)
+signatures = false
+changelog  = false
 
 [targets]
-# Explicit build targets (defaults to your host triples)
 triples = [
   "x86_64-unknown-linux-gnu",
   "aarch64-unknown-linux-gnu",
@@ -22,12 +24,22 @@ triples = [
 ]
 
 [archive]
-# Formats per platform (defaults: tar.gz on Unix, zip on Windows)
+# Format all builds into both .tar.gz and .zip for cross-platform compatibility
 formats = ["tar.gz", "zip"]
+# Optionally, set this to true if you want each format built for every platform
+all-platforms = true
 
 [assets]
-# Extra files to bundle alongside the binary
+# Add the CLI binary automatically
+include-binaries = true
 files = [
   "README.md",
   "LICENSE",
 ]
+
+[release]
+# Whether to publish to GitHub Releases by default
+publish = true
+# Optional: Include GitHub Release draft setting
+draft = false
+prerelease = false
