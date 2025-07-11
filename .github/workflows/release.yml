@@ -56,42 +56,42 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install cargo-dist (Unix)
+      - name: Install dist (Unix)
         if: runner.os != 'Windows'
         run: |
           cargo install cargo-dist --locked --force
         shell: bash
 
-      - name: Install cargo-dist (Windows)
+      - name: Install dist (Windows)
         if: runner.os == 'Windows'
         run: |
           cargo install cargo-dist --locked --force
         shell: pwsh
 
-      - name: Verify cargo-dist installation (Unix)
+      - name: Verify dist binary (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          echo "--- Verifying cargo-dist binary ---"
-          ls -l ~/.cargo/bin/
-          ~/.cargo/bin/cargo-dist --version
+          echo "--- Verifying 'dist' binary ---"
+          ls -lh ~/.cargo/bin/
+          ~/.cargo/bin/dist --version
 
-      - name: Verify cargo-dist installation (Windows)
+      - name: Verify dist binary (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Write-Host "--- Verifying cargo-dist binary ---"
-          Get-Command cargo-dist -ErrorAction Stop
-          cargo-dist --version
+          Write-Host "--- Verifying 'dist' binary ---"
+          Get-Command dist -ErrorAction Stop
+          dist --version
 
       - name: Build & package releases (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: ~/.cargo/bin/cargo-dist --tag ${{ github.ref_name }}
+        run: ~/.cargo/bin/dist --tag ${{ github.ref_name }}
         env:
           RUSTFLAGS: '-C target-cpu=native'
 
       - name: Build & package releases (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cargo-dist --tag ${{ github.ref_name }}
+        run: dist --tag ${{ github.ref_name }}
