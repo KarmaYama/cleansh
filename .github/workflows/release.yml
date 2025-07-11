@@ -97,14 +97,14 @@ jobs:
 
       - name: Build & package release (Unix)
         if: runner.os != 'Windows'
-        run: ~/.cargo/bin/dist build --tag ${{ github.ref_name }} --target ${{ matrix.target }} --ci
+        run: ~/.cargo/bin/dist build --tag ${{ github.ref_name }} --target ${{ matrix.target }} --ci github
         shell: bash
         env:
           RUSTFLAGS: '-C target-cpu=native'
 
       - name: Build & package release (Windows)
         if: runner.os == 'Windows'
-        run: dist build --tag ${{ github.ref_name }} --target ${{ matrix.target }} --ci
+        run: dist build --tag ${{ github.ref_name }} --target ${{ matrix.target }} --ci github
         shell: pwsh
         env:
           RUSTFLAGS: '-C target-cpu=native'
