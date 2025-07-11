@@ -1,4 +1,5 @@
 # 🧭 Cleansh – Sanitize Your Terminal Output, Securely.
+[![CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml)
 
 > A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in development so expect bugs and please do report them.
 
@@ -182,6 +183,26 @@ rules:
 > As confirmed by our integration tests, custom rules can selectively override default rules, providing granular control over the sanitization process.
 
 -----
+
+## 📋 Clipboard Support
+
+When using the `-c` / `--clipboard` flag, `cleansh` will copy sanitized output to your system clipboard.
+
+### ✔️ Supported by Default:
+- **macOS**
+- **Windows**
+
+### ⚠️ Linux Users:
+Clipboard support requires one of the following utilities to be installed:
+
+- `xclip`
+- `xsel`
+- `wl-clipboard`
+
+Without these, clipboard functionality may fail silently or print a warning.
+
+> If you're running `cleansh` in a headless server or container, clipboard features will be disabled automatically.
+
 
 ## 4\. 🧠 Sanitizer Engine Design (in `src/tools/sanitize_shell.rs`)
 

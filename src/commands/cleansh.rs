@@ -4,7 +4,7 @@ use crate::config;
 use crate::tools::sanitize_shell;
 use crate::ui::output_format;
 use crate::ui::theme::{ThemeEntry, ThemeStyle};
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use std::fs;
 use std::io; // `Write` is no longer directly used by this module's functions
 use std::path::PathBuf;
@@ -25,7 +25,6 @@ pub fn run_cleansh(
     // 1. Load and merge rules
     let default_cfg = config::load_default_rules().context("Loading default rules")?;
     let merged_cfg = if let Some(p) = config_path {
-        // Use print_info_message for user-facing feedback when custom config is loaded
         output_format::print_info_message(
             &mut io::stdout(),
             &format!("Loading custom rules from: {}", p.display()),
@@ -41,7 +40,7 @@ pub fn run_cleansh(
     // 2. Sanitize
     let (sanitized, summary) = sanitize_shell::sanitize_content(input_content, &compiled);
 
-    // 3. Print summary or info (No redactions applied message is handled inside print_redaction_summary)
+    // 3. Print summary
     output_format::print_redaction_summary(&mut io::stdout(), &summary, theme_map);
 
     // 4. Diff
@@ -53,13 +52,34 @@ pub fn run_cleansh(
     if clipboard_enabled {
         match Clipboard::new() {
             Ok(mut cb) => {
-                cb.set_text(sanitized.clone()).ok(); // .ok() converts Result to Option, discarding the error for minor issues
-                output_format::print_success_message(&mut io::stdout(), "Copied to clipboard.", theme_map);
+                match cb.set_text(sanitized.clone()) {
+                    Ok(_) => {
+                        output_format::print_success_message(
+                            &mut io::stdout(),
+                            "✅ Copied to clipboard.",
+                            theme_map,
+                        );
+                    }
+                    Err(e) => {
+                        error!("Clipboard set_text error: {}", e);
+                        warn!("Failed to copy to clipboard: {}", e);
+                        output_format::print_error_message(
+                            &mut io::stderr(),
+                            "⚠️ Failed to copy to clipboard. \
+                             On Linux, ensure `xclip`, `xsel`, or `wl-clipboard` is installed.",
+                            theme_map,
+                        );
+                    }
+                }
             }
             Err(e) => {
-                error!("Clipboard error: {}", e);
-                // Use print_error_message for user-facing error
-                output_format::print_error_message(&mut io::stderr(), "Failed to access clipboard. Please ensure you have xclip/xsel installed (Linux) or granted permissions.", theme_map);
+                error!("Clipboard initialization error: {}", e);
+                warn!("Clipboard backend unavailable: {}", e);
+                output_format::print_error_message(
+                    &mut io::stderr(),
+                    "⚠️ Clipboard is unavailable on this system.",
+                    theme_map,
+                );
             }
         }
     }
@@ -67,10 +87,13 @@ pub fn run_cleansh(
     // 6. File or stdout
     if let Some(path) = output_path {
         fs::write(&path, &sanitized).context("Writing output file")?;
-        output_format::print_success_message(&mut io::stdout(), "Written to file.", theme_map);
+        output_format::print_success_message(
+            &mut io::stdout(),
+            "✅ Written to file.",
+            theme_map,
+        );
     } else if !diff_enabled {
         // Only print content to stdout if diff is not enabled
-        // as diff_enabled already prints the modified content within its view.
         output_format::print_content(&mut io::stdout(), &sanitized);
     }
 

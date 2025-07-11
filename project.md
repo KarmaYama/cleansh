@@ -2,7 +2,8 @@
 📁 /
 ├── 📁 .github
 │   └── 📁 workflows
-│       └── 📄 release.yml
+│       ├── 📄 release.yml
+│       └── 📄 rust.yml
 ├── 📁 config
 │   └── 📄 default_rules.yaml
 ├── 📁 src
@@ -22,8 +23,16 @@
 ├── 📁 tests
 │   └── 📄 cleansh_integration.rs
 ├── 📁 website
+│   ├── 📁 node_modules
+│   ├── 📁 src
+│   │   ├── 📄 custom.css
+│   │   └── 📄 input.css
 │   ├── 📄 index.html
-│   └── 📄 styles.css
+│   ├── 📄 package-lock.json
+│   ├── 📄 package.json
+│   ├── 📄 postcss.config.js
+│   ├── 📄 styles.css
+│   └── 📄 tailwind.config.js
 ├── 📄 .env
 ├── 📄 .gitignore
 ├── 📄 Cargo.lock
