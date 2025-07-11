@@ -15,7 +15,9 @@ use strip_ansi_escapes::strip as strip_ansi_escapes_fn;
 // Helper function to run the cleansh command with given input and arguments
 fn run_cleansh_command(input: &str, args: &[&str]) -> Command {
     let mut cmd = Command::cargo_bin("cleansh").unwrap();
-    cmd.arg("--debug"); // Keep debug argument for more verbose output if needed
+    // Removing --debug for cleaner stdout in tests, unless strictly needed for cleansh function
+    // For integration tests, it's often better to test release-like behavior.
+    // cmd.arg("--debug"); 
     cmd.args(args); // Set arguments BEFORE writing to stdin
     cmd.write_stdin(input.as_bytes()).unwrap();
     cmd
@@ -66,8 +68,8 @@ fn test_basic_sanitization() -> Result<()> {
 #[test]
 fn test_clipboard_output() -> Result<()> {
     let input = "Secret JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-    // Adjust expected_sanitized_content to include clipboard message and GENERIC_TOKEN_REDACTED
-    let expected_sanitized_content = "✅ Copied to clipboard.\nSecret [GENERIC_TOKEN_REDACTED]: [JWT_REDACTED]";
+    // This is the actual sanitized content that should be printed to stdout after the clipboard confirmation message.
+    let expected_sanitized_content_on_stdout = "Secret [GENERIC_TOKEN_REDACTED]: [JWT_REDACTED]"; 
 
     let output = run_cleansh_command(input, &["-c"])
         .assert()
@@ -78,22 +80,30 @@ fn test_clipboard_output() -> Result<()> {
 
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
 
-    // The info message about reading from stdin is now part of the output
-    assert!(stripped.contains("Reading input from stdin...\n"));
-    assert!(stripped.contains("--- Redaction Summary ---"));
-    assert!(stripped.contains("jwt_token (1 occurrences)")); // Still expect JWT to be counted
-    assert!(stripped.contains("-------------------------\n\n")); // Assert the ending sequence of the summary
+    assert!(stripped.contains("Reading input from stdin...\n"), "Output missing 'Reading input' message");
+    assert!(stripped.contains("--- Redaction Summary ---"), "Output missing Redaction Summary header");
+    assert!(stripped.contains("jwt_token (1 occurrences)"), "Summary missing JWT occurrence");
+    assert!(stripped.contains("-------------------------\n\n"), "Output missing summary footer");
+    assert!(stripped.contains("✅ Copied to clipboard."), "Output missing 'Copied to clipboard' message");
 
-    // Extract content after summary for comparison
-    let summary_end_marker = "-------------------------\n\n";
-    let summary_end_idx = stripped.find(summary_end_marker)
-                                  .map(|idx| idx + summary_end_marker.len())
-                                  .unwrap_or_else(|| {
-                                      panic!("Summary end marker not found in output: '{}'", stripped);
-                                  });
-    let actual_sanitized_part = &stripped[summary_end_idx..];
+    // Find the end of the clipboard message including its potential newline
+    let clipboard_msg_marker = "✅ Copied to clipboard.";
+    // Assuming the clipboard message is followed by a newline, and then the content starts.
+    // We try to find the full marker with a newline first for robustness.
+    let clipboard_msg_with_newline_marker = format!("{}\n", clipboard_msg_marker);
 
-    assert_eq!(actual_sanitized_part.trim_end(), expected_sanitized_content.trim_end());
+    let content_start_idx = if let Some(idx) = stripped.find(&clipboard_msg_with_newline_marker) {
+        idx + clipboard_msg_with_newline_marker.len()
+    } else if let Some(idx) = stripped.find(clipboard_msg_marker) {
+        // Fallback: if no newline, content starts directly after the marker.
+        idx + clipboard_msg_marker.len()
+    } else {
+        panic!("Neither clipboard message marker nor with newline found in output: '{}'", stripped);
+    };
+
+    let actual_sanitized_part = &stripped[content_start_idx..];
+    
+    assert_eq!(actual_sanitized_part.trim_end(), expected_sanitized_content_on_stdout.trim_end(), "Sanitized content printed to stdout does not match expected.");
     Ok(())
 }
 
