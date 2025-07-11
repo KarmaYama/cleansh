@@ -12,7 +12,6 @@ changelog  = false
 
 [archive]
 formats = ["tar.gz", "zip"]
-all-platforms = true
 
 [assets]
 include-binaries = true

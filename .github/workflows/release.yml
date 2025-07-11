@@ -87,15 +87,30 @@ jobs:
         shell: bash
         env:
           RUSTFLAGS: '-C target-cpu=native'
-          # Explicitly set CARGO_BUILD_TARGET to ensure cargo-dist knows the target
           CARGO_BUILD_TARGET: |
             ${{ matrix.os == 'macos-latest' && 'x86_64-apple-darwin' || '' }}
             ${{ matrix.os == 'ubuntu-latest' && 'x86_64-unknown-linux-gnu' || '' }}
+            # Note: For macOS, the 'aarch64-apple-darwin' suggestion from the error
+            # might mean the runner is ARM. We'll handle this in the script.
         run: |
-          # The target is now set via CARGO_BUILD_TARGET env var
+          # Determine the *actual* target triple for the current runner.
+          # We're making this more robust by detecting the architecture.
+          TARGET=""
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            if [[ "$(uname -m)" == "arm64" ]]; then
+              TARGET="aarch64-apple-darwin"
+            else
+              TARGET="x86_64-apple-darwin"
+            fi
+          else # ubuntu-latest
+            TARGET="x86_64-unknown-linux-gnu"
+          fi
+
+          # Use the determined TARGET with the --target flag, as cargo-dist seems to prefer it.
           ~/.cargo/bin/dist build \
             --tag ${{ github.ref_name }} \
             --ci github \
+            --target "$TARGET" \
             --artifacts all
 
       - name: Build & package release (Windows)
@@ -105,8 +120,9 @@ jobs:
           RUSTFLAGS: '-C target-cpu=native'
           CARGO_BUILD_TARGET: 'x86_64-pc-windows-msvc'
         run: |
-          # The target is now set via CARGO_BUILD_TARGET env var
+          $TARGET = "x86_64-pc-windows-msvc"
           dist build `
             --tag ${{ github.ref_name }} `
             --ci github `
+            --target $TARGET `
             --artifacts all
