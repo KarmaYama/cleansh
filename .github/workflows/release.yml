@@ -1,5 +1,6 @@
 # .github/workflows/release.yml
 name: Release
+
 on:
   push:
     # Build a release whenever a new tag is pushed.
@@ -25,10 +26,15 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
+      # Ensure ~/.cargo/bin is explicitly added to PATH
+      - name: Set up PATH for cargo binaries
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - uses: actions/cache@v4
         with:
+          # Temporarily remove ~/.cargo/bin/ from cache path to force a fresh cargo-dist install.
+          # If this solves the issue, you can consider re-adding it for faster runs,
+          # but for now, let's prioritize a reliable install.
           path: |
-            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
@@ -40,15 +46,14 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Install cargo-dist
         run: cargo install cargo-dist --locked
-      - name: Run cargo dist
-        # The `dist` command will build your binaries for the current platform
-        # and prepare them for uploading.
-        # `--tag v${{ github.ref_name }}` ensures the assets are linked to the specific tag.
-        run: cargo dist dist --tag v${{ github.ref_name }}
-          # The `dist-build-install` command is an alternative if you want to
-          # test the installation locally in the CI environment (e.g. for `cargo install`).
-          # For a basic release, `dist` is sufficient.
-          # For more advanced scenarios, see cargo-dist's documentation.
+      - name: Verify cargo-dist installation
+        run: |
+          echo "Current PATH: $PATH"
+          which cargo-dist || { echo "Error: cargo-dist not found in PATH after installation"; exit 1; }
+          cargo --list | grep " dist" || { echo "Error: 'cargo dist' not listed as a subcommand"; exit 1; }
+      - name: Run cargo dist build
+        # ${{ github.ref_name }} directly gives the tag name (e.g., "v0.1.4")
+        run: cargo dist dist --tag ${{ github.ref_name }}
 
   # The cargo-dist command to upload the release assets to GitHub.
   cleansh_upload:
@@ -56,10 +61,13 @@ jobs:
     needs: [cleansh_build] # Ensure builds are complete before uploading
     steps:
       - uses: actions/checkout@v4
+      # Ensure ~/.cargo/bin is explicitly added to PATH
+      - name: Set up PATH for cargo binaries
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - uses: actions/cache@v4
         with:
+          # Same cache path adjustment as in cleansh_build
           path: |
-            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
@@ -71,9 +79,11 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Install cargo-dist
         run: cargo install cargo-dist --locked
+      - name: Verify cargo-dist installation for upload
+        run: |
+          echo "Current PATH: $PATH"
+          which cargo-dist || { echo "Error: cargo-dist not found in PATH after installation"; exit 1; }
+          cargo --list | grep " dist" || { echo "Error: 'cargo dist' not listed as a subcommand"; exit 1; }
       - name: Run cargo dist upload
-        # The `upload` command takes the assets built in the `cleansh_build` job
-        # and uploads them to the GitHub Release associated with the pushed tag.
-        run: cargo dist upload --tag v${{ github.ref_name }}
-          # The `dist-upload-check` command is an alternative if you want to
-          # perform a dry-run check without actually uploading.
+        # ${{ github.ref_name }} directly gives the tag name (e.g., "v0.1.4")
+        run: cargo dist upload --tag ${{ github.ref_name }}
