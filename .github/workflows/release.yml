@@ -23,8 +23,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Add cargo bin to PATH
-        run: echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
+      # Removed explicit `Add cargo bin to PATH` here.
+      # actions-rs/toolchain generally handles this.
+      # If issues persist, consider adding it *after* toolchain setup
+      # but before cargo install, though it shouldn't be strictly necessary.
 
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -63,15 +65,27 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cargo install cargo-dist --locked --force
+          # Explicitly re-add cargo bin to PATH after install and source bashrc/profile if they exist
+          # This is a belt-and-suspenders approach to ensure shell re-evaluates PATH
+          # while the GITHUB_PATH mechanism should technically handle it for future steps.
+          # Forcing a reload here might bridge a gap if Cargo's internal caching is an issue.
+          echo "${HOME}/.cargo/bin" >> $GITHUB_PATH # Ensure it's there persistently
+          # Try to force shell to re-evaluate (often not needed for GITHUB_PATH but can help with caching)
+          [ -f ~/.bashrc ] && source ~/.bashrc || true
+          [ -f ~/.profile ] && source ~/.profile || true
         shell: bash
 
       - name: Install cargo-dist (Windows)
         if: runner.os == 'Windows'
         run: |
           cargo install cargo-dist --locked --force
+          # For PowerShell, appending to GITHUB_PATH is sufficient for persistence.
+          # No direct equivalent of sourcing profile for immediate effect needed like bash,
+          # as environment changes tend to be more immediate within a pwsh step.
+          echo "${HOME}\.cargo\bin" >> $GITHUB_PATH
         shell: pwsh
 
-      # --- DEBUGGING STEPS START HERE ---
+      # --- DEBUGGING STEPS (KEEP THESE!) ---
       - name: Debug PATH and cargo-dist (Unix)
         if: runner.os != 'Windows'
         shell: bash
