@@ -1,16 +1,9 @@
-[package]
-name        = "cleansh"
-version     = "0.1.0"
-description = "Sanitize your terminal output. One tool. One purpose."
-license     = "MIT"
-repository  = "https://github.com/KarmaYama/cleansh"
-
 [build]
 targets  = [
-  "x86_64-unknown-linux-gnu",   
-  "x86_64-pc-windows-msvc",     
-  "x86_64-apple-darwin",        
-  "aarch64-apple-darwin"        
+  "x86_64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin"
 ]
 profiles   = ["release"]
 signatures = false
@@ -30,3 +23,6 @@ files = [
 publish    = true
 draft      = false
 prerelease = false
+
+[dist]
+build-command = "cargo build --release"

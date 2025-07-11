@@ -1,4 +1,3 @@
-#Cargo.toml
 
 [package]
 name = "cleansh"
@@ -7,9 +6,17 @@ edition = "2024"
 description = "Sanitize your terminal output. One tool. One purpose."
 license = "MIT"
 repository = "https://github.com/KarmaYama/cleansh"
+homepage = "https://github.com/KarmaYama/cleansh"
+authors = ["Cleansh Technologies LLC"]
 readme = "README.md"
 categories = ["command-line-utilities", "security", "productivity"]
 keywords = ["cli", "security", "redact", "sanitize", "clipboard", "privacy"]
+
+[package.metadata.wix]
+upgrade-guid = "F47C98E6-B908-4CB3-A38B-0EFD5F3DE62D"
+path-guid = "DB8DAC94-9423-4D0E-A466-24166013B8BB"
+license = false
+eula = false
 
 [dependencies]
 # CLI Argument Parsing
@@ -51,6 +58,12 @@ assert_cmd = "2.0"
 predicates = "3.0"
 tempfile = "3.10" 
 
-# Target specific dependencies (if needed, e.g., for Windows-specific features)
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+

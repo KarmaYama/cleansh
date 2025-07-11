@@ -37,6 +37,7 @@
 ├── 📄 .gitignore
 ├── 📄 Cargo.lock
 ├── 📄 Cargo.toml
+├── 📄 Dist.toml
 ├── 📄 cleansh_scope.md
 ├── 📄 Cleansh.toml
 ├── 📄 LICENSE
