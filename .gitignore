@@ -2,7 +2,7 @@
 
 # Standard Rust project ignores
 /target/
-/Cargo.lock
+
 /.idea/
 .vscode/
 *.swp

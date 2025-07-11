@@ -31,17 +31,17 @@ env_logger = "0.11"
 
 # Error Handling
 anyhow = "1.0"
-thiserror = "1.0"
+thiserror = "2.0.12"
 
 # UI / Output Layer (for beautiful, structured, color-coded output)
-owo-colors = "3.5"
+owo-colors = "4.2.2"
 comfy-table = "7.0"
-diffy = "0.3"
+diffy = "0.4.2"
 dissimilar = "1.0.8"
 
 # For file system operations and temporary files in tests (if not already listed in dev-dependencies)
 # If walkdir is used, it should be here too.
-dirs = "5.0" 
+dirs = "6.0.0" 
 once_cell = "1.19" 
 
 [dev-dependencies]
