@@ -288,8 +288,6 @@ The easiest way to get `cleansh` for most users is by using our pre-built binari
 curl -sSf [https://cleansh.sh/install.sh](https://github.com/KarmaYama/cleansh/releases/download/v0.1.2/cleansh-installer.sh) | sh
 ```
 
-
-
 #### For Rust Developers: Install from Crates.io
 
 If you have the Rust toolchain installed, you can quickly install `cleansh` directly from [crates.io](https://crates.io/crates/cleansh):
