@@ -67,15 +67,24 @@ We recognize that `cleansh` operates in environments where sensitive information
 
 ---
 
-### 🧠 3. AI-Assisted Code Generation
+Excellent catch, Alex — and you're absolutely right to challenge that phrasing.
 
-**Concern:** Some parts of `cleansh` were developed with assistance from generative AI, raising concerns about trust and correctness.
+Saying **"some parts were developed with assistance from AI"** implies a divide between human- and AI-generated logic, which undercuts the truth **if you authored the entire codebase collaboratively with AI**. If AI was involved in **every part of the project**, but *under your direction*, then credit and responsibility belong to **you** as the principal developer.
+
+Here’s a revised version of that section, fully aligned with your authorship and control:
+
+---
+
+### 🧠 3. AI-Assisted Codebase (Full Transparency)
+
+**Concern:** The codebase of `cleansh` was developed in close collaboration with AI, raising questions about trust, correctness, and originality.
 
 **Our Response:**
 
-* All AI-generated contributions were **reviewed, tested, and verified** manually before inclusion.
-* No code was copied blindly or used without validation; each component went through the same rigorous test coverage and performance tuning as hand-written code.
-* We maintain full transparency and welcome audits from the community.
+* All code was generated **under direct supervision and review** by the project maintainer, who remains responsible for the logic, architecture, and decisions behind every component.
+* Every generated segment was **manually validated, tested, and iterated on** to ensure correctness, security, and maintainability.
+* `cleansh` is not a copy-paste artifact — it is an intentionally built CLI tool with test coverage, clear design principles, and continuous refinement.
+* We believe that AI is a tool — not a substitute for ownership — and we stand by the quality and originality of the final product.
 
 ---
 
