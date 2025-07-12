@@ -126,23 +126,22 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
-        # Pass arguments to CodeQL's internal Rust autobuilder to maximize coverage.
-        # We aim to build for all applicable targets on the current runner.
-        # Use `--all-targets` to build binaries, examples, tests, benches.
-        # Use `--release` for release profiles as they may have different optimizations.
-        # Conditional targets are added based on the runner OS and your `[dist]` config.
-        build-arguments: |
+        # Removed 'build-arguments' as it is not a valid input for github/codeql-action/init@v3.
+        # The correct way to pass extra arguments to the Rust autobuilder is via CODEQL_ACTION_EXTRA_OPTIONS.
+      env:
+        # Pass arguments to CodeQL's internal Rust autobuilder via environment variables.
+        # These environment variables influence CodeQL's internal 'autobuild' process for Rust.
+        # They are set only when the current matrix language is Rust.
+        CODEQL_ACTION_EXTRA_OPTIONS: >-
           ${{ matrix.language == 'rust' && '--release' || '' }}
-          ${{ matrix.language == 'rust' && runner.os == 'Linux' && '--all-targets --target aarch64-unknown-linux-gnu --target x86_64-unknown-linux-musl' || '' }}
-          ${{ matrix.language == 'rust' && runner.os == 'macOS' && '--all-targets --target aarch64-apple-darwin --target x86_64-apple-darwin' || '' }}
-          # If you had a dedicated Windows runner for CodeQL analysis, you would add its specific targets here:
-          # ${{ matrix.language == 'rust' && runner.os == 'Windows' && '--all-targets --target x86_64-pc-windows-msvc' || '' }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
+          ${{ matrix.language == 'rust' and runner.os == 'Linux' && '--all-targets --target aarch64-unknown-linux-gnu --target x86_64-unknown-linux-musl' || '' }}
+          ${{ matrix.language == 'rust' and runner.os == 'macOS' && '--all-targets --target aarch64-apple-darwin --target x86_64-apple-darwin' || '' }}
+          # If a Windows runner were part of the matrix, the following would apply to analyze MSVC builds:
+          # ${{ matrix.language == 'rust' and runner.os == 'Windows' && '--all-targets --target x86_64-pc-windows-msvc' || '' }}
 
-        # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
-        # queries: security-extended,security-and-quality
+        # Note: CODEQL_ACTION_EXTRA_OPTIONS applies to the autobuilder.
+        # For manual build mode, you would specify the commands directly in a 'run' step.
+        # Since Rust requires build-mode: none, this environment variable is appropriate.
 
     # This 'run' step is left here from the original template for other languages.
     # For Rust, with build-mode: none, CodeQL handles the build internally.
