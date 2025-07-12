@@ -7,7 +7,6 @@ repository = "https://github.com/KarmaYama/cleansh"
 homepage = "https://github.com/KarmaYama/cleansh"
 authors = ["Cleansh Technologies LLC"]
 readme = "README.md"
-crates.io = "https://crates.io/crates/cleansh" 
 rust-version = "1.88.0"
 categories = ["command-line-utilities"]
 keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
