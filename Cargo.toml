@@ -66,4 +66,7 @@ winapi = "0.3"
 inherits = "release"
 lto = "thin"
 
+[lib]
+name = "cleansh"
+path = "src/lib.rs"
 

@@ -139,25 +139,43 @@
 //!
 //! ---
 //!
-//! ## 5. Project Structure
-//!
-//! ```
-//! cleansh/
-//! ├── src/
-//! │   ├── main.rs
-//! │   ├── commands/
-//! │   ├── tools/
-//! │   ├── config/
-//! │   ├── ui/
-//! │   └── tests/
-//! ├── config/
-//! │   └── default_rules.yaml
-//! ├── .env
-//! ├── .gitignore
-//! ├── Cargo.toml
-//! ├── README.md
-//! └── LICENSE (MIT)
-//! ```
+/// ## 5. Project Structure
+/// 
+/// ```rust
+/// cleansh/
+/// ├── src/
+/// │   ├── main.rs
+/// │   ├── commands/
+/// │   ├── tools/
+/// │   ├── config/
+/// │   ├── ui/
+/// │   └── tests/
+/// ├── config/
+/// │   └── default_rules.yaml
+/// ├── .env
+/// ├── .gitignore
+/// ├── Cargo.toml
+/// ├── README.md
+/// └── LICENSE (MIT)
+/// ```
+/// 
+/// ```text
+/// cleansh/
+/// ├── src/
+/// │   ├── main.rs
+/// │   ├── commands/
+/// │   ├── tools/
+/// │   ├── config/
+/// │   ├── ui/
+/// │   └── tests/
+/// ├── config/
+/// │   └── default_rules.yaml
+/// ├── .env
+/// ├── .gitignore
+/// ├── Cargo.toml
+/// ├── README.md
+/// └── LICENSE (MIT)
+/// ```
 //!
 //! ---
 //!
@@ -340,7 +358,7 @@
 //! | Area | Stack/Choice |
 //! | :---------------- | :-------------------------------------------- |
 //! | **Language** | Rust |
-//! | **Config Format** | `.env` files + YAML |
+//! | **Config Format** | `.env` files  YAML |
 //! | **CLI Parsing** | `clap` |
 //! | **Regex Engine** | `regex` |
 //! | **ANSI Stripping**| `strip-ansi-escapes` |
