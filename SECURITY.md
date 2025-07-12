@@ -27,7 +27,7 @@ We deeply appreciate the efforts of security researchers and the open-source com
 
 **How to Report a Vulnerability:**
 
-1.  **Direct Email:** Please report vulnerabilities by sending an email to `security@cleansh.dev` (assuming you will set up this email address).
+1.  **Direct Email:** Please report vulnerabilities by sending an email to `alex.matariran@gmail.com`
 2.  **Encryption (Optional but Recommended):** For sensitive disclosures, you may request our PGP key in your initial email for encrypted communication.
 3.  **Provide Details:** In your report, please include as much detail as possible:
     * A clear and concise description of the vulnerability.
@@ -50,5 +50,4 @@ We deeply appreciate the efforts of security researchers and the open-source com
 **Please do not disclose potential vulnerabilities publicly until we have had an opportunity to address them.** We are committed to addressing valid concerns promptly and openly.
 
 ---
-
-This revised policy is more tailored to `cleansh`'s current stage and provides clear instructions for reporting. Once you've had a chance to review this, let me know if you'd like any adjustments!
+!
