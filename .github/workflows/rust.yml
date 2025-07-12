@@ -1,4 +1,5 @@
-name: Rust
+# .github/workflows/rust.yml
+name: Rust CI
 
 on:
   push:
@@ -10,16 +11,30 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build_and_test: # Renamed job to better reflect its purpose
     runs-on: ubuntu-latest
-    permissions: 
-      contents: read
+    permissions:
+      contents: read # Only read permission is needed for checkout and running tests/rdme check
 
     steps:
       - uses: actions/checkout@v4
 
+      # Install Rust toolchain (optional, but good practice if not guaranteed by runner)
+      # The 'actions/checkout@v4' often includes Rust, but this ensures it.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable # Ensures a stable Rust toolchain is available
+
+      # Install cargo-rdme for README consistency check
+      - name: Install cargo-rdme
+        run: cargo install cargo-rdme
+
+      # Check if README.md is up-to-date with lib.rs documentation
+      # This step will fail the CI if README.md needs to be regenerated.
+      - name: Check README.md consistency
+        run: cargo rdme --check
+
       - name: Build
         run: cargo build --verbose
 
-      - name: Run tests (with clipboard test skipped in CI)
+      - name: Run tests (including doc tests and skipping clipboard test in CI)
         run: cargo test --verbose

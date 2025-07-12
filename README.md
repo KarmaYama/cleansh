@@ -1,3 +1,5 @@
+<!-- cargo-rdme -->
+
 # Cleansh – Sanitize Your Terminal Output, Securely.
 
 [![CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml)
@@ -356,3 +358,4 @@ This project is licensed under the [MIT License](./LICENSE).
 **Precision redaction. Local-only trust. Built for devs.**
 
 -----
+<!-- cargo-rdme -->
