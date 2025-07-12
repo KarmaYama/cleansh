@@ -285,14 +285,14 @@ The easiest way to get `cleansh` for most users is by using our pre-built binari
 **One-line Install (Linux/macOS):**
 
 ```bash
-curl -sSf [https://cleansh.sh/install.sh](https://cleansh.sh/install.sh) | sh
+curl -sSf [https://cleansh.sh/install.sh](https://github.com/KarmaYama/cleansh/releases/download/v0.1.2/cleansh-installer.sh) | sh
 ```
 
-**(Note: `https://cleansh.sh/install.sh` is a placeholder. Update with your actual distribution script URL once available\!)**
+
 
 #### For Rust Developers: Install from Crates.io
 
-If you have the Rust toolchain installed, you can quickly install `cleansh` directly from [crates.io](https://crates.io/):
+If you have the Rust toolchain installed, you can quickly install `cleansh` directly from [crates.io](https://crates.io/crates/cleansh):
 
 ```bash
 cargo install cleansh
@@ -345,14 +345,18 @@ This generates packages ready for release to platforms like GitHub Releases.
 ```toml
 [package]
 name = "cleansh"
-version = "0.1.2" # <--- UPDATED to 0.1.2
-edition = "2021"
-description = "Sanitize your terminal output. One tool. One purpose."
+version = "0.1.2"
+edition = "2024"
 license = "MIT"
-repository = "[https://github.com/KarmaYama/cleansh](https://github.com/KarmaYama/cleansh)"
+repository = "https://github.com/KarmaYama/cleansh"
+homepage = "https://github.com/KarmaYama/cleansh"
+authors = ["Cleansh Technologies LLC"]
 readme = "README.md"
-categories = ["command-line-utilities", "security", "productivity", "text-processing"] # Added 'text-processing' for better discoverability
-keywords = ["cli", "security", "redact", "sanitize", "clipboard", "privacy", "log-sanitization"] # Expanded keywords for better discoverability
+crates.io = "https://crates.io/crates/cleansh" 
+rust-version = "1.88.0"
+categories = ["command-line-utilities"]
+keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
+description = "Sanitize your terminal output. One tool. One purpose.
 ```
 
 ### License

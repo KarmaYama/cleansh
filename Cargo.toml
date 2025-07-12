@@ -2,14 +2,16 @@
 name = "cleansh"
 version = "0.1.2"
 edition = "2024"
-description = "Sanitize your terminal output. One tool. One purpose."
 license = "MIT"
 repository = "https://github.com/KarmaYama/cleansh"
 homepage = "https://github.com/KarmaYama/cleansh"
 authors = ["Cleansh Technologies LLC"]
 readme = "README.md"
+crates.io = "https://crates.io/crates/cleansh" 
+rust-version = "1.88.0"
 categories = ["command-line-utilities"]
 keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
+description = "Sanitize your terminal output. One tool. One purpose."
 
 [package.metadata.wix]
 upgrade-guid = "F47C98E6-B908-4CB3-A38B-0EFD5F3DE62D"
