@@ -5,37 +5,81 @@
 
 > A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in active development; while the latest **`v0.1.2`** release addresses critical output formatting and stability, we value your feedback, so please do report any issues you encounter.
 
------
+---
+
+## 📚 Table of Contents
+
+* [✨ Overview](#-overview)
+* [✅ Core Capabilities – Current Version (v0.1.2)](#-core-capabilities--current-version-v012---stability--output-refinement)
+    * [🎯 Primary Redaction Categories:](#-primary-redaction-categories)
+    * [💡 Optional Features (with flags):](#-optional-features-with-flags)
+* [🚀 Usage Examples](#-usage-examples)
+    * [Basic Sanitization (Piping from `stdin`)](#basic-sanitization-piping-from-stdin)
+    * [Copying to Clipboard (`-c` or `--clipboard`)](#copying-to-clipboard--c-or---clipboard)
+    * [Showing a Diff View (`-d` or `--diff`)](#showing-a-diff-view--d-or---diff)
+    * [Loading Custom Redaction Rules (`--config <path>`)](#loading-custom-redaction-rules---config-path)
+    * [Outputting to a File (`-o <path>`)](#outputting-to-a-file--o-path)
+    * [Reading Input from a File](#reading-input-from-a-file)
+    * [Combining Flags](#combining-flags)
+* [⚠️ Known Issues](#-known-issues)
+    * [1. Windows Absolute Path Redaction](#1-windows-absolute-path-redaction)
+    * [2. Partial Custom Rule Interaction](#2-partial-custom-rule-interaction)
+* [🧱 Project Structure](#-project-structure)
+* [⚙ Configuration Strategy](#-configuration-strategy)
+    * [1. Runtime Settings (from `.env`)](#1-runtime-settings-from-env)
+    * [2. User Rule Configuration (Optional, via `--config`)](#2-user-rule-configuration-optional-via---config)
+* [📋 Clipboard Support](#-clipboard-support)
+* [🧠 Sanitizer Engine Design](#-sanitizer-engine-design-in-srctoolssanitize_shellrs)
+    * [Internal Pipeline:](#internal-pipeline)
+    * [Engine Architecture:](#engine-architecture)
+* [📊 Logging and Error Handling](#-logging-and-error-handling)
+    * [Logging:](#logging)
+    * [Error Handling:](#error-handling)
+* [🧪 Testing and Validations](#-testing-and-validations)
+    * [Unit Tests:](#unit-tests)
+    * [Integration Tests:](#integration-tests)
+* [🚀 Packaging & Distribution](#-packaging--distribution)
+    * [Installation](#installation)
+    * [Building from Source](#building-from-source)
+    * [Distribution Automation](#distribution-automation)
+* [📜 Metadata & License](#-metadata--license)
+    * [Metadata (in `Cargo.toml`)](#metadata-in-cargotoml)
+    * [License](#license)
+* [🔐 Security by Default Principles](#-security-by-default-principles)
+* [🛠 Future-Proofing (Post v1.0 Aspirations)](#-future-proofing-post-v10-aspirations)
+* [🧵 Summary of Technology Stack](#-summary-of-technology-stack)
+
+---
 
 ## ✨ Overview
 
 `cleansh` is a powerful and reliable command-line utility designed to help you quickly and securely redact sensitive information from your terminal output. Whether you're debugging, collaborating, or sharing logs, `cleansh` ensures that confidential data like IP addresses, email addresses, and access tokens never leave your local environment unmasked. Piped directly from `stdin` or loaded from files, `cleansh` provides a robust, pre-configured solution for data sanitization, with flexible options for custom rules and output formats.
 
------
+---
 
-## 1\. ✅ Core Capabilities – Current Version (**v0.1.2**) - Stability & Output Refinement
+## ✅ Core Capabilities – Current Version (**v0.1.2**) - Stability & Output Refinement
 
 This version of `cleansh` focuses on providing essential sanitization features with a strong emphasis on security and ease of use, building upon the "Precision View" of `v0.1.1`. Based on our rigorously passing test suite, you can trust `cleansh` to accurately mask the following sensitive data types and handle output reliably:
 
 ### 🎯 Primary Redaction Categories:
 
-  * **Emails:** Common email address formats (e.g., `user@example.com`).
-  * **IP Addresses:** Both IPv4 addresses (e.g., `192.168.1.1`).
-  * **Tokens & Secrets:** Generic tokens, JSON Web Tokens (JWTs), AWS keys, GCP keys, SSH keys, and common hex secrets.
-  * **Absolute Paths:** Linux paths (e.g., `/home/user/documents/report.pdf` are transformed to `~/home/user/...`) and macOS paths (e.g., `/Users/admin/logs/app.log` are transformed to `~/Users/admin/...`).
+* **Emails:** Common email address formats (e.g., `user@example.com`).
+* **IP Addresses:** Both IPv4 addresses (e.g., `192.168.1.1`).
+* **Tokens & Secrets:** Generic tokens, JSON Web Tokens (JWTs), AWS keys, GCP keys, SSH keys, and common hex secrets.
+* **Absolute Paths:** Currently, `cleansh` redacts Linux paths (e.g., `/home/user/documents/report.pdf` are transformed to `~/home/user/...`) and macOS paths (e.g., `/Users/admin/logs/app.log` are transformed to `~/Users/admin/...`).
 
 ### 💡 Optional Features (with flags):
 
 `cleansh` provides command-line flags to customize its behavior, all thoroughly tested:
 
-  * **Copy to Clipboard:** Use `--clipboard` (`-c`) to automatically copy the sanitized output to your system's clipboard.
-  * **Show Diff View:** Use `--diff` (`-d`) to display a clear, **line-by-line colored diff** between the original and sanitized content, highlighting all redactions, powered by the `diffy` crate.
-  * **Load Custom Config:** Use `--config <path/to/config.yaml>` to apply your own custom redaction rules, which can augment or override the powerful built-in defaults.
-  * **Output to File:** Use `--out <path/to/result.txt>` to write the sanitized output directly to a specified file.
+* **Copy to Clipboard:** Use `--clipboard` (`-c`) to automatically copy the sanitized output to your system's clipboard.
+* **Show Diff View:** Use `--diff` (`-d`) to display a clear, **line-by-line colored diff** between the original and sanitized content, highlighting all redactions, powered by the `diffy` crate.
+* **Load Custom Config:** Use `--config <path/to/config.yaml>` to apply your own custom redaction rules, which can augment or override the powerful built-in defaults.
+* **Output to File:** Use `--out <path/to/result.txt>` to write the sanitized output directly to a specified file.
 
------
+---
 
-## 1.5 🚀 Usage Examples
+## 🚀 Usage Examples
 
 `cleansh` is designed to integrate seamlessly into your command-line workflow. Here are some common ways to use it:
 
@@ -47,10 +91,10 @@ Pipe the output of any command directly into `cleansh`. The sanitized content wi
 
 ```powershell
 # On Windows (PowerShell)
-echo "My email is test@example.com and my IP is 192.168.1.1." | .\target\release\cleansh.exe
+echo "My email is test@example.com and my IP is 192.168.1.1." | cleansh
 
 # On Linux/macOS (Bash/Zsh)
-echo "My email is test@example.com and my IP is 192.168.1.1." | ./target/release/cleansh
+echo "My email is test@example.com and my IP is 192.168.1.1." | cleansh
 ````
 
 **Example: Cleaning `docker logs` before sharing**
@@ -115,7 +159,27 @@ my-command-output | cleansh -d -o sanitized_output.txt
 
 -----
 
-## 2\. 🧱 Project Structure
+## ⚠️ Known Issues
+
+While `cleansh v0.1.2` significantly improves stability and output, we are aware of a few areas that are currently being tracked for future improvements:
+
+### 1\. Windows Absolute Path Redaction
+
+  * **Severity:** Medium (Affects cross-platform consistency for a specific redaction category).
+  * **Description:** `cleansh`'s built-in absolute path redaction currently supports Linux and macOS path formats (e.g., `/home/user/documents`). However, it does **not** currently identify or redact Windows absolute paths (e.g., `C:\Users\User\Documents\file.txt`).
+  * **Impact:** Users on Windows environments may experience unexpected leakage of local absolute paths if they rely solely on the built-in path redaction.
+  * **Workaround:** For immediate needs, users can define their own custom regex rules in their `config.yaml` to specifically target and redact Windows path patterns.
+
+### 2\. Partial Custom Rule Interaction
+
+  * **Severity:** Low (Does not prevent redaction, but may alter the intended custom placeholder).
+  * **Description:** In some scenarios, a custom redaction rule designed to apply a specific placeholder might be partially or fully overridden by a more general, built-in "generic token" rule. This can result in the `[GENERIC_TOKEN_REDACTED]` placeholder appearing instead of the custom one (e.g., `EMP-12345` becoming `[GENERIC_TOKEN_REDACTED]-12345` instead of `[EMPLOYEE_ID_REDACTED]`).
+  * **Impact:** While the sensitive data is always redacted, the desired custom placeholder for the entire matched string might not be used, potentially reducing clarity or adherence to specific reporting formats.
+  * **Workaround:** When defining custom rules that are intended to override or be very specific, ensure their patterns are as precise as possible and carefully review their interaction with existing default rules, especially those for generic tokens.
+
+-----
+
+## 🧱 Project Structure
 
 The `cleansh` codebase is thoughtfully organized for clarity, modularity, and maintainability, adhering to best practices for Rust projects.
 
@@ -145,7 +209,7 @@ cleansh/
 
 -----
 
-## 3\. ⚙ Configuration Strategy
+## ⚙ Configuration Strategy
 
 `cleansh` employs a layered configuration approach, prioritizing security and ease of use.
 
@@ -192,16 +256,16 @@ When using the `-c` / `--clipboard` flag, `cleansh` will copy sanitized output t
 
 ### ✔️ Supported by Default:
 
-  - **macOS**
-  - **Windows**
+  * **macOS**
+  * **Windows**
 
 ### ⚠️ Linux Users:
 
 Clipboard support requires one of the following utilities to be installed:
 
-  - `xclip`
-  - `xsel`
-  - `wl-clipboard`
+  * `xclip`
+  * `xsel`
+  * `wl-clipboard`
 
 Without these, clipboard functionality may fail silently or print a warning.
 
@@ -209,7 +273,7 @@ Without these, clipboard functionality may fail silently or print a warning.
 
 -----
 
-## 4\. 🧠 Sanitizer Engine Design (in `src/tools/sanitize_shell.rs`)
+## 🧠 Sanitizer Engine Design (in `src/tools/sanitize_shell.rs`)
 
 The heart of `cleansh` is its robust sanitization engine, designed for efficiency and precision.
 
@@ -229,7 +293,7 @@ The heart of `cleansh` is its robust sanitization engine, designed for efficienc
 
 -----
 
-## 5\. 📊 Logging and Error Handling
+## 📊 Logging and Error Handling
 
 `cleansh` is built with a focus on clear operational visibility and resilient error management.
 
@@ -250,7 +314,7 @@ Implements robust error management using `anyhow` for top-level error aggregatio
 
 -----
 
-## 6\. 🧪 Testing and Validations
+## 🧪 Testing and Validations
 
 A comprehensive testing strategy ensures the reliability and correctness of `cleansh`. Our recent test runs confirm all critical functionalities are working as expected.
 
@@ -272,7 +336,7 @@ A comprehensive testing strategy ensures the reliability and correctness of `cle
 
 -----
 
-## 7\. 🚀 Packaging & Distribution
+## 🚀 Packaging & Distribution
 
 `cleansh` is designed for seamless cross-platform deployment and ease of installation, catering to both Rust developers and general users.
 
@@ -285,7 +349,7 @@ The easiest way to get `cleansh` for most users is by using our pre-built binari
 **One-line Install (Linux/macOS):**
 
 ```bash
-curl -sSf [https://cleansh.sh/install.sh](https://github.com/KarmaYama/cleansh/releases/download/v0.1.2/cleansh-installer.sh) | sh
+curl -sSf [https://github.com/KarmaYama/cleansh/releases/download/v0.1.2/cleansh-installer.sh](https://github.com/KarmaYama/cleansh/releases/download/v0.1.2/cleansh-installer.sh) | sh
 ```
 
 #### For Rust Developers: Install from Crates.io
@@ -336,7 +400,7 @@ This generates packages ready for release to platforms like GitHub Releases.
 
 -----
 
-## 8\. 📜 Metadata & License
+## 📜 Metadata & License
 
 ### Metadata (in `Cargo.toml`)
 
@@ -346,11 +410,11 @@ name = "cleansh"
 version = "0.1.2"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/KarmaYama/cleansh"
-homepage = "https://github.com/KarmaYama/cleansh"
+repository = "[https://github.com/KarmaYama/cleansh](https://github.com/KarmaYama/cleansh)"
+homepage = "[https://github.com/KarmaYama/cleansh](https://github.com/KarmaYama/cleansh)"
 authors = ["Cleansh Technologies LLC"]
 readme = "README.md"
-crates.io = "https://crates.io/crates/cleansh" 
+crates.io = "[https://crates.io/crates/cleansh](https://crates.io/crates/cleansh)" 
 rust-version = "1.88.0"
 categories = ["command-line-utilities"]
 keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
@@ -363,7 +427,7 @@ description = "Sanitize your terminal output. One tool. One purpose.
 
 -----
 
-## 9\. 🔐 Security by Default Principles
+## 🔐 Security by Default Principles
 
 `cleansh` is engineered with a "secure by default" mindset, embodying several key security principles:
 
@@ -378,7 +442,7 @@ description = "Sanitize your terminal output. One tool. One purpose.
 
 -----
 
-## 10\. 🛠 Future-Proofing (Post v1.0 Aspirations)
+## 🛠 Future-Proofing (Post v1.0 Aspirations)
 
 As `cleansh` evolves, we envision expanding its utility and integration capabilities:
 
@@ -407,4 +471,3 @@ As `cleansh` evolves, we envision expanding its utility and integration capabili
 | License           | MIT                                          |
 
 -----
-
