@@ -52,9 +52,8 @@ jobs:
         - language: javascript-typescript
           build-mode: none
         - language: rust
-          # IMPORTANT CHANGE: Revert build-mode to 'none' as per CodeQL's error message.
-          # CodeQL will internally manage the build process for Rust when 'none' is set.
-          build-mode: none
+          build-mode: none # Keep build-mode as 'none' per CodeQL requirement.
+
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -70,41 +69,54 @@ jobs:
         submodules: recursive # Important for repos with submodules
 
     # --- START OF RUST ENVIRONMENT SETUP FOR CODEQL ---
-    # This step ensures that all necessary targets and cross-compilation tools
-    # are available BEFORE CodeQL initializes and performs its internal build.
+    # This step ensures that all necessary targets are available for CodeQL's internal build.
     - if: matrix.language == 'rust'
       name: Prepare Rust environment for CodeQL
       shell: bash
       run: |
         echo "Preparing Rust environment for CodeQL analysis..."
 
-        # Install Rust toolchain if not already present (usually handled by runner, but explicit is safer)
-        # and ensure correct version based on Cargo.toml's rust-version
+        # Update and set default Rust toolchain (stable is usually good unless specified otherwise)
         rustup update --no-self-update stable
         rustup default stable
         rustup show
 
-        # Install mingw-w64 for Windows cross-compilation on Linux runners
+        # Define targets from your [dist] config that can be installed on Linux/macOS runners.
+        # We explicitly omit x86_64-pc-windows-msvc for Linux/macOS runners due to cross-compilation complexity.
+        # For comprehensive MSVC analysis, consider a dedicated job on a 'windows-latest' runner.
+        LINUX_TARGETS="aarch64-unknown-linux-gnu x86_64-unknown-linux-musl"
+        MACOS_TARGETS="aarch64-apple-darwin x86_64-apple-darwin"
+
+        targets_to_add=""
+
         if [[ "${{ runner.os }}" == "Linux" ]]; then
-          echo "Setting up for Windows cross-compilation on Linux runner..."
-          sudo apt-get update -y
-          # Check if mingw-w64 is already installed or install it
-          if ! dpkg -s gcc-mingw-w64-x86-64 &> /dev/null; then
-            sudo apt-get install -y gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 || echo "Warning: Failed to install mingw-w64 packages. Windows target build might be incomplete."
-          else
-            echo "mingw-w64 packages already installed."
-          fi
-          # Add Windows target to rustup
-          if ! rustup target list | grep -q 'x86_64-pc-windows-gnu (installed)'; then
-            rustup target add x86_64-pc-windows-gnu || echo "Warning: Failed to add x86_64-pc-windows-gnu target. Windows code analysis might be incomplete."
-          else
-            echo "x86_64-pc-windows-gnu target already installed."
-          fi
-        elif [[ "${{ runner.os }}" == "Windows" ]]; then
-            echo "On Windows runner, native Windows target already available."
+          echo "On Linux runner, checking for Linux cross-compilation targets."
+          for target in $LINUX_TARGETS; do
+            if ! rustup target list | grep -q "$target (installed)"; then
+              targets_to_add+=" $target"
+            fi
+          done
         elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            echo "On macOS runner, native macOS target already available. No Windows cross-compilation setup needed."
+          echo "On macOS runner, checking for Apple targets."
+          for target in $MACOS_TARGETS; do
+            if ! rustup target list | grep -q "$target (installed)"; then
+              targets_to_add+=" $target"
+            fi
+          done
+        elif [[ "${{ runner.os }}" == "Windows" ]]; then
+          echo "On Windows runner, native Windows targets are usually sufficient."
+          # If you ever run this job on Windows, and need specific MSVC targets, you might add them here.
+          # Example: if ! rustup target list | grep -q 'x86_64-pc-windows-msvc (installed)'; then targets_to_add+=" x86_64-pc-windows-msvc"; fi
         fi
+
+        if [ -n "$targets_to_add" ]; then
+          echo "Adding Rust targets: $targets_to_add"
+          # Use 'sh' compatibility for rustup target add
+          rustup target add $targets_to_add || echo "Warning: Failed to add some Rust targets. Code analysis for these might be incomplete."
+        else
+          echo "All necessary Rust targets already installed or not applicable for this runner."
+        fi
+
         echo "Rust environment preparation complete."
     # --- END OF RUST ENVIRONMENT SETUP FOR CODEQL ---
 
@@ -113,7 +125,18 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }} # This will be 'none' for Rust
+        build-mode: ${{ matrix.build-mode }}
+        # Pass arguments to CodeQL's internal Rust autobuilder to maximize coverage.
+        # We aim to build for all applicable targets on the current runner.
+        # Use `--all-targets` to build binaries, examples, tests, benches.
+        # Use `--release` for release profiles as they may have different optimizations.
+        # Conditional targets are added based on the runner OS and your `[dist]` config.
+        build-arguments: |
+          ${{ matrix.language == 'rust' && '--release' || '' }}
+          ${{ matrix.language == 'rust' && runner.os == 'Linux' && '--all-targets --target aarch64-unknown-linux-gnu --target x86_64-unknown-linux-musl' || '' }}
+          ${{ matrix.language == 'rust' && runner.os == 'macOS' && '--all-targets --target aarch64-apple-darwin --target x86_64-apple-darwin' || '' }}
+          # If you had a dedicated Windows runner for CodeQL analysis, you would add its specific targets here:
+          # ${{ matrix.language == 'rust' && runner.os == 'Windows' && '--all-targets --target x86_64-pc-windows-msvc' || '' }}
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file.
         # Prefix the list here with "+" to use these queries and those in the config file.
