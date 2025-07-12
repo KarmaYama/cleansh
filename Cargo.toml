@@ -8,7 +8,7 @@ repository = "https://github.com/KarmaYama/cleansh"
 homepage = "https://github.com/KarmaYama/cleansh"
 authors = ["Cleansh Technologies LLC"]
 readme = "README.md"
-categories = ["command-line-utilities", "security", "productivity"]
+categories = ["command-line-utilities"]
 keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
 
 [package.metadata.wix]
