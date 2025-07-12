@@ -1,10 +1,11 @@
 // src/ui/output_format.rs
 use crate::config::RedactionSummaryItem;
-use crate::ui::theme::{ThemeEntry, ThemeStyle}; // Removed ThemeColor, as it's not directly used
+use crate::ui::theme::{ThemeEntry, ThemeStyle};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
 use std::io::Write;
-use dissimilar;
+// Removed `use dissimilar;` as it's not directly used here and causes a warning
+use diffy::{create_patch, Line}; // Import create_patch function and Line enum
 
 /// Prints the content to the given writer.
 pub fn print_content<W: Write>(writer: &mut W, content: &str) {
@@ -38,7 +39,7 @@ pub fn print_success_message<W: Write>(
 }
 
 /// Prints an informational message to the given writer, styled by the theme.
-pub fn print_info_message<W: Write>( // Corrected: removed extra 'fn'
+pub fn print_info_message<W: Write>(
     writer: &mut W,
     message: &str,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
@@ -58,7 +59,7 @@ pub fn print_error_message<W: Write>(
 }
 
 /// Prints a warning message to the given writer, styled by the theme.
-pub fn print_warn_message<W: Write>( // Corrected: removed extra 'fn'
+pub fn print_warn_message<W: Write>(
     writer: &mut W,
     message: &str,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
@@ -103,22 +104,24 @@ pub fn print_diff_view<W: Write>(
     let diff_header = get_styled_text("\n--- Diff View ---", ThemeEntry::DiffHeader, theme_map);
     let _ = writeln!(writer, "{}", diff_header);
 
-    let diff = dissimilar::diff(original_content, sanitized_content);
+    // Use diffy::create_patch to get a Patch object
+    let patch = create_patch(original_content, sanitized_content);
 
-    for change in diff {
-        match change {
-            dissimilar::Chunk::Equal(s) => {
-                let _ = write!(writer, " {}", s); // No styling for equal parts
-            }
-            dissimilar::Chunk::Delete(s) => {
-                let styled_deleted = get_styled_text(&format!("-{}", s), ThemeEntry::DiffRemoved, theme_map);
-                let _ = write!(writer, "{}", styled_deleted);
-            }
-            dissimilar::Chunk::Insert(s) => {
-                let styled_inserted = get_styled_text(&format!("+{}", s), ThemeEntry::DiffAdded, theme_map);
-                let _ = write!(writer, "{}", styled_inserted);
+    // Iterate through the hunks and lines in the patch
+    for hunk in patch.hunks() {
+        for line_change in hunk.lines() { // hunk.lines() returns an iterator of diffy::Line
+            match line_change {
+                Line::Delete(s) => { // Line deleted from original
+                    let _ = writeln!(writer, "{}{}", "-".red(), s.red());
+                }
+                Line::Insert(s) => { // Line inserted into new (sanitized)
+                    let _ = writeln!(writer, "{}{}", "+".green(), s.green());
+                }
+                Line::Context(s) => { // Line present in both (unchanged)
+                    let _ = writeln!(writer, " {}", s); // Space prefix for equal lines
+                }
             }
         }
     }
-    let _ = writeln!(writer, "\n{}", get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map));
+    let _ = writeln!(writer, "{}", get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map));
 }

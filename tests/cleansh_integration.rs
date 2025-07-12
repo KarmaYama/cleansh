@@ -60,14 +60,41 @@ fn test_clipboard_output() -> Result<()> {
 #[test]
 fn test_diff_view() -> Result<()> {
     let input = "Old IP: 10.0.0.1. New IP: 192.168.1.1.";
-    let expected = "  Old IP: -10.0.0.1. New IP: 192.168.1.1+[IPV4_REDACTED]. New IP: [IPV4_REDACTED] .";
+    // FIX APPLIED HERE: Updated expected string to match the new diffy line-by-line format
+    let expected = "-Old IP: 10.0.0.1. New IP: 192.168.1.1.\n+Old IP: [IPV4_REDACTED]. New IP: [IPV4_REDACTED].";
     let output = run_cleansh_command(input, &["-d"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
-    let start = stripped.find("--- Diff View ---\n").unwrap() + 18;
-    let end = stripped[start..].find("\n-----------------").unwrap() + start;
-    let diff = &stripped[start..end];
+    
+    // Assert presence of common elements
+    assert!(stripped.contains("Reading input from stdin...\n"));
+    assert!(stripped.contains("--- Redaction Summary ---"));
+    assert!(stripped.contains("ipv4_address (2 occurrences)"));
+    assert!(stripped.contains("-------------------------\n\n")); // Check for summary footer
+    assert!(stripped.contains("--- Diff View ---"));
+    assert!(stripped.contains("-----------------")); // Check for diff footer
+
+    // Extract the diff content part
+    let diff_start_marker = "--- Diff View ---\n";
+    let diff_end_marker = "\n-----------------";
+
+    let diff_start_idx = stripped.find(diff_start_marker)
+                                 .map(|idx| idx + diff_start_marker.len())
+                                 .unwrap_or_else(|| {
+                                     panic!("Diff start marker not found: '{}'", stripped);
+                                 });
+    let diff_end_idx = stripped[diff_start_idx..].find(diff_end_marker)
+                                                 .map(|idx| idx + diff_start_idx)
+                                                 .unwrap_or_else(|| {
+                                                     panic!("Diff end marker not found after start: '{}'", stripped);
+                                                 });
+
+    let diff = &stripped[diff_start_idx..diff_end_idx];
+    
+    // Assert the extracted diff matches the new expected format
     assert_eq!(diff.trim(), expected.trim());
-    assert!(!stripped.contains("Old IP: [IPV4_REDACTED]. New IP: [IPV4_REDACTED]."));
+    
+    // Removed the assertion about not containing the final sanitized content,
+    // as the diff view explicitly shows both original and redacted parts.
     Ok(())
 }
 
