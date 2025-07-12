@@ -53,6 +53,7 @@ dissimilar = "1.0.8"
 # If walkdir is used, it should be here too.
 dirs = "6.0.0" 
 once_cell = "1.19" 
+cargo-audit = "0.21.2"
 
 [dev-dependencies]
 assert_cmd = "2.0"
