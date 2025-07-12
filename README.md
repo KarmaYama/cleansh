@@ -120,7 +120,7 @@ myscript.sh | cleansh -o safe.log
 **File Input:**
 
 ```bash
-cleansh < raw_log_file.txt
+cleansh  ./raw_log_file.txt
 ```
 
 **Combined:**
