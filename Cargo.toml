@@ -9,7 +9,7 @@ homepage = "https://github.com/KarmaYama/cleansh"
 authors = ["Cleansh Technologies LLC"]
 readme = "README.md"
 categories = ["command-line-utilities", "security", "productivity"]
-keywords = ["cli", "security", "redact", "sanitize", "clipboard", "privacy"]
+keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
 
 [package.metadata.wix]
 upgrade-guid = "F47C98E6-B908-4CB3-A38B-0EFD5F3DE62D"
