@@ -3,6 +3,9 @@ use std::{collections::HashMap, fs, path::Path};
 use anyhow::{Context, Result};
 
 /// Represents a single redaction rule.
+///
+/// Each rule defines a pattern to match, a string to replace it with,
+/// and optional metadata like a description and regex flags.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Rule {
     pub name: String,
@@ -16,11 +19,19 @@ pub struct Rule {
     pub dot_matches_new_line: bool,
 }
 
+/// A container for a collection of `Rule`s.
+///
+/// This struct is used to deserialize the YAML configuration files
+/// that define the redaction rules.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct RulesConfig {
     pub rules: Vec<Rule>,
 }
 
+/// Represents an item in the redaction summary, detailing what was redacted.
+///
+/// This struct stores information about a specific rule that found matches,
+/// including the original text, its sanitized version, and the number of occurrences.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RedactionSummaryItem {
     pub rule_name: String,
@@ -29,12 +40,34 @@ pub struct RedactionSummaryItem {
     pub occurrences: usize,
 }
 
+/// Loads the default redaction rules embedded within the application.
+///
+/// These rules are compiled into the binary and provide the base set of
+/// sensitive patterns `cleansh` will redact by default.
+///
+/// # Returns
+///
+/// A `Result` containing `RulesConfig` if parsing is successful,
+/// or an `anyhow::Error` if the embedded YAML is malformed.
 pub fn load_default_rules() -> Result<RulesConfig> {
     let default_rules_yaml = include_str!("../config/default_rules.yaml");
     serde_yaml::from_str(default_rules_yaml)
         .context("Failed to parse embedded default_rules.yaml")
 }
 
+/// Loads custom redaction rules from a specified YAML file.
+///
+/// This allows users to extend or override the default redaction behavior
+/// with their own patterns.
+///
+/// # Arguments
+///
+/// * `path` - A reference to the path of the user's YAML configuration file.
+///
+/// # Returns
+///
+/// A `Result` containing `RulesConfig` if the file is read and parsed successfully,
+/// or an `anyhow::Error` if the file cannot be read or the YAML is malformed.
 pub fn load_user_rules<P: AsRef<Path>>(path: P) -> Result<RulesConfig> {
     let path = path.as_ref();
     let content = fs::read_to_string(path)
@@ -44,6 +77,20 @@ pub fn load_user_rules<P: AsRef<Path>>(path: P) -> Result<RulesConfig> {
         .with_context(|| format!("Failed to parse user config file: {}", path.display()))
 }
 
+/// Merges default redaction rules with optional user-defined rules.
+///
+/// User-defined rules with the same `name` as a default rule will override the default.
+/// New user-defined rules will be added. The merged rules are sorted by name for
+/// deterministic order.
+///
+/// # Arguments
+///
+/// * `default_rules` - The base set of default redaction rules.
+/// * `user_rules` - An `Option` containing user-defined rules. If `None`, only default rules are used.
+///
+/// # Returns
+///
+/// A `RulesConfig` containing the combined and sorted set of redaction rules.
 pub fn merge_rules(
     default_rules: RulesConfig,
     user_rules: Option<RulesConfig>,

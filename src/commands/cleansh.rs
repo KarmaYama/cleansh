@@ -6,21 +6,43 @@ use crate::ui::output_format;
 use crate::ui::theme::{ThemeEntry, ThemeStyle};
 use log::{debug, error, info, warn};
 use std::fs;
-use std::io; // `Write` is no longer directly used by this module's functions
+use std::io;
 use std::path::PathBuf;
 use std::collections::HashMap;
 
-/// The main entry point for the `cleansh` command.
+/// The main entry point for the `cleansh` command's execution logic.
+///
+/// This function orchestrates the entire sanitization process, including:
+/// - Loading and merging redaction rules (default and custom).
+/// - Applying sanitization to the input content.
+/// - Displaying a summary of redactions.
+/// - Handling optional features like diff view, clipboard output, and file output.
+///
+/// # Arguments
+///
+/// * `input_content` - The string content to be sanitized.
+/// * `clipboard_enabled` - A boolean indicating whether to copy the sanitized output to the clipboard.
+/// * `diff_enabled` - A boolean indicating whether to display a diff view between original and sanitized content.
+/// * `config_path` - An optional `PathBuf` to a custom YAML configuration file for redaction rules.
+/// * `output_path` - An optional `PathBuf` to write the sanitized output to a file.
+/// * `no_redaction_summary` - A boolean indicating whether to suppress the redaction summary output.
+/// * `theme_map` - A `HashMap` containing the current theme's styling for various output elements.
+///
+/// # Returns
+///
+/// Returns `Ok(())` on successful execution, or an `anyhow::Result` error if any step fails.
 pub fn run_cleansh(
     input_content: &str,
     clipboard_enabled: bool,
     diff_enabled: bool,
     config_path: Option<PathBuf>,
     output_path: Option<PathBuf>,
+    no_redaction_summary: bool,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
 ) -> Result<()> {
     info!("Starting cleansh command.");
     debug!("Clipboard: {}, Diff: {}", clipboard_enabled, diff_enabled);
+    debug!("No redaction summary: {}", no_redaction_summary);
 
     // 1. Load and merge rules
     let default_cfg = config::load_default_rules().context("Loading default rules")?;
@@ -40,8 +62,21 @@ pub fn run_cleansh(
     // 2. Sanitize
     let (sanitized, summary) = sanitize_shell::sanitize_content(input_content, &compiled);
 
-    // 3. Print summary
-    output_format::print_redaction_summary(&mut io::stdout(), &summary, theme_map);
+    // 3. Print summary (only if not suppressed)
+    // If no_redaction_summary is TRUE, we print NOTHING related to summary.
+    // If no_redaction_summary is FALSE, we print either the actual summary OR "No redactions applied.".
+    if !no_redaction_summary {
+        if summary.is_empty() && !input_content.trim().is_empty() { // Check if input is not just whitespace
+            output_format::print_info_message(
+                &mut io::stdout(),
+                "No redactions applied.",
+                theme_map,
+            );
+        } else if !summary.is_empty() {
+            output_format::print_redaction_summary(&mut io::stdout(), &summary, theme_map);
+        }
+    }
+
 
     // 4. Diff
     if diff_enabled {
@@ -85,6 +120,11 @@ pub fn run_cleansh(
     }
 
     // 6. File or stdout
+    // Logic:
+    // 1. If output_path is Some, write to file and print "Written to file" message.
+    // 2. Else (no output file):
+    //    a. If diff_enabled is true, ONLY print the diff.
+    //    b. Else (no diff): Print the sanitized content to stdout.
     if let Some(path) = output_path {
         fs::write(&path, &sanitized).context("Writing output file")?;
         output_format::print_success_message(
@@ -93,9 +133,11 @@ pub fn run_cleansh(
             theme_map,
         );
     } else if !diff_enabled {
-        // Only print content to stdout if diff is not enabled
+        // Only print content to stdout if not writing to file AND diff is not enabled.
+        // Summary and clipboard messages are handled separately.
         output_format::print_content(&mut io::stdout(), &sanitized);
     }
+
 
     info!("cleansh finished.");
     Ok(())

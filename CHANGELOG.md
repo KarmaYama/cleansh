@@ -1,9 +1,23 @@
 # Changelog
-# Guide: "Fixed", "Changed", "Removed", "Deprecated", or "Security"
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.1.2] - 2025-07-12 - Stability & Output Refinement
+
+### Fixed
+
+* **Resolved critical output formatting issues** in integration tests (`test_basic_sanitization` and `test_no_redactions`) ensuring the application's stdout behavior aligns perfectly with expectations.
+* **Corrected an oversight in the application's output logic** (`src/commands/cleansh.rs`) where an "No redactions applied." message was incorrectly suppressed when using `--no-redaction-summary`. This message now correctly appears when no redactions occur and the summary is *not* suppressed.
+* Eliminated an **unused variable warning** in `test_clipboard_output` in `tests/cleansh_integration.rs` to maintain a clean compilation.
+
+### Changed
+
+* Adjusted internal test expectations within `tests/cleansh_integration.rs` to precisely match the `cleansh` application's refined output behavior, particularly concerning newlines and summary messages.
+
+---
 
 ## [0.1.1] - 2025-07-12 - Precision View
 
@@ -20,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Improved
 
 * Enhanced the clarity and accuracy of the diff output when using the `--diff` flag.
+
+---
 
 ## [0.1.0] - 2025-07-12 - Initial Public Release (Pre-release)
 

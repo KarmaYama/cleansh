@@ -269,3 +269,42 @@ With the foundation in place, you can explore more sophisticated integrations.
 
 ---
 
+
+### 1. Enhancing Core Functionality & UX (Short-term, High Impact)
+
+* **Expanded Redaction Rules:**
+    * **More Data Types:** Consider adding built-in rules for common sensitive data not yet covered: credit card numbers, social security numbers (or their UK equivalents like National Insurance numbers, post-migration), phone numbers, URLs, GUIDs, specific API keys (e.g., GitHub, Stripe), or even specific file paths on Windows.
+    * **Regex Libraries/Presets:** Research and integrate more advanced or specialized regex libraries that cater to a wider array of sensitive patterns more efficiently.
+    * **Contextual Redaction:** Explore if some redactions could be context-aware (e.g., redacting a number *only* if it appears next to "card" or "SSN"). This is more complex but powerful.
+
+* **Interactive Mode/Preview:**
+    * **"Dry Run" Mode:** A flag (e.g., `--dry-run` or `-n`) that shows what *would* be redacted without actually performing the redaction or outputting the sanitized string. This would be incredibly useful for users to verify rules.
+    * **Interactive Prompt for Ambiguous Matches:** For very sensitive or potentially ambiguous matches, could `cleansh` prompt the user (Y/N) before redacting? (Might be too complex for a CLI, but interesting to consider for a future TUI/GUI).
+
+* **Improved Output Flexibility:**
+    * **JSON/YAML Output:** For integration with other tools, allowing the sanitized content or even the redaction summary to be outputted in structured formats (JSON, YAML) would be a significant step towards scalability and modularity.
+    * **Configurable Redaction Placeholders:** Allow users to specify their own `[REDACTED]` strings per rule, e.g., `[CUSTOM_EMAIL]`, `[AWS_ID]`.
+
+### 2. Performance & Optimization (Ongoing)
+
+* **Benchmarking:** Establish a rigorous benchmarking suite to track performance as new features are added. This aligns with **optimizing performance**.
+* **Parallel Processing:** For very large inputs, investigate if sanitization can be parallelized (e.g., processing chunks of text concurrently, if the rules allow for it without cross-chunk dependencies).
+
+### 3. Modularity & Extensibility (Medium-term, Strategic)
+
+* **Plugin System for Rules:** This would be a more advanced feature, but imagine a `cleansh` where users could easily add new rule sets as external plugins without recompiling the main binary. This directly aligns with **modularity** and **scalable design patterns**.
+* **Separation of Concerns:** Continue to review the codebase (e.g., `commands`, `tools`, `ui`) to ensure a clear separation of concerns, making it easier to maintain and extend.
+
+### 4. Documentation & Community (Long-term Vision)
+
+* **Comprehensive Rule Documentation:** Detail each built-in rule, its regex pattern, and typical use cases in the `README.md` or a dedicated `RULES.md` file.
+* **Contribution Guidelines:** As the project matures, providing clear guidelines for contributors (e.g., on adding new rules, writing tests) will be crucial for community growth.
+* **User Guides/Cookbooks:** Create examples for common scenarios, like "How to use `cleansh` in a CI/CD pipeline" or "Creating your first custom rule."
+
+
+### **Immediate Next Steps I'd Recommend:**
+
+1.  **Review the `print_content` and `print_redaction_summary` functions:** Even though the tests pass now, the extra newline in `test_basic_sanitization` might indicate a subtle inconsistency in how newlines are handled at the end of output blocks. It might be worth a quick look to see if you can achieve the exact expected output without the extra newline (which might make the output cleaner for end-users), and then adjust the test expectation again. If it's intentional for separation, then the current test is fine.
+2.  **Expanded Redaction Rules:** This is a low-hanging fruit for immediate value. Start by identifying the next 2-3 most critical sensitive data types you want to redact.
+3.  **Basic "Dry Run" Mode:** A `--dry-run` flag that simply outputs the *sanitized* content without writing to file or clipboard, and *always* includes the summary. This would be a great debugging/preview feature.
+

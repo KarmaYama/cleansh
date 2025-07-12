@@ -3,12 +3,14 @@ use std::io::{self, Read};
 use std::path::PathBuf;
 use std::fs;
 use std::process::exit;
-use std::collections::HashMap; // Needed for Theme map
+use std::collections::HashMap;
+use std::env;
 
 // Third‑party crate imports for CLI parsing, logging, and error handling
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, ArgAction};
 use log::{debug, info};
+use dotenvy;
 
 // Internal module imports. These modules will be defined within the `src` directory
 mod commands;
@@ -17,7 +19,7 @@ mod logger;
 mod tools;
 mod ui;
 
-/// cleansh - A high‑trust, single‑purpose CLI tool that sanitizes terminal output for safe sharing.
+/// `cleansh` - A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing.
 ///
 /// Secure by default. Zero config required. Extendable when needed.
 ///
@@ -37,17 +39,25 @@ mod ui;
 )]
 struct Cli {
     /// Copy the sanitized result to the system clipboard.
-    /// Short flag is `-c` (unique).
-    #[arg(short, long, help = "Copy the sanitized result to the system clipboard.")]
+    /// Short flag is `-c`. Default can be set via CLIPBOARD_ENABLED env var.
+    #[arg(short, long, help = "Copy the sanitized result to the system clipboard.", env = "CLIPBOARD_ENABLED", action = ArgAction::SetTrue)]
     clipboard: bool,
+
+    /// Do NOT copy the sanitized result to the system clipboard. Overrides CLIPBOARD_ENABLED env var.
+    #[arg(long = "no-clipboard", help = "Do NOT copy the sanitized result to the system clipboard.", action = ArgAction::SetTrue)] // Change to SetTrue for a standalone 'no' flag
+    disable_clipboard: bool, // Renamed to avoid confusion
 
     /// Show a detailed diff view highlighting all redactions made to the input.
     /// Short flag is `-d`.
-    #[arg(short, long, help = "Show a detailed diff view highlighting redactions.")]
+    #[arg(short, long, help = "Show a detailed diff view highlighting redactions.", action = ArgAction::SetTrue)]
     diff: bool,
 
+    /// Do NOT show a detailed diff view.
+    #[arg(long = "no-diff", help = "Do NOT show a detailed diff view.", action = ArgAction::SetTrue)] // Change to SetTrue for a standalone 'no' flag
+    disable_diff: bool, // Renamed to avoid confusion
+
     /// Specify a custom YAML configuration file for redaction rules.
-    /// **Long-only** `--config` (no short) to avoid conflicts.
+    /// Long-only `--config` to avoid conflicts.
     #[arg(long, value_name = "FILE", help = "Load a custom YAML configuration file for redaction rules.")]
     config: Option<PathBuf>,
 
@@ -56,9 +66,13 @@ struct Cli {
     #[arg(short = 'o', long, value_name = "FILE", help = "Output the sanitized content to a specified file instead of stdout.")]
     out: Option<PathBuf>,
 
-    /// Enable debug logging for more verbose output.
-    #[arg(long, help = "Enable debug logging for more verbose output.")]
+    /// Enable debug logging for more verbose output. Overrides LOG_LEVEL env var.
+    #[arg(long, help = "Enable debug logging for more verbose output.", action = ArgAction::SetTrue)]
     debug: bool,
+
+    /// Do NOT enable debug logging.
+    #[arg(long = "no-debug", help = "Do NOT enable debug logging.", action = ArgAction::SetTrue)] // Change to SetTrue for a standalone 'no' flag
+    disable_debug: bool, // Renamed to avoid confusion
 
     /// Optional input file path. Reads from stdin if not provided.
     #[arg(value_name = "INPUT", help = "Optional input file to read from. Reads from stdin if not provided.")]
@@ -67,53 +81,75 @@ struct Cli {
     /// Specify a custom YAML theme file for output styling.
     #[arg(long, value_name = "FILE", help = "Load a custom YAML theme file for output styling.")]
     theme: Option<PathBuf>,
+
+    /// Do not display the redaction summary at the end of the output.
+    #[arg(long, help = "Do not display the redaction summary at the end of the output.", action = ArgAction::SetTrue)]
+    no_redaction_summary: bool,
 }
 
+/// The main entry point of the `cleansh` application.
+///
+/// This function parses command-line arguments, initializes logging,
+/// reads input content, and delegates to the core `run_cleansh` command logic.
+/// It handles top-level errors by printing a user-friendly message and exiting.
+///
+/// # Returns
+///
+/// Returns `Ok(())` on successful application execution.
+/// Exits with a non-zero status code on error.
 fn main() -> Result<()> {
-    // Parse arguments once and store them.
+    // Load environment variables from .env file first.
+    dotenvy::dotenv().ok();
+
     let cli = Cli::parse();
 
+    // Determine effective values: 'disable' flags take precedence.
+    let effective_debug = cli.debug && !cli.disable_debug;
+    let effective_clipboard = cli.clipboard && !cli.disable_clipboard;
+    let effective_diff = cli.diff && !cli.disable_diff;
+
+
     // 1. Initialize the logger.
-    // If `--debug` is enabled, and RUST_LOG is not already set, set it to "debug".
-    // Because `set_var` is marked unsafe in this toolchain, wrap it accordingly.
-    if cli.debug && std::env::var("RUST_LOG").is_err() {
-        // Safety: We are setting an environment variable that is not used by other parts
-        // of the program in a way that would cause unsoundness. This is a common pattern
-        // for configuring logging.
+    if effective_debug {
         unsafe {
-            std::env::set_var("RUST_LOG", "debug");
+            env::set_var("RUST_LOG", "debug");
+        }
+    } else if env::var("RUST_LOG").is_err() {
+        if let Ok(log_level_env) = env::var("LOG_LEVEL") {
+            unsafe {
+                env::set_var("RUST_LOG", log_level_env);
+            }
         }
     }
     logger::init_logger();
 
     info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
     debug!("Parsed CLI arguments: {:?}", cli);
+    debug!("Effective Debug: {}, Effective Clipboard: {}, Effective Diff: {}", effective_debug, effective_clipboard, effective_diff);
+
 
     // Load theme from file or use embedded defaults
     let theme_map: HashMap<ui::theme::ThemeEntry, ui::theme::ThemeStyle> =
         if let Some(theme_path) = cli.theme {
             ui::theme::ThemeStyle::load_from_file(&theme_path)
                 .unwrap_or_else(|e| {
-                    // Use print_warn_message for user-facing warning
                     ui::output_format::print_warn_message(
                         &mut io::stderr(),
                         &format!("Failed to load custom theme from {}: {}. Falling back to default white theme.", theme_path.display(), e),
-                        &ui::theme::ThemeStyle::default_theme_map(), // Use default theme for this warning message
+                        &ui::theme::ThemeStyle::default_theme_map(),
                     );
                     log::warn!("Failed to load custom theme from {}: {}. Falling back to default white theme.", theme_path.display(), e);
                     ui::theme::ThemeStyle::default_theme_map()
                 })
         } else {
-            // Fallback to a default theme (all white, or a predefined simple one)
             ui::theme::ThemeStyle::default_theme_map()
         };
-
 
     // 2. Determine the input source and read content.
     let mut input_content = String::new();
     if let Some(input_path) = cli.input_file {
         info!("Reading input from file: {}", input_path.display());
-        ui::output_format::print_info_message( // Use print_info_message
+        ui::output_format::print_info_message(
             &mut io::stdout(),
             &format!("Reading input from file: {}", input_path.display()),
             &theme_map,
@@ -122,7 +158,7 @@ fn main() -> Result<()> {
             .with_context(|| format!("Failed to read input from file: {}", input_path.display()))?;
     } else {
         info!("Reading input from stdin...");
-        ui::output_format::print_info_message( // Use print_info_message
+        ui::output_format::print_info_message(
             &mut io::stdout(),
             "Reading input from stdin...",
             &theme_map,
@@ -135,17 +171,17 @@ fn main() -> Result<()> {
     // 3. Delegate the core sanitization workflow.
     if let Err(e) = commands::cleansh::run_cleansh(
         &input_content,
-        cli.clipboard,
-        cli.diff,
+        effective_clipboard, // Use effective value
+        effective_diff,      // Use effective value
         cli.config,
         cli.out,
-        &theme_map, // Pass the loaded theme map
+        cli.no_redaction_summary,
+        &theme_map,
     ) {
-        // Print a user‑friendly error message (now styled)
         ui::output_format::print_error_message(
             &mut io::stderr(),
             &format!("An error occurred: {}", e),
-            &theme_map, // Pass the theme map for error messages
+            &theme_map,
         );
         exit(1);
     }
