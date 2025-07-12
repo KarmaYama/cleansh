@@ -1,9 +1,10 @@
-```Cleansh
+```Cleansh-v0.1.2
 📁 /
 ├── 📁 .github
-│   └── 📁 workflows
-│       ├── 📄 release.yml
-│       └── 📄 rust.yml
+│   ├── 📁 workflows
+│   │   ├── 📄 release.yml
+│   │   └── 📄 rust.yml
+│   └── 📄 dependabot.yml
 ├── 📁 config
 │   └── 📄 default_rules.yaml
 ├── 📁 src
@@ -20,10 +21,8 @@
 │   ├── 📄 config.rs
 │   ├── 📄 logger.rs
 │   └── 📄 main.rs
-├── 📁 tests
-│   └── 📄 cleansh_integration.rs
+├── 📁 target
 ├── 📁 website
-│   ├── 📁 node_modules
 │   ├── 📁 src
 │   │   ├── 📄 custom.css
 │   │   └── 📄 input.css
@@ -33,14 +32,21 @@
 │   ├── 📄 postcss.config.js
 │   ├── 📄 styles.css
 │   └── 📄 tailwind.config.js
+├── 📁 wix
+│   └── 📄 main.wxs
 ├── 📄 .env
 ├── 📄 .gitignore
 ├── 📄 Cargo.lock
 ├── 📄 Cargo.toml
-├── 📄 Dist.toml
+├── 📄 CHANGELOG.md
 ├── 📄 cleansh_scope.md
 ├── 📄 Cleansh.toml
+├── 📄 CODE_OF_CONDUCT.md
+├── 📄 CONTRIBUTING
+├── 📄 dist-workspace.toml
+├── 📄 dist.toml
 ├── 📄 LICENSE
 ├── 📄 project.md
-└── 📄 README.md
+├── 📄 README.md
+└── 📄 SECURITY.md
 ```
