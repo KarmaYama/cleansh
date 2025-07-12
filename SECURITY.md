@@ -8,7 +8,7 @@ We take the security of `cleansh` very seriously. We are committed to protecting
 
 `cleansh` is currently in active development, and we aim to provide security updates for the **latest stable release**. As a command-line utility, `cleansh` does not have "versions" in the traditional sense of long-term support branches like larger software frameworks. Instead, we follow a rapid release cycle, with each new version building upon and enhancing the previous one.
 
-**Therefore, we recommend all users update to the [latest available version on crates.io](https://crates.io/crates/cleansh) to ensure they receive all security patches and bug fixes.**
+**Therefore, we recommend all users update to the <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer">latest available version on crates.io</a> to ensure they receive all security patches and bug fixes.**
 
 At this stage of development (pre-v1.0), only the **most recent published version** is actively supported with security fixes.
 
