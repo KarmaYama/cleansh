@@ -1,7 +1,9 @@
 # 🧭 Cleansh – Sanitize Your Terminal Output, Securely.
+
 [![CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml)
 [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml)
-> A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in development so expect bugs and please do report them.
+
+> A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in active development; while the latest `v0.1.1` release addresses a key bug in the diff view, we value your feedback, so please do report any issues you encounter.
 
 -----
 
@@ -11,7 +13,7 @@
 
 -----
 
-## 1\. ✅ Core Capabilities – Current Version (v0.1.0)
+## 1\. ✅ Core Capabilities – Current Version (v0.1.1) - Precision View
 
 This version of `cleansh` focuses on providing essential sanitization features with a strong emphasis on security and ease of use. Based on our rigorously passing test suite, you can trust `cleansh` to accurately mask the following sensitive data types:
 
@@ -27,7 +29,7 @@ This version of `cleansh` focuses on providing essential sanitization features w
 `cleansh` provides command-line flags to customize its behavior, all thoroughly tested:
 
   * **Copy to Clipboard:** Use `--clipboard` (`-c`) to automatically copy the sanitized output to your system's clipboard.
-  * **Show Diff View:** Use `--diff` (`-d`) to display a clear, colored diff between the original and sanitized content, highlighting all redactions.
+  * **Show Diff View:** Use `--diff` (`-d`) to display a clear, **line-by-line colored diff** between the original and sanitized content, highlighting all redactions, powered by the `diffy` crate.
   * **Load Custom Config:** Use `--config <path/to/config.yaml>` to apply your own custom redaction rules, which can augment or override the powerful built-in defaults.
   * **Output to File:** Use `--out <path/to/result.txt>` to write the sanitized output directly to a specified file.
 
@@ -120,25 +122,25 @@ The `cleansh` codebase is thoughtfully organized for clarity, modularity, and ma
 ```
 cleansh/
 ├── src/
-│   ├── main.rs                 # CLI entrypoint, argument parsing, high-level orchestration
-│   ├── commands/
-│   │   └── cleansh.rs          # Main CLI logic, handles command execution, config loading, and flag processing
-│   ├── tools/
-│   │   └── sanitize_shell.rs   # Core sanitization engine: contains all regex definitions, redaction logic, and path normalization
-│   ├── config/                 # (New: Consider this as a module for config handling)
-│   │   └── mod.rs              # Logic for loading default and user-defined rules
-│   ├── ui/                     # (New: Consider this as a module for UI handling)
-│   │   ├── mod.rs              # Public UI functions
-│   │   ├── output_format.rs    # Handles all terminal output formatting (summaries, diffs, messages)
-│   │   └── theme.rs            # Manages color themes and styling
-│   └── tests/                  # Unit tests for individual components
+│   ├── main.rs                 # CLI entrypoint, argument parsing, high-level orchestration
+│   ├── commands/
+│   │   └── cleansh.rs          # Main CLI logic, handles command execution, config loading, and flag processing
+│   ├── tools/
+│   │   └── sanitize_shell.rs   # Core sanitization engine: contains all regex definitions, redaction logic, and path normalization
+│   ├── config/                 # (New: Consider this as a module for config handling)
+│   │   └── mod.rs              # Logic for loading default and user-defined rules
+│   ├── ui/                     # (New: Consider this as a module for UI handling)
+│   │   ├── mod.rs              # Public UI functions
+│   │   ├── output_format.rs    # Handles all terminal output formatting (summaries, diffs, messages)
+│   │   └── theme.rs            # Manages color themes and styling
+│   └── tests/                  # Unit tests for individual components
 ├── config/
-│   └── default_rules.yaml      # Embedded immutable default redaction rules
-├── .env                        # Runtime configuration settings (local development)
+│   └── default_rules.yaml      # Embedded immutable default redaction rules
+├── .env                        # Runtime configuration settings (local development)
 ├── .gitignore
-├── Cargo.toml                  # Rust project manifest
-├── README.md                   # This file
-├── LICENSE (MIT)               # MIT License file
+├── Cargo.toml                  # Rust project manifest
+├── README.md                   # This file
+├── LICENSE (MIT)               # MIT License file
 ```
 
 -----
@@ -189,20 +191,23 @@ rules:
 When using the `-c` / `--clipboard` flag, `cleansh` will copy sanitized output to your system clipboard.
 
 ### ✔️ Supported by Default:
-- **macOS**
-- **Windows**
+
+  - **macOS**
+  - **Windows**
 
 ### ⚠️ Linux Users:
+
 Clipboard support requires one of the following utilities to be installed:
 
-- `xclip`
-- `xsel`
-- `wl-clipboard`
+  - `xclip`
+  - `xsel`
+  - `wl-clipboard`
 
 Without these, clipboard functionality may fail silently or print a warning.
 
 > If you're running `cleansh` in a headless server or container, clipboard features will be disabled automatically.
 
+-----
 
 ## 4\. 🧠 Sanitizer Engine Design (in `src/tools/sanitize_shell.rs`)
 
@@ -261,7 +266,7 @@ A comprehensive testing strategy ensures the reliability and correctness of `cle
   * **Assert Output Match:** Verifies that the resulting sanitized output precisely matches expected strings for different input scenarios.
   * **Clipboard Behavior (Mocked):** Confirms that the clipboard functionality is correctly invoked and handles data as expected.
   * **File Output Validation:** Tests the `--out` flag, ensuring content is accurately written to the specified file.
-  * **Diff View Accuracy:** Asserts that the diff output correctly highlights redactions as per the `dissimilar` crate's output.
+  * **Diff View Accuracy:** Asserts that the diff output correctly highlights redactions and **line changes as per the `diffy` crate's output.**
   * **Custom Configuration Application:** Validates that `--config` files are loaded, merged, and correctly apply custom and overridden rules.
   * **No Redaction Scenario:** Ensures `cleansh` behaves gracefully and provides appropriate messages when no sensitive data is found.
 
@@ -292,6 +297,14 @@ If you have the Rust toolchain installed, you can quickly install `cleansh` dire
 ```bash
 cargo install cleansh
 ```
+
+To **update** to the latest version, simply run:
+
+```bash
+cargo install cleansh --force
+```
+
+This is the recommended and most secure way to update for Rust developers, leveraging Cargo's robust package management.
 
 #### Building from Source
 
@@ -332,7 +345,7 @@ This generates packages ready for release to platforms like GitHub Releases.
 ```toml
 [package]
 name = "cleansh"
-version = "0.1.0"
+version = "0.1.1" # <--- UPDATED to 0.1.1
 edition = "2021"
 description = "Sanitize your terminal output. One tool. One purpose."
 license = "MIT"
@@ -384,7 +397,7 @@ As `cleansh` evolves, we envision expanding its utility and integration capabili
 | CLI Parsing       | `clap` with derives                           |
 | Regex Engine      | `regex` crate                                 |
 | ANSI Stripping    | `strip-ansi-escapes`                          |
-| Diff Generation   | `dissimilar`                                  |
+| Diff Generation   | `diffy`                                       |
 | Clipboard         | `arboard`                                     |
 | Logging           | `log` + `env_logger`                          |
 | Error Handling    | `anyhow` + `thiserror`                        |
