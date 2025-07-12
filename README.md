@@ -408,5 +408,3 @@ As `cleansh` evolves, we envision expanding its utility and integration capabili
 
 -----
 
-```
-```
