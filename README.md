@@ -3,7 +3,7 @@
 [![CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml)
 [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml)
 
-> A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in active development; while the latest `v0.1.1` release addresses a key bug in the diff view, we value your feedback, so please do report any issues you encounter.
+> A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in active development; while the latest **`v0.1.2`** release addresses critical output formatting and stability, we value your feedback, so please do report any issues you encounter.
 
 -----
 
@@ -13,9 +13,9 @@
 
 -----
 
-## 1\. ✅ Core Capabilities – Current Version (v0.1.1) - Precision View
+## 1\. ✅ Core Capabilities – Current Version (**v0.1.2**) - Stability & Output Refinement
 
-This version of `cleansh` focuses on providing essential sanitization features with a strong emphasis on security and ease of use. Based on our rigorously passing test suite, you can trust `cleansh` to accurately mask the following sensitive data types:
+This version of `cleansh` focuses on providing essential sanitization features with a strong emphasis on security and ease of use, building upon the "Precision View" of `v0.1.1`. Based on our rigorously passing test suite, you can trust `cleansh` to accurately mask the following sensitive data types and handle output reliably:
 
 ### 🎯 Primary Redaction Categories:
 
@@ -51,7 +51,7 @@ echo "My email is test@example.com and my IP is 192.168.1.1." | .\target\release
 
 # On Linux/macOS (Bash/Zsh)
 echo "My email is test@example.com and my IP is 192.168.1.1." | ./target/release/cleansh
-```
+````
 
 **Example: Cleaning `docker logs` before sharing**
 
@@ -224,7 +224,7 @@ The heart of `cleansh` is its robust sanitization engine, designed for efficienc
 ### Engine Architecture:
 
   * **Efficient Matching:** Utilizes the `regex::RegexSet` for highly optimized, simultaneous matching of multiple regular expressions against the input.
-  * **Immutable Defaults:** The default rule-set is compiled directly into the binary, preventing runtime tampering.
+  * **Immutable Defaults:** The core redaction rule-set is compiled directly into the binary, preventing runtime tampering.
   * **ANSI Stripping:** Employs the `strip-ansi-escapes` crate to ensure that sensitive data hidden within ANSI escape codes (common in terminal output) is also properly identified and redacted.
 
 -----
@@ -285,7 +285,7 @@ The easiest way to get `cleansh` for most users is by using our pre-built binari
 **One-line Install (Linux/macOS):**
 
 ```bash
-curl -sSf https://cleansh.sh/install.sh | sh
+curl -sSf [https://cleansh.sh/install.sh](https://cleansh.sh/install.sh) | sh
 ```
 
 **(Note: `https://cleansh.sh/install.sh` is a placeholder. Update with your actual distribution script URL once available\!)**
@@ -312,7 +312,7 @@ To build `cleansh` from its source code, you'll need the Rust toolchain installe
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/KarmaYama/cleansh.git
+    git clone [https://github.com/KarmaYama/cleansh.git](https://github.com/KarmaYama/cleansh.git)
     cd cleansh
     ```
 2.  **Build in release mode (recommended for performance):**
@@ -345,14 +345,14 @@ This generates packages ready for release to platforms like GitHub Releases.
 ```toml
 [package]
 name = "cleansh"
-version = "0.1.1" # <--- UPDATED to 0.1.1
+version = "0.1.2" # <--- UPDATED to 0.1.2
 edition = "2021"
 description = "Sanitize your terminal output. One tool. One purpose."
 license = "MIT"
-repository = "https://github.com/KarmaYama/cleansh" 
+repository = "[https://github.com/KarmaYama/cleansh](https://github.com/KarmaYama/cleansh)"
 readme = "README.md"
-categories = ["command-line-utilities", "security", "productivity"]
-keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
+categories = ["command-line-utilities", "security", "productivity", "text-processing"] # Added 'text-processing' for better discoverability
+keywords = ["cli", "security", "redact", "sanitize", "clipboard", "privacy", "log-sanitization"] # Expanded keywords for better discoverability
 ```
 
 ### License
@@ -371,7 +371,7 @@ keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
 | No external network calls | `cleansh` operates entirely locally, with no HTTP/cloud dependencies or telemetry. Your data stays private.                 |
 | Immutable default rules   | The core redaction rule-set is embedded at compile time and cannot be altered without recompilation, ensuring integrity.    |
 | Path redaction built-in   | Automatically prevents the unintentional leakage of personal filesystem details by normalizing paths.                       |
-| YAML sandboxed parsing    | User-defined YAML config files are strictly parsed for declarative rules; no execution capabilities are allowed.            |
+| YAML sandboxed parsing    | User-defined YAML config files are strictly parsed for declarative rules; no execution capabilities are allowed.              |
 | Clipboard output opt-in   | Copying to clipboard is an explicit opt-in action (`-c` flag), not a default, to prevent silent data transfer.              |
 
 -----
@@ -390,19 +390,21 @@ As `cleansh` evolves, we envision expanding its utility and integration capabili
 
 ## 🧵 Summary of Technology Stack
 
-| Area              | Stack/Choice                                  |
-| :---------------- | :-------------------------------------------- |
-| Language          | Rust                                          |
-| Config Format     | `.env` + Optional YAML                        |
-| CLI Parsing       | `clap` with derives                           |
-| Regex Engine      | `regex` crate                                 |
-| ANSI Stripping    | `strip-ansi-escapes`                          |
-| Diff Generation   | `diffy`                                       |
-| Clipboard         | `arboard`                                     |
-| Logging           | `log` + `env_logger`                          |
-| Error Handling    | `anyhow` + `thiserror`                        |
-| Installation      | `cargo-dist` + curl script / `cargo install`  |
-| License           | MIT                                           |
+| Area              | Stack/Choice                                 |
+| :---------------- | :------------------------------------------- |
+| Language          | Rust                                         |
+| Config Format     | `.env` + Optional YAML                       |
+| CLI Parsing       | `clap` with derives                          |
+| Regex Engine      | `regex` crate                                |
+| ANSI Stripping    | `strip-ansi-escapes`                         |
+| Diff Generation   | `diffy`                                      |
+| Clipboard         | `arboard`                                    |
+| Logging           | `log` + `env_logger`                         |
+| Error Handling    | `anyhow` + `thiserror`                       |
+| Installation      | `cargo-dist` + curl script / `cargo install` |
+| License           | MIT                                          |
 
 -----
 
+```
+```
