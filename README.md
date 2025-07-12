@@ -4,6 +4,8 @@
 [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml)
 [![crates.io](https://img.shields.io/crates/v/cleansh.svg)](https://crates.io/crates/cleansh)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml)
+[![CodeQL](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql)
 
 > A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed. It is still in active development; while the latest **`v0.1.2`** release addresses critical output formatting and stability, we value your feedback, so please do report any issues you encounter.
 
