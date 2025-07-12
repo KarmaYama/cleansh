@@ -134,10 +134,10 @@ jobs:
         # They are set only when the current matrix language is Rust.
         CODEQL_ACTION_EXTRA_OPTIONS: >-
           ${{ matrix.language == 'rust' && '--release' || '' }}
-          ${{ matrix.language == 'rust' and runner.os == 'Linux' && '--all-targets --target aarch64-unknown-linux-gnu --target x86_64-unknown-linux-musl' || '' }}
-          ${{ matrix.language == 'rust' and runner.os == 'macOS' && '--all-targets --target aarch64-apple-darwin --target x86_64-apple-darwin' || '' }}
+          ${{ matrix.language == 'rust' && runner.os == 'Linux' && '--all-targets --target aarch64-unknown-linux-gnu --target x86_64-unknown-linux-musl' || '' }}
+          ${{ matrix.language == 'rust' && runner.os == 'macOS' && '--all-targets --target aarch64-apple-darwin --target x86_64-apple-darwin' || '' }}
           # If a Windows runner were part of the matrix, the following would apply to analyze MSVC builds:
-          # ${{ matrix.language == 'rust' and runner.os == 'Windows' && '--all-targets --target x86_64-pc-windows-msvc' || '' }}
+          # ${{ matrix.language == 'rust' && runner.os == 'Windows' && '--all-targets --target x86_64-pc-windows-msvc' || '' }}
 
         # Note: CODEQL_ACTION_EXTRA_OPTIONS applies to the autobuilder.
         # For manual build mode, you would specify the commands directly in a 'run' step.
