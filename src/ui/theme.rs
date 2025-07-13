@@ -1,4 +1,3 @@
-// src/ui/theme.rs
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;

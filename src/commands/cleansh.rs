@@ -27,6 +27,7 @@ use std::collections::HashMap;
 /// * `output_path` - An optional `PathBuf` to write the sanitized output to a file.
 /// * `no_redaction_summary` - A boolean indicating whether to suppress the redaction summary output.
 /// * `theme_map` - A `HashMap` containing the current theme's styling for various output elements.
+/// * `opt_in_rules` - A vector of rule names that the user has explicitly opted into.
 ///
 /// # Returns
 ///
@@ -39,10 +40,12 @@ pub fn run_cleansh(
     output_path: Option<PathBuf>,
     no_redaction_summary: bool,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+    opt_in_rules: Vec<String>, // Added opt_in_rules
 ) -> Result<()> {
     info!("Starting cleansh command.");
     debug!("Clipboard: {}, Diff: {}", clipboard_enabled, diff_enabled);
     debug!("No redaction summary: {}", no_redaction_summary);
+    debug!("Opt-in rules: {:?}", opt_in_rules);
 
     // 1. Load and merge rules
     let default_cfg = config::load_default_rules().context("Loading default rules")?;
@@ -57,14 +60,21 @@ pub fn run_cleansh(
     } else {
         default_cfg
     };
-    let compiled = sanitize_shell::compile_rules(merged_cfg).context("Compiling rules")?;
+
+    // Filter rules based on opt-in status
+    let filtered_rules_config = config::RulesConfig {
+        rules: merged_cfg.rules.into_iter().filter(|rule| {
+            // Include rule if it's not opt-in, or if it is opt-in AND its name is in the opt_in_rules list
+            !rule.opt_in || opt_in_rules.contains(&rule.name)
+        }).collect(),
+    };
+
+    let compiled = sanitize_shell::compile_rules(filtered_rules_config).context("Compiling rules")?;
 
     // 2. Sanitize
     let (sanitized, summary) = sanitize_shell::sanitize_content(input_content, &compiled);
 
     // 3. Print summary (only if not suppressed)
-    // If no_redaction_summary is TRUE, we print NOTHING related to summary.
-    // If no_redaction_summary is FALSE, we print either the actual summary OR "No redactions applied.".
     if !no_redaction_summary {
         if summary.is_empty() && !input_content.trim().is_empty() { // Check if input is not just whitespace
             output_format::print_info_message(
@@ -76,7 +86,6 @@ pub fn run_cleansh(
             output_format::print_redaction_summary(&mut io::stdout(), &summary, theme_map);
         }
     }
-
 
     // 4. Diff
     if diff_enabled {
@@ -120,11 +129,6 @@ pub fn run_cleansh(
     }
 
     // 6. File or stdout
-    // Logic:
-    // 1. If output_path is Some, write to file and print "Written to file" message.
-    // 2. Else (no output file):
-    //    a. If diff_enabled is true, ONLY print the diff.
-    //    b. Else (no diff): Print the sanitized content to stdout.
     if let Some(path) = output_path {
         fs::write(&path, &sanitized).context("Writing output file")?;
         output_format::print_success_message(
@@ -133,11 +137,8 @@ pub fn run_cleansh(
             theme_map,
         );
     } else if !diff_enabled {
-        // Only print content to stdout if not writing to file AND diff is not enabled.
-        // Summary and clipboard messages are handled separately.
         output_format::print_content(&mut io::stdout(), &sanitized);
     }
-
 
     info!("cleansh finished.");
     Ok(())

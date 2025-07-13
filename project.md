@@ -1,7 +1,11 @@
-```Cleansh-v0.1.2
+```Cleansh
 📁 /
 ├── 📁 .github
+│   ├── 📁 ISSUE_TEMPLATE
+│   │   ├── 📄 bug_report.md
+│   │   └── 📄 feature_request.md
 │   ├── 📁 workflows
+│   │   ├── 📄 codeql.yml
 │   │   ├── 📄 release.yml
 │   │   └── 📄 rust.yml
 │   └── 📄 dependabot.yml
@@ -19,17 +23,21 @@
 │   │   ├── 📄 output_format.rs
 │   │   └── 📄 theme.rs
 │   ├── 📄 config.rs
+│   ├── 📄 lib.rs
 │   ├── 📄 logger.rs
 │   └── 📄 main.rs
-├── 📁 target
+├── 📁 tests
+│   └── 📄 cleansh_integration.rs
 ├── 📁 website
 │   ├── 📁 src
 │   │   ├── 📄 custom.css
 │   │   └── 📄 input.css
+│   ├── 📄 cleansh.ico
 │   ├── 📄 index.html
 │   ├── 📄 package-lock.json
 │   ├── 📄 package.json
 │   ├── 📄 postcss.config.js
+│   ├── 📄 privacy.html
 │   ├── 📄 styles.css
 │   └── 📄 tailwind.config.js
 ├── 📁 wix
@@ -39,14 +47,16 @@
 ├── 📄 Cargo.lock
 ├── 📄 Cargo.toml
 ├── 📄 CHANGELOG.md
-├── 📄 cleansh_scope.md
+├── 📄 CLEANSH_SCOPE.md
 ├── 📄 Cleansh.toml
 ├── 📄 CODE_OF_CONDUCT.md
-├── 📄 CONTRIBUTING
+├── 📄 CONTRIBUTING.md
 ├── 📄 dist-workspace.toml
 ├── 📄 dist.toml
 ├── 📄 LICENSE
+├── 📄 netlify.toml
 ├── 📄 project.md
 ├── 📄 README.md
-└── 📄 SECURITY.md
+├── 📄 SECURITY.md
+└── 📄 TRADEMARK.md
 ```

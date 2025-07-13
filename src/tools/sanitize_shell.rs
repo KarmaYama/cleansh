@@ -1,6 +1,3 @@
-// src/tools/sanitize_shells.rs
-
-
 use anyhow::{Context, Result};
 use log::{debug, trace};
 use regex::{Regex, RegexBuilder};
@@ -16,6 +13,7 @@ pub struct SanitizationRule {
     original_pattern: String,
     description: Option<String>,
     dot_matches_new_line: bool,
+    pub opt_in: bool, // Added for opt-in rules
 }
 
 impl std::fmt::Debug for SanitizationRule {
@@ -26,6 +24,7 @@ impl std::fmt::Debug for SanitizationRule {
             .field("replace_with", &self.replace_with)
             .field("description", &self.description)
             .field("dot_matches_new_line", &self.dot_matches_new_line)
+            .field("opt_in", &self.opt_in) // Added for debug
             .finish()
     }
 }
@@ -35,6 +34,8 @@ pub fn compile_rules(rules_config: config::RulesConfig) -> Result<Vec<Sanitizati
     let mut compiled_rules = Vec::with_capacity(rules_config.rules.len());
 
     for rule in rules_config.rules {
+        // Only compile rules that are not opt-in, or if an opt-in mechanism were to be added here.
+        // For now, we will compile all and filter later based on effective rules.
         debug!("Attempting to compile rule: {}", rule.name);
         trace!("Pattern: '{}'", rule.pattern);
 
@@ -61,6 +62,7 @@ pub fn compile_rules(rules_config: config::RulesConfig) -> Result<Vec<Sanitizati
             original_pattern: rule.pattern,
             description: rule.description,
             dot_matches_new_line: rule.dot_matches_new_line,
+            opt_in: rule.opt_in, // Store opt_in status
         });
 
         debug!("Successfully compiled rule: {}", compiled_rules.last().unwrap().name);
@@ -76,7 +78,6 @@ pub fn sanitize_content(
 ) -> (String, Vec<RedactionSummaryItem>) {
     debug!("Starting content sanitization.");
 
-    // ✔️ Correct usage for strip_ansi_escapes 0.2.1
     let stripped_bytes = strip_ansi_escapes_fn(content);
     let mut sanitized_content = String::from_utf8_lossy(&stripped_bytes).to_string();
 
@@ -145,6 +146,8 @@ fn summarize_redaction_items(items: Vec<RedactionSummaryItem>) -> Vec<RedactionS
             .entry(item.rule_name.clone())
             .and_modify(|existing| {
                 existing.occurrences += 1;
+                // For simplicity, when summarizing, we keep the last original/sanitized example.
+                // If a full list of all originals per rule is needed, this needs to be a Vec.
                 existing.original_text = item.original_text.clone();
                 existing.sanitized_text = item.sanitized_text.clone();
             })

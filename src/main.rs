@@ -44,8 +44,8 @@ struct Cli {
     clipboard: bool,
 
     /// Do NOT copy the sanitized result to the system clipboard. Overrides CLIPBOARD_ENABLED env var.
-    #[arg(long = "no-clipboard", help = "Do NOT copy the sanitized result to the system clipboard.", action = ArgAction::SetTrue)] // Change to SetTrue for a standalone 'no' flag
-    disable_clipboard: bool, // Renamed to avoid confusion
+    #[arg(long = "no-clipboard", help = "Do NOT copy the sanitized result to the system clipboard.", action = ArgAction::SetTrue)]
+    disable_clipboard: bool,
 
     /// Show a detailed diff view highlighting all redactions made to the input.
     /// Short flag is `-d`.
@@ -53,8 +53,8 @@ struct Cli {
     diff: bool,
 
     /// Do NOT show a detailed diff view.
-    #[arg(long = "no-diff", help = "Do NOT show a detailed diff view.", action = ArgAction::SetTrue)] // Change to SetTrue for a standalone 'no' flag
-    disable_diff: bool, // Renamed to avoid confusion
+    #[arg(long = "no-diff", help = "Do NOT show a detailed diff view.", action = ArgAction::SetTrue)]
+    disable_diff: bool,
 
     /// Specify a custom YAML configuration file for redaction rules.
     /// Long-only `--config` to avoid conflicts.
@@ -71,8 +71,8 @@ struct Cli {
     debug: bool,
 
     /// Do NOT enable debug logging.
-    #[arg(long = "no-debug", help = "Do NOT enable debug logging.", action = ArgAction::SetTrue)] // Change to SetTrue for a standalone 'no' flag
-    disable_debug: bool, // Renamed to avoid confusion
+    #[arg(long = "no-debug", help = "Do NOT enable debug logging.", action = ArgAction::SetTrue)]
+    disable_debug: bool,
 
     /// Optional input file path. Reads from stdin if not provided.
     #[arg(value_name = "INPUT", help = "Optional input file to read from. Reads from stdin if not provided.")]
@@ -85,6 +85,11 @@ struct Cli {
     /// Do not display the redaction summary at the end of the output.
     #[arg(long, help = "Do not display the redaction summary at the end of the output.", action = ArgAction::SetTrue)]
     no_redaction_summary: bool,
+
+    /// Comma-separated list of opt-in rule names to enable.
+    /// E.g., `--enable-rules "aws_secret_key,generic_hex_secret_32"`
+    #[arg(long, help = "Comma-separated list of opt-in rule names to enable (e.g., 'aws_secret_key,generic_hex_secret_32').")]
+    enable_rules: Option<String>,
 }
 
 /// The main entry point of the `cleansh` application.
@@ -108,6 +113,12 @@ fn main() -> Result<()> {
     let effective_clipboard = cli.clipboard && !cli.disable_clipboard;
     let effective_diff = cli.diff && !cli.disable_diff;
 
+    // Parse opt-in rules
+    let opt_in_rules: Vec<String> = cli.enable_rules
+        .clone() // <--- Added .clone() here to prevent partial move
+        .map(|s| s.split(',').map(|rule_name| rule_name.trim().to_string()).collect())
+        .unwrap_or_else(Vec::new);
+
 
     // 1. Initialize the logger.
     if effective_debug {
@@ -124,8 +135,9 @@ fn main() -> Result<()> {
     logger::init_logger();
 
     info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
-    debug!("Parsed CLI arguments: {:?}", cli);
+    debug!("Parsed CLI arguments: {:?}", cli); // Now `cli` can be borrowed here
     debug!("Effective Debug: {}, Effective Clipboard: {}, Effective Diff: {}", effective_debug, effective_clipboard, effective_diff);
+    debug!("Explicitly enabled opt-in rules: {:?}", opt_in_rules);
 
 
     // Load theme from file or use embedded defaults
@@ -177,6 +189,7 @@ fn main() -> Result<()> {
         cli.out,
         cli.no_redaction_summary,
         &theme_map,
+        opt_in_rules, // Pass opt_in_rules
     ) {
         ui::output_format::print_error_message(
             &mut io::stderr(),

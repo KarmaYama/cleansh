@@ -17,6 +17,8 @@ pub struct Rule {
     pub multiline: bool,
     #[serde(default)]
     pub dot_matches_new_line: bool,
+    #[serde(default)] // Added for opt-in rules
+    pub opt_in: bool,
 }
 
 /// A container for a collection of `Rule`s.
@@ -123,6 +125,9 @@ mod tests {
     fn test_load_default_rules() {
         let config = load_default_rules().unwrap();
         assert!(!config.rules.is_empty());
+        // Verify a rule with opt_in status exists and is correctly parsed
+        assert!(config.rules.iter().any(|r| r.name == "aws_secret_key" && r.opt_in));
+        assert!(config.rules.iter().any(|r| r.name == "email" && !r.opt_in));
     }
 
     #[test]
@@ -140,15 +145,20 @@ rules:
     replace_with: "[CUSTOM_EMAIL_REDACTED]"
     multiline: false
     dot_matches_new_line: false
+  - name: "my_opt_in_rule"
+    pattern: "OPT_IN_PATTERN"
+    replace_with: "[OPT_IN_REDACTED]"
+    opt_in: true
 "#;
         let mut file = NamedTempFile::new().unwrap();
         file.write_all(user_yaml.as_bytes()).unwrap();
         let path = file.path();
 
         let config = load_user_rules(path).unwrap();
-        assert_eq!(config.rules.len(), 2);
+        assert_eq!(config.rules.len(), 3);
         assert!(config.rules.iter().any(|r| r.name == "custom_token"));
         assert!(config.rules.iter().any(|r| r.name == "email"));
+        assert!(config.rules.iter().any(|r| r.name == "my_opt_in_rule" && r.opt_in));
         assert_eq!(
             config.rules.iter().find(|r| r.name == "email").unwrap().replace_with,
             "[CUSTOM_EMAIL_REDACTED]"
@@ -213,6 +223,10 @@ rules:
     replace_with: "[EXAMPLE_EMAIL_REDACTED]"
     multiline: false
     dot_matches_new_line: false
+  - name: "new_opt_in_rule"
+    pattern: "NEW_OPT_IN"
+    replace_with: "[NEW_OPT_IN_REDACTED]"
+    opt_in: true
 "#;
         let mut file = NamedTempFile::new().unwrap();
         file.write_all(user_yaml.as_bytes()).unwrap();
@@ -221,6 +235,8 @@ rules:
         let merged_config = merge_rules(default_config.clone(), Some(user_rules));
 
         assert!(merged_config.rules.iter().any(|r| r.name == "custom_log_id"));
+        assert!(merged_config.rules.iter().any(|r| r.name == "new_opt_in_rule" && r.opt_in));
+
 
         let merged_email_rule = merged_config.rules.iter().find(|r| r.name == "email").unwrap();
         assert_eq!(merged_email_rule.replace_with, "[EXAMPLE_EMAIL_REDACTED]");
@@ -229,7 +245,12 @@ rules:
         }
 
         let initial_default_count = default_config.rules.len();
-        let expected_count = initial_default_count + 1; // One new, one override
+        // Count how many default rules are NOT overridden by user rules
+        let non_overridden_defaults = default_config.rules.iter()
+            .filter(|d_rule| !["email"].contains(&d_rule.name.as_str()))
+            .count();
+        // Expected count = non_overridden_defaults + new user rules (custom_log_id, new_opt_in_rule) + overridden email rule
+        let expected_count = non_overridden_defaults + 2 + 1; // 2 new, 1 override
         assert_eq!(merged_config.rules.len(), expected_count);
     }
 }

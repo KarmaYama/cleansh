@@ -5,6 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
+## [0.1.5] - 2025-07-16 or earlier – Phase 1: Refined Default Redaction Rules
+
+### Added
+
+* **New redaction patterns** for emerging/expanded formats:
+    * **GitHub PATs** (`ghp_…`)
+    * **GitHub fine‑grained PATs** (`github_pat_…`, 72 chars)
+    * **Stripe keys** (`sk_live_…`, `sk_test_…`, `rk_live_…`)
+    * **Google OAuth tokens** (`ya29.…`, 20–120 chars)
+    * **IPv6 addresses** (full uncompressed form, 8×1–4 hex digits)
+    * **US Social Security Numbers (SSN)**
+    * **UK National Insurance Numbers (NINO)**
+    * **South African ID Numbers**
+    * **Windows Absolute Paths** (`C:\…`, `\\Server\Share\…`)
+    * **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`)
+    * **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
+
+### Changed
+
+* **Anchoring & Boundaries**
+    * Added `\b` word‑boundaries or full anchors to *every* regex to eliminate partial / substring matches.
+* **Contact Info**
+    * **Email** – now supports uppercase, digits and up to 63‑char TLDs (`.[A-Za-z]{2,63}`) to cover modern gTLDs.
+* **Network Identifiers**
+    * **IPv4** – tightened per‑octet ranges to `0–255` with full validation.
+    * **IPv6** – added uncompressed rule; description now notes compressed forms (`::`) are not covered in this phase.
+* **Auth Tokens & Keys**
+    * **JWT Token** - Description updated to use standard ASCII hyphen-minus (`-`).
+    * **GitHub Access** – classic `ghp_…` rule remains; added `github_pat_…` for fine‑grained tokens.
+    * **Stripe** – unified `sk_live_`, `sk_test_`, `rk_live_` under one rule (24 chars).
+    * **AWS** – expanded prefixes to include both `AKIA` and `ASIA`; all keys now fully anchored.
+    * **AWS Secret Access Key** – **Now opt-in only** due to high false positive risk from generic Base64 patterns.
+    * **GCP** – `AIza…` rule unchanged but re‑anchored.
+    * **Google OAuth** – length bound refined to 20–120 chars.
+    * **SSH keys** – block pattern refined to include full BEGIN/END delimiters (`-----…-----`), uses `[\s\S]*?` for safe multiline matching.
+* **Generic Secrets**
+    * **32‑ and 64‑char hex** – exact‑length patterns, fully anchored. **Now opt-in only** due to high false positive risk from matching common hashes or IDs.
+    * **Generic Token** – unchanged pattern, but description now flags as **opt‑in only** due to high false‑positive risk.
+* **Identifiers & Financial**
+    * **Credit Cards** – **Pattern significantly updated** to incorporate major BINs (Bank Identification Numbers) for enhanced precision, replacing the broad `13-16 digit` match; description now explicitly notes “no Luhn check.”
+    * **US SSN / UK NINO** – remain highly precise, with hyphens or built‑in date/area exclusions.
+    * **South African ID Numbers** – **Pattern refined** for more accurate format matching of YYMMDDSSSCCZ, including citizenship; no Luhn check.
+* **Filesystem Paths**
+    * **Linux/macOS** – refined to target common user home directories (`/home`, `/Users`) for sensitive path redaction.
+    * **Windows** – unchanged but fully anchored, supports drive‑letter paths; description clarifies that UNC paths are not extensively covered by this rule.
+
+### Improved
+
+* **Regex Clarity & Maintainability**
+    * Replaced greedy wildcards with specific quantifiers.
+    * Modularized complex rules into comment‑annotated YAML entries.
+    * Documented known limitations (e.g. full‑compression IPv6, no Luhn, specific Windows path types).
+* **Performance & Security**
+    * Ensured all patterns compile efficiently under Rust’s `regex` crate (RE2‑style, no backtracking pitfalls).
+    * Introduced `opt_in: true` flag for high false-positive risk rules (AWS Secret Key, generic hex, generic token) to align with "secure by default" principle.
+    * Avoided nested quantifiers or lookaround constructs that could risk ReDoS.
+* **Future‑Proofing**
+    * Prepared hooks for Phase 2: entropy thresholds, contextual analysis, Luhn–post‑processing.
+    * Updated descriptions to guide opt‑in/opt‑out of broad or high‑risk rules.
+
+---
+
+*All notable changes for this release—building a robust “secure by default” foundation for cleansh’s evolving redaction engine.*
+
+---
 
 ## [0.1.2] - 2025-07-12 - Stability & Output Refinement
 

@@ -1,4 +1,3 @@
-// src/ui/output_format.rs
 use crate::config::RedactionSummaryItem;
 use crate::ui::theme::{ThemeEntry, ThemeStyle};
 use owo_colors::OwoColorize;
@@ -34,7 +33,7 @@ pub fn print_success_message<W: Write>(
     message: &str,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
 ) {
-    let styled_message = get_styled_text(&format!("✅ {}\n", message), ThemeEntry::Success, theme_map);
+    let styled_message = get_styled_text(&format!("{}\n", message), ThemeEntry::Success, theme_map);
     let _ = write!(writer, "{}", styled_message);
 }
 
@@ -54,7 +53,7 @@ pub fn print_error_message<W: Write>(
     message: &str,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
 ) {
-    let styled_message = get_styled_text(&format!("❌ ERROR: {}\n", message), ThemeEntry::Error, theme_map);
+    let styled_message = get_styled_text(&format!("ERROR: {}\n", message), ThemeEntry::Error, theme_map);
     let _ = write!(writer, "{}", styled_message);
 }
 
@@ -64,7 +63,7 @@ pub fn print_warn_message<W: Write>(
     message: &str,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
 ) {
-    let styled_message = get_styled_text(&format!("⚠️ WARNING: {}\n", message), ThemeEntry::Warn, theme_map);
+    let styled_message = get_styled_text(&format!("WARNING: {}\n", message), ThemeEntry::Warn, theme_map);
     let _ = write!(writer, "{}", styled_message);
 }
 
