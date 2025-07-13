@@ -1,0 +1,3 @@
+[build]
+  publish = "website"
+  command = "# No build command needed for static HTML/CSS/JS"
