@@ -27,7 +27,7 @@ We deeply appreciate the efforts of security researchers and the open-source com
 
 **How to Report a Vulnerability:**
 
-1.  **Direct Email:** Please report vulnerabilities by sending an email to `alex.matariran@gmail.com`
+1.  **Direct Email:** Please report vulnerabilities by sending an email to `cleansshh@gmail.com`
 2.  **Encryption (Optional but Recommended):** For sensitive disclosures, you may request our PGP key in your initial email for encrypted communication.
 3.  **Provide Details:** In your report, please include as much detail as possible:
     * A clear and concise description of the vulnerability.
