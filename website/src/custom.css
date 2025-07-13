@@ -1,29 +1,102 @@
-/* Custom styles for enterprise feel and animations */
-body {
-  font-family: 'Inter', sans-serif;
+/* ---------------------------------------------------------
+   1. Tailwind Directives
+--------------------------------------------------------- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------
+   2. Base Layer Overrides
+--------------------------------------------------------- */
+@layer base {
+  /* Custom default font stacks */
+  body {
+    @apply bg-gray-950 text-white antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Dark mode background fix */
+  html.dark body {
+    @apply bg-gray-900;
+  }
+
+  /* Placeholder color for inputs/textareas */
+  input::placeholder,
+  textarea::placeholder {
+    color: #6B7280; /* Tailwind gray-500 */
+    opacity: 1;
+  }
 }
-.font-mono {
-  font-family: 'IBM Plex Mono', monospace;
+
+/* ---------------------------------------------------------
+   3. Components Layer: Enterprise Animations & Diffs
+--------------------------------------------------------- */
+@layer components {
+  /* Fade‑in animations */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+  .fade-in.appear {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Diff highlighting for live demo */
+  .diff-added {
+    color: #6EE7B7; /* Tailwind emerald-300 */
+  }
+  .diff-removed {
+    color: #F87171; /* Tailwind red-400 */
+    text-decoration: line-through;
+  }
+
+  /* Separator between navbar links */
+  .nav-separator {
+    @apply mx-2 text-gray-500;
+  }
+
+  /* Dark‑mode toggle button */
+  #theme-toggle {
+    @apply fixed bottom-4 right-4 z-50 bg-gray-800 text-gray-100 p-2 rounded-md cursor-pointer;
+  }
 }
-.fade-in {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+
+/* ---------------------------------------------------------
+   4. Utilities Layer: Custom Helpers
+--------------------------------------------------------- */
+@layer utilities {
+  /* Responsive utility: hide on small, show on large */
+  .hidden-lg {
+    @apply hidden lg:block;
+  }
+  .block-lg {
+    @apply block lg:hidden;
+  }
+
+  /* Smooth scroll for anchor links */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
 }
-.fade-in.appear {
-  opacity: 1;
-  transform: translateY(0);
+
+/* ---------------------------------------------------------
+   5. Keyframes (if you wish to extend with more complex anims)
+--------------------------------------------------------- */
+/* Example: subtle pulse on CTA buttons */
+@keyframes pulse-slow {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
 }
-/* Simple diff highlighting for the demo */
-.diff-added {
-  color: #6EE7B7; /* Green for added content */
-}
-.diff-removed {
-  color: #F87171; /* Red for removed content */
-  text-decoration: line-through;
-}
-/* Adjusting placeholder text color for dark mode inputs */
-input::placeholder, textarea::placeholder {
-  color: #6B7280; /* gray-500 */
-  opacity: 1; /* Firefox default is less */
+.btn-pulse {
+  @apply inline-block;
+  animation: pulse-slow 4s ease-in-out infinite;
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,315 +10,298 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <meta property="og:title" content="cleansh – Secure Terminal Redaction" />
+  <meta property="og:description" content="Open-source Rust CLI tool that redacts logs and output, locally." />
+  <meta property="og:image" content="https://yourdomain.com/preview.png" />
+  <style>
+    /* Fade‑in animations */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 1s ease-out, transform 1s ease-out; }
+    .fade-in.appear { opacity: 1; transform: translateY(0); }
+    /* Separator styling */
+    .nav-separator { margin: 0 0.5rem; color: #4B5563; }
+    /* Dark-mode toggle button */
+    #theme-toggle { position: fixed; bottom: 1rem; right: 1rem; z-index: 100; background: #1f2937; color: #f9fafb; padding: 0.5rem; border-radius: 0.375rem; cursor: pointer; }
+  </style>
 </head>
 <body class="bg-gray-950 text-white font-sans antialiased">
 
-  <header class="bg-gray-950 p-6 z-50 relative">
-    <nav class="max-w-7xl mx-auto flex justify-between items-center">
+  <!-- Dark mode toggle -->
+  <button id="theme-toggle" aria-label="Toggle dark/light theme">🌙</button>
+
+  <!-- Navbar -->
+  <header class="bg-gray-950 p-4 lg:p-6 shadow-md">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
       <a href="#" class="text-3xl font-extrabold text-blue-400">cleansh</a>
-      <div class="space-x-6 text-lg">
-        <a href="#features" class="text-gray-300 hover:text-white transition duration-200">Features</a>
-        <a href="#use-cases" class="text-gray-300 hover:text-white transition duration-200">Use Cases</a>
-        <a href="#future-plans" class="text-gray-300 hover:text-white transition duration-200">Roadmap</a>
-        <a href="#install" class="text-gray-300 hover:text-white transition duration-200">Install</a>
-        <a href="#adoption" class="text-gray-300 hover:text-white transition duration-200">Adoption</a>
-        <a href="https://github.com/KarmaYama/cleansh" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">GitHub</a>
-        <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Crates.io</a>
-        <a href="https://docs.rs/cleansh" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Docs.rs</a>
-        <a href="https://github.com/KarmaYama/cleansh/releases" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Releases</a>
-        <a href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Changelog</a>
-        <a href="privacy.html" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Privacy</a>
-      </div>
-    </nav>
+      <!-- Desktop menu -->
+      <nav class="hidden lg:flex lg:items-center lg:space-x-0 lg:text-gray-300 text-lg">
+        <a href="#features" class="hover:text-white transition">Features</a><span class="nav-separator">|</span>
+        <a href="#use-cases" class="hover:text-white transition">Use Cases</a><span class="nav-separator">|</span>
+        <a href="#future-plans" class="hover:text-white transition">Roadmap</a><span class="nav-separator">|</span>
+        <a href="#install" class="hover:text-white transition">Install</a><span class="nav-separator">|</span>
+        <a href="#adoption" class="hover:text-white transition">Adoption</a><span class="nav-separator">|</span>
+        <a href="https://github.com/KarmaYama/cleansh" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-400 hover:text-blue-300 transition">GitHub</a><span class="nav-separator">|</span>
+        <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-400 hover:text-blue-300 transition">Crates.io</a><span class="nav-separator">|</span>
+        <a href="https://docs.rs/cleansh" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-400 hover:text-blue-300 transition">Docs.rs</a><span class="nav-separator">|</span>
+        <a href="https://github.com/KarmaYama/cleansh/releases" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-400 hover:text-blue-300 transition">Releases</a><span class="nav-separator">|</span>
+        <a href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-400 hover:text-blue-300 transition">Changelog</a><span class="nav-separator">|</span>
+        <a href="privacy.html" class="font-semibold text-blue-400 hover:text-blue-300 transition">Privacy</a>
+      </nav>
+      <!-- Mobile menu toggle -->
+      <button id="menu-toggle" class="lg:hidden text-3xl text-blue-400 focus:outline-none">☰</button>
+    </div>
+    <!-- Mobile menu -->
+    <div id="nav-mobile" class="hidden lg:hidden mt-4 bg-gray-900 rounded-lg shadow-lg p-4 space-y-2 text-gray-300 text-base">
+      <a href="#features" class="block hover:text-white transition">Features</a>
+      <a href="#use-cases" class="block hover:text-white transition">Use Cases</a>
+      <a href="#future-plans" class="block hover:text-white transition">Roadmap</a>
+      <a href="#install" class="block hover:text-white transition">Install</a>
+      <a href="#adoption" class="block hover:text-white transition">Adoption</a>
+      <a href="https://github.com/KarmaYama/cleansh" target="_blank" rel="noopener noreferrer" class="block font-semibold text-blue-400 hover:text-blue-300 transition">GitHub</a>
+      <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer" class="block font-semibold text-blue-400 hover:text-blue-300 transition">Crates.io</a>
+      <a href="https://docs.rs/cleansh" target="_blank" rel="noopener noreferrer" class="block font-semibold text-blue-400 hover:text-blue-300 transition">Docs.rs</a>
+      <a href="https://github.com/KarmaYama/cleansh/releases" target="_blank" rel="noopener noreferrer" class="block font-semibold text-blue-400 hover:text-blue-300 transition">Releases</a>
+      <a href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" class="block font-semibold text-blue-400 hover:text-blue-300 transition">Changelog</a>
+      <a href="privacy.html" class="block font-semibold text-blue-400 hover:text-blue-300 transition">Privacy</a>
+    </div>
   </header>
 
-  <section class="min-h-screen flex flex-col items-center justify-center text-center px-6 py-20 bg-gradient-to-br from-gray-950 to-gray-800 relative overflow-hidden">
+  <!-- Hero -->
+  <section class="min-h-screen flex flex-col items-center justify-center text-center px-6 py-20 bg-gradient-to-br from-gray-950 to-gray-800 relative overflow-hidden fade-in">
     <div class="absolute inset-0 z-0 opacity-10" style="background-image: radial-gradient(circle at top left, #3B82F6 0%, transparent 40%), radial-gradient(circle at bottom right, #10B981 0%, transparent 40%);"></div>
-    <div class="max-w-5xl z-10 fade-in">
-      <p class="text-blue-400 uppercase text-base tracking-widest mb-4 font-semibold">High-Trust. Secure by Default. Zero Config.</p>
-      <h1 class="text-6xl md:text-7xl font-extrabold mb-8 leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
-        Sanitize Terminal Output. <br class="hidden md:inline">Securely Share.
+    <div class="max-w-5xl z-10">
+      <p class="text-blue-400 uppercase text-base tracking-widest mb-4 font-semibold">High‑Trust. Secure by Default. Zero Config.</p>
+      <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold mb-8 leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
+        Sanitize Terminal Output.<br class="hidden md:inline"> Securely Share.
       </h1>
-      <p class="text-gray-300 text-xl md:text-2xl mb-10 leading-relaxed font-light">
-        <span class="font-semibold text-white">cleansh</span> is a powerful, single-purpose CLI tool that intelligently redacts <span class="font-semibold">IP addresses, emails, tokens, and absolute paths</span> from your logs and terminal output. <br class="hidden md:inline">Built in Rust, it's fully local, open-source, and privacy-first. Currently in <span class="font-semibold">active development (v0.1.2)</span>, we value your feedback—please report any issues you encounter.
+      <p class="text-gray-300 text-lg sm:text-xl mb-10 leading-relaxed font-light">
+        <span class="font-semibold text-white">cleansh</span> is a powerful, single‑purpose CLI tool that intelligently redacts <span class="font-semibold">IP addresses, emails, tokens, and absolute paths</span> from your logs and terminal output.<br class="hidden md:inline"> Built in Rust, it's fully local, open‑source, and privacy‑first. Currently in <span class="font-semibold">active development (v0.1.2)</span>. We value your feedback—please report any issues.
       </p>
       <div class="flex flex-col sm:flex-row gap-5 justify-center">
-        <a href="#install" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-full font-bold text-xl transition duration-300 ease-in-out shadow-xl hover:shadow-2xl transform hover:scale-105">Get cleansh Now</a>
-        <a href="#live-demo" class="border border-blue-500 text-blue-400 hover:border-blue-400 hover:text-white px-10 py-5 rounded-full font-semibold text-xl transition duration-300 ease-in-out shadow-lg hover:shadow-xl transform hover:scale-105">Try Live Demo</a>
+        <a href="#install" class="bg-blue-600 hover:bg-blue-700 text-white px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-lg sm:text-xl transition transform hover:scale-105 shadow-xl hover:shadow-2xl">Get cleansh Now</a>
+        <a href="#live-demo" class="border border-blue-500 text-blue-400 hover:border-blue-400 hover:text-white px-8 sm:px-10 py-4 sm:py-5 rounded-full font-semibold text-lg sm:text-xl transition transform hover:scale-105 shadow-lg hover:shadow-xl">Try Live Demo</a>
       </div>
     </div>
   </section>
 
-  <section class="bg-gray-900 px-6 py-20 border-t border-gray-800" id="live-demo">
-    <div class="max-w-6xl mx-auto text-center fade-in">
-      <h2 class="text-5xl font-bold mb-6 text-white">Experience Real-Time Log Redaction</h2>
-      <p class="text-gray-300 text-lg mb-12">
-        Paste your logs below and see `cleansh` instantly redact sensitive information. <span class="font-semibold text-blue-300">No data leaves your browser.</span>
+  <!-- Live Demo -->
+  <section id="live-demo" class="bg-gray-900 px-6 py-20 border-t border-gray-800 fade-in">
+    <div class="max-w-6xl mx-auto text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold mb-6 text-white">Experience Real‑Time Log Redaction</h2>
+      <p class="text-gray-300 text-md sm:text-lg mb-12">
+        Paste your logs below and see <code>cleansh</code> instantly redact sensitive information. <span class="font-semibold text-blue-300">No data leaves your browser.</span>
       </p>
-
-      <div class="bg-gray-800 rounded-xl p-8 shadow-2xl border border-gray-700">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="bg-gray-800 rounded-xl p-6 sm:p-8 shadow-2xl border border-gray-700 max-w-full mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label for="inputLog" class="block text-left text-gray-300 text-sm font-semibold mb-2">Your Original Log (Paste here):</label>
-            <textarea id="inputLog" class="w-full h-64 p-4 rounded-lg bg-gray-950 text-green-300 font-mono text-sm border border-gray-700 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none" placeholder="Paste sensitive log data here..."></textarea>
+            <label for="inputLog" class="block text-left text-gray-300 text-sm font-semibold mb-2">Your Original Log:</label>
+            <textarea id="inputLog" class="w-full h-56 sm:h-64 p-4 rounded-lg bg-gray-950 text-green-300 font-mono text-sm sm:text-base border border-gray-700 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none" placeholder="Paste sensitive log data here..."></textarea>
           </div>
           <div>
             <label for="outputLog" class="block text-left text-gray-300 text-sm font-semibold mb-2">Redacted Output:</label>
-            <textarea id="outputLog" class="w-full h-64 p-4 rounded-lg bg-gray-950 text-green-300 font-mono text-sm border border-gray-700 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none" readonly placeholder="Redacted output will appear here..."></textarea>
+            <textarea id="outputLog" class="w-full h-56 sm:h-64 p-4 rounded-lg bg-gray-950 text-green-300 font-mono text-sm sm:text-base border border-gray-700 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none" readonly placeholder="Redacted output will appear here..."></textarea>
           </div>
         </div>
-        <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-          <button id="redactButton" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold text-lg transition duration-300 ease-in-out shadow-lg hover:shadow-xl transform hover:scale-105">Redact My Logs</button>
-          <button id="copyButton" class="border border-gray-400 text-gray-300 hover:border-white hover:text-white px-8 py-4 rounded-full font-medium text-lg transition duration-300 ease-in-out shadow-lg hover:shadow-xl transform hover:scale-105">Copy Redacted Log</button>
+        <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center gap-4">
+          <button id="redactButton" class="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-md sm:text-lg transition transform hover:scale-105 shadow-lg hover:shadow-xl">Redact My Logs</button>
+          <button id="copyButton" class="border border-gray-400 text-gray-300 hover:border-white hover:text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-medium text-md sm:text-lg transition transform hover:scale-105 shadow-lg hover:shadow-xl">Copy Redacted Log</button>
         </div>
-        <p class="text-gray-500 text-sm mt-6">
-          <span class="font-semibold text-red-400">Note:</span> This is a client-side demo. For production-grade redaction, use the CLI tool for its full capabilities and performance.
-          <span class="font-semibold text-yellow-400">(Live `cleansh` tool integration via WebAssembly (WASM) or dedicated API coming soon!)</span>
+        <p class="text-gray-500 text-xs sm:text-sm mt-4">
+          <span class="font-semibold text-red-400">Note:</span> This is a client-sided demo. For production-grade redaction, use the CLI tool for full capabilities and performance. 
+          <span class="font-semibold text-yellow-400">(Live `cleansh` integration via WASM or API coming soon!)</span>
         </p>
       </div>
     </div>
   </section>
 
-  <section class="bg-gray-950 px-6 py-20 border-t border-gray-800" id="adoption">
-    <div class="max-w-4xl mx-auto text-center fade-in">
-      <h2 class="text-5xl font-bold mb-10 text-white">Join the Growing `cleansh` Community</h2>
-      <p class="text-gray-300 text-xl mb-12">
-        `cleansh` is quickly gaining traction among developers who prioritize security and efficiency. See our adoption on crates.io:
-      </p>
-      <div class="flex justify-center items-center">
-        <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center group">
-          <span class="text-5xl font-extrabold text-blue-400 mb-2 group-hover:text-blue-300 transition-colors duration-200">
-            <img src="https://img.shields.io/crates/d/cleansh.svg?style=for-the-badge&labelColor=334155&color=4FC3F7" alt="Downloads from crates.io" class="h-16">
-          </span>
-          <p class="text-gray-300 text-lg font-semibold mt-4">Downloads (from crates.io)</p>
-        </a>
-      </div>
-    </div>
-  </section>
-  <section class="bg-gray-950 px-6 py-20 border-t border-gray-800" id="features">
-    <div class="max-w-6xl mx-auto fade-in">
-      <h2 class="text-5xl font-bold text-center mb-14 text-white">Why Choose cleansh? Secure, Comprehensive, Flexible.</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
-          <h3 class="text-2xl font-bold mb-4 text-blue-400">🛡 Secure by Default</h3>
-          <p class="text-gray-400 leading-relaxed">
-            All redaction logic is <span class="font-semibold">static and regex-based</span>, preventing arbitrary code execution. `cleansh` operates <span class="font-semibold">entirely locally with no external network calls or telemetry</span>. Your sensitive data stays private.
-          </p>
-        </div>
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
-          <h3 class="text-2xl font-bold mb-4 text-green-400">✂️ Comprehensive Built-in Redactions</h3>
-          <p class="text-gray-400 leading-relaxed">
-            Out-of-the-box detection for common sensitive data: <span class="font-semibold">Emails, IPv4 addresses, generic tokens, JWTs, AWS/GCP/SSH keys, common hex secrets, and normalized absolute paths</span> (Linux/macOS).
-          </p>
-        </div>
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
-          <h3 class="text-2xl font-bold mb-4 text-purple-400">⚙️ Flexible Custom YAML Rules</h3>
-          <p class="text-gray-400 leading-relaxed">
-            Extend `cleansh` easily. Define your own <span class="font-semibold">custom regex patterns in a YAML file</span> to clean industry-specific tokens or unique data points. These rules intelligently merge with built-in defaults.
-          </p>
-        </div>
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
-          <h3 class="text-2xl font-bold mb-4 text-yellow-400">📋 Instant Clipboard Integration (`-c`)</h3>
-          <p class="text-gray-400 leading-relaxed">
-            Streamline your workflow. With the simple <span class="font-semibold">`--clipboard` or `-c` flag</span>, `cleansh` automatically copies the <span class="font-semibold">sanitized output directly to your system clipboard</span>, ready for pasting.
-          </p>
-        </div>
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
-          <h3 class="2xl font-bold mb-4 text-red-400">📂 Versatile Input/Output (`-o`)</h3>
-          <p class="text-gray-400 leading-relaxed">
-            Designed for flexibility. `cleansh` works seamlessly with <span class="font-semibold">stdin (piped input), file input</span>, and can output to <span class="font-semibold">stdout, the clipboard, or a specified file</span> using `--out` or `-o`.
-          </p>
-        </div>
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
-          <h3 class="text-2xl font-bold mb-4 text-teal-400">✨ Clear Diff View (`-d`)</h3>
-          <p class="text-gray-400 leading-relaxed">
-            Understand exactly what `cleansh` redacts. Use the <span class="font-semibold">`--diff` or `-d` flag</span> to <span class="font-semibold">display a colored diff between the original and sanitized content</span>, highlighting all changes for quick review.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="bg-gray-900 px-6 py-20 border-t border-gray-800" id="use-cases">
-    <div class="max-w-5xl mx-auto text-center fade-in">
-      <h2 class="text-5xl font-bold mb-12 text-white">Who Needs cleansh? Common Scenarios.</h2>
+  <!-- Adoption -->
+  <section id="adoption" class="bg-gray-950 px-6 py-20 border-t border-gray-800 fade-in">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold mb-10 text-white">Join the Growing <code>cleansh</code> Community</h2>
       <p class="text-gray-300 text-lg mb-12">
-        Whether you're debugging, collaborating, or ensuring compliance, `cleansh` simplifies data security.
+        <code>cleansh</code> is quickly gaining traction among developers who prioritize security and efficiency. See our adoption on crates.io:
       </p>
+      <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer" class="inline-flex flex-col items-center group">
+        <img src="https://img.shields.io/crates/d/cleansh.svg?style=for-the-badge&labelColor=334155&color=4FC3F7" alt="Downloads from crates.io" class="h-16 mb-2 group-hover:opacity-90 transition" />
+        <p class="text-gray-300 text-lg font-semibold">Downloads (crates.io)</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="bg-gray-950 px-6 py-20 border-t border-gray-800 fade-in">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-4xl sm:text-5xl font-bold text-center mb-14 text-white">Why Choose <code>cleansh</code>? Secure, Comprehensive, Flexible.</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
+          <h3 class="text-2xl font-bold mb-4 text-blue-400">🛡 Secure by Default</h3>
+          <p class="text-gray-400 leading-relaxed">All redaction logic is <span class="font-semibold">static and regex‑based</span>, preventing arbitrary code execution. cleansh runs <span class="font-semibold">entirely locally—no external network calls or telemetry</span>. Your sensitive data stays private.</p>
+        </div>
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
+          <h3 class="text-2xl font-bold mb-4 text-green-400">✂️ Comprehensive Built‑in Redactions</h3>
+          <p class="text-gray-400 leading-relaxed">Supports detection of sensitive data like <span class="font-semibold">emails, IPv4 addresses, tokens, JWTs, SSH/AWS/GCP keys, hex secrets, and absolute paths</span> out-of-the-box.</p>
+        </div>
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
+          <h3 class="text-2xl font-bold mb-4 text-purple-400">⚙️ Flexible Custom YAML Rules</h3>
+          <p class="text-gray-400 leading-relaxed">Extend cleansh with your own <span class="font-semibold">regex rules via YAML</span>, merging intelligently with defaults to suit industry- or project-specific requirements.</p>
+        </div>
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
+          <h3 class="text-2xl font-bold mb-4 text-yellow-400">📋 Clipboard Integration (`-c`)</h3>
+          <p class="text-gray-400 leading-relaxed">Use the <span class="font-semibold">`--clipboard` or `-c` flag</span> to automatically copy sanitized output to your system clipboard—ready to paste.</p>
+        </div>
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
+          <h3 class="text-2xl font-bold mb-4 text-red-400">📂 Versatile I/O (`-o`)</h3>
+          <p class="text-gray-400 leading-relaxed">Supports stdin (piped) and file input, and outputs to stdout, clipboard, or a specified file using `--out` or `-o`.</p>
+        </div>
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
+          <h3 class="text-2xl font-bold mb-4 text-teal-400">✨ Clear Diff View (`-d`)</h3>
+          <p class="text-gray-400 leading-relaxed">Use the <span class="font-semibold">`--diff` or `-d` flag</span> to display a colored diff between original and sanitized output, highlighting changes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section id="use-cases" class="bg-gray-950 px-6 py-20 border-t border-gray-800 fade-in">
+    <div class="max-w-5xl mx-auto text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold mb-12 text-white">Who Needs <code>cleansh</code>? Common Scenarios.</h2>
+      <p class="text-gray-300 text-lg mb-12">Whether you're debugging, collaborating, or ensuring compliance, cleansh simplifies secure log sharing.</p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-        <div class="bg-gray-950 p-6 rounded-xl shadow-lg border border-gray-800">
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-800">
           <h3 class="text-2xl font-bold mb-3 text-blue-300">Debugging & Support</h3>
-          <p class="text-gray-400 leading-relaxed">Share problematic logs with colleagues or support teams without accidentally exposing API keys, user data, or network specifics. Ensures faster, safer issue resolution.</p>
+          <p class="text-gray-400 leading-relaxed">Share logs safely with teammates or support without exposing API keys or user data.</p>
         </div>
-        <div class="bg-gray-950 p-6 rounded-xl shadow-lg border border-gray-800">
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-800">
           <h3 class="text-2xl font-bold mb-3 text-blue-300">Compliance & Auditing</h3>
-          <p class="text-gray-400 leading-relaxed">Automate the redaction of Personally Identifiable Information (PII) or other regulated data to comply with GDPR, CCPA, HIPAA, and internal security policies.</p>
+          <p class="text-gray-400 leading-relaxed">Redact PII or regulated data automatically to comply with GDPR, CCPA, HIPAA, or internal policies.</p>
         </div>
-        <div class="bg-gray-950 p-6 rounded-xl shadow-lg border border-gray-800">
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-800">
           <h3 class="text-2xl font-bold mb-3 text-blue-300">CI/CD Pipelines</h3>
-          <p class="text-gray-400 leading-relaxed">Integrate `cleansh` directly into your continuous integration and deployment pipelines to ensure all generated logs are sanitized before being stored or presented.</p>
+          <p class="text-gray-400 leading-relaxed">Integrate cleansh into your CI/CD workflows to sanitize logs before storage or sharing.</p>
         </div>
-        <div class="bg-gray-950 p-6 rounded-xl shadow-lg border border-gray-800">
-          <h3 class="text-2xl font-bold mb-3 text-blue-300">Open-Source Contributions</h3>
-          <p class="text-gray-400 leading-relaxed">When contributing to public repositories, use `cleansh` to redact sensitive information from code snippets, issue descriptions, or discussion threads.</p>
+        <div class="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-800">
+          <h3 class="text-2xl font-bold mb-3 text-blue-300">Open‑Source Contributions</h3>
+          <p class="text-gray-400 leading-relaxed">Use cleansh to redact sensitive info from issue descriptions, code snippets, and public discussions.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="bg-gray-950 px-6 py-20 border-t border-gray-800" id="future-plans">
-    <div class="max-w-6xl mx-auto text-center fade-in">
-      <h2 class="text-5xl font-bold mb-8 text-white">Future-Proofing cleansh: Our Roadmap</h2>
-      <p class="text-gray-300 text-xl mb-12 leading-relaxed">
-        As `cleansh` evolves beyond its current stable version, we envision expanding its utility and integration capabilities for broader accessibility and advanced data protection needs.
-      </p>
+  <!-- Roadmap -->
+  <section id="future-plans" class="bg-gray-900 px-6 py-20 border-t border-gray-800 fade-in">
+    <div class="max-w-6xl mx-auto text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold mb-8 text-white">Future‑Proofing cleansh: Our Roadmap</h2>
+      <p class="text-gray-300 text-xl mb-12 leading-relaxed">As cleansh evolves beyond v0.1.2, we plan to expand its integration and redaction capabilities.</p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800">
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
           <h3 class="text-2xl font-bold mb-4 text-orange-400">🔌 Plugin System <span class="text-sm font-normal text-gray-500">(Coming Soon)</span></h3>
-          <p class="text-gray-400 leading-relaxed">
-            A modular plugin architecture to allow dynamic loading of external, custom redaction logic and advanced functionalities. This will enable community and industry-specific extensions.
-          </p>
+          <p class="text-gray-400 leading-relaxed">Support a modular plugin architecture to enable community and industry-specific redaction logic extensions.</p>
         </div>
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800">
-          <h3 class="text-2xl font-bold mb-4 text-orange-400">🌐 WebAssembly (WASM) & Integrated Solutions <span class="text-sm font-normal text-gray-500">(Coming Soon)</span></h3>
-          <p class="text-gray-400 leading-relaxed">
-            Developing a WebAssembly (WASM) version for client-side, browser-based log sanitization, alongside exploring VS Code extensions and lightweight web GUIs for diverse user interfaces.
-          </p>
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
+          <h3 class="text-2xl font-bold mb-4 text-orange-400">🌐 WebAssembly & Integrated Solutions <span class="text-sm font-normal text-gray-500">(Coming Soon)</span></h3>
+          <p class="text-gray-400 leading-relaxed">Developing WASM version for browser-based redaction, VS Code extension, and lightweight GUIs.</p>
         </div>
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800">
-          <h3 class="text-2xl font-bold mb-4 text-orange-400">📦 Custom Git Hooks <span class="text-sm font-normal text-gray-500">(Coming Soon)</span></h3>
-          <p class="text-gray-400 leading-relaxed">
-            Implementing pre-commit or post-merge Git hooks to automatically sanitize commit messages or patch diffs before sharing them, integrating security directly into developer workflows.
-          </p>
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
+          <h3 class="text-2xl font-bold mb-4 text-orange-400">📦 Git Hooks <span class="text-sm font-normal text-gray-500">(Coming Soon)</span></h3>
+          <p class="text-gray-400 leading-relaxed">Implement Git pre-commit or post-merge hooks to sanitize logs or commit messages automatically.</p>
         </div>
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800">
+        <div class="bg-gray-900 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition transform hover:-translate-y-2">
           <h3 class="text-2xl font-bold mb-4 text-orange-400">🔒 Advanced Redaction Tiers <span class="text-sm font-normal text-gray-500">(Coming Soon)</span></h3>
-          <p class="text-gray-400 leading-relaxed">
-            Investigating features like auto-detection of security tokens from various cloud providers and dynamic secrets for complex enterprise use cases, enhancing protection for highly sensitive data.
-          </p>
+          <p class="text-gray-400 leading-relaxed">Plan support for cloud-specific tokens, dynamic secrets, and enterprise-grade redaction levels.</p>
         </div>
       </div>
       <div class="mt-16">
-        <a href="https://github.com/KarmaYama/cleansh#14-future-proofing-post-v10-aspirations" target="_blank" rel="noopener noreferrer" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-full font-bold text-xl transition duration-300 ease-in-out shadow-lg hover:shadow-xl transform hover:scale-105">Explore Our Full Roadmap on GitHub</a>
+        <a href="https://github.com/KarmaYama/cleansh#14-future-proofing-post-v10-aspirations" target="_blank" rel="noopener noreferrer" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-full font-bold text-xl transition transform hover:scale-105 shadow-lg hover:shadow-xl">Explore Full Roadmap on GitHub</a>
       </div>
     </div>
   </section>
 
-  <section class="bg-gray-900 px-6 py-20 border-t border-gray-800" id="install">
-    <div class="max-w-4xl mx-auto text-center fade-in">
-      <h2 class="text-5xl font-bold mb-10 text-white">Get Started with cleansh Today</h2>
-      <p class="text-gray-300 text-xl mb-12">
-        Installing `cleansh` is quick and easy. Choose your preferred method below. For detailed instructions, refer to our <a class="underline text-blue-400 hover:text-blue-300 font-semibold" href="https://github.com/KarmaYama/cleansh#installation" target="_blank" rel="noopener noreferrer">GitHub documentation</a>.
-      </p>
-    <div class="bg-gray-950 rounded-2xl p-8 text-green-300 font-mono text-base shadow-2xl border border-gray-800">
-      <p class="text-white text-xl font-semibold mb-4">Install via Script (macOS / Linux)</p>
-      <pre class="text-left break-words whitespace-pre-wrap overflow-x-auto">curl -sSf https://github.com/KarmaYama/cleansh/releases/latest/download/cleansh-installer.sh | sh</pre>
-      <p class="text-gray-500 text-sm mt-4">This script downloads the latest pre-compiled binary for your system. It's the recommended way for most users.</p>
-    </div>
-      <div class="bg-gray-950 rounded-2xl p-8 text-green-300 font-mono text-base shadow-2xl border border-gray-800">
+  <!-- Install -->
+  <section id="install" class="bg-gray-900 px-6 py-20 border-t border-gray-800 fade-in">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold mb-10 text-white">Get Started with cleansh Today</h2>
+      <p class="text-gray-300 text-xl mb-12">Installing <code>cleansh</code> is quick and easy. For full instructions, see our <a href="https://github.com/KarmaYama/cleansh#installation" target="_blank" rel="noopener noreferrer" class="underline text-blue-400 hover:text-blue-300 font-semibold">GitHub docs</a>.</p>
+      <div class="bg-gray-800 rounded-2xl p-6 sm:p-8 text-green-300 font-mono text-base shadow-2xl border border-gray-700 mb-6">
+        <p class="text-white text-xl font-semibold mb-4">Install via Script (macOS / Linux)</p>
+        <pre class="break-words whitespace-pre-wrap overflow-x-auto">curl -sSf https://github.com/KarmaYama/cleansh/releases/latest/download/cleansh-installer.sh | sh</pre>
+        <p class="text-gray-500 text-sm mt-4">Downloads the latest pre‑compiled binary. Recommended for most users.</p>
+      </div>
+      <div class="bg-gray-800 rounded-2xl p-6 sm:p-8 text-green-300 font-mono text-base shadow-2xl border border-gray-700 mb-6">
         <p class="text-white text-xl font-semibold mb-4">Install via Cargo (Rust)</p>
-        <pre class="text-left whitespace-pre-wrap">cargo install cleansh</pre>
-        <p class="text-gray-500 text-sm mt-4">If you have the Rust toolchain installed, use Cargo to compile and install `cleansh` directly from <a class="underline text-blue-400 hover:text-blue-300 font-semibold" href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer">crates.io</a>.</p>
+        <pre class="whitespace-pre-wrap">cargo install cleansh</pre>
+        <p class="text-gray-500 text-sm mt-4">Builds directly using Cargo from <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer" class="underline text-blue-400 hover:text-blue-300 font-semibold">crates.io</a>.</p>
       </div>
-    </div>
-      <p class="text-center text-gray-400 text-base mt-10">
-        Alternatively, <a class="underline text-blue-400 hover:text-blue-300 font-semibold" href="https://github.com/KarmaYama/cleansh/releases" target="_blank" rel="noopener noreferrer">download a pre-compiled binary</a> for Windows, macOS, or Linux directly from GitHub releases, or <a class="underline text-blue-400 hover:text-blue-300 font-semibold" href="https://github.com/KarmaYama/cleansh#building-from-source" target="_blank" rel="noopener noreferrer">build from source</a>.
+      <p class="text-gray-400 text-base mb-10">
+        Alternatively, <a href="https://github.com/KarmaYama/cleansh/releases" target="_blank" rel="noopener noreferrer" class="underline text-blue-400 hover:text-blue-300 font-semibold">download binaries</a> for Windows, macOS, or Linux from releases, or <a href="https://github.com/KarmaYama/cleansh#building-from-source" target="_blank" rel="noopener noreferrer" class="underline text-blue-400 hover:text-blue-300 font-semibold">build from source</a>.
       </p>
-      <div class="mt-16">
-        <a href="#live-demo" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-full font-bold text-xl transition duration-300 ease-in-out shadow-lg hover:shadow-xl transform hover:scale-105">Try the Live Demo</a>
-      </div>
+      <a href="#live-demo" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-full font-bold text-xl transition transform hover:scale-105 shadow-lg hover:shadow-xl">Try the Live Demo</a>
     </div>
   </section>
 
-  <footer class="text-center text-gray-500 text-sm py-12 bg-gray-950 border-t border-gray-800">
+  <!-- Footer -->
+  <footer class="text-center text-gray-500 text-sm py-12 bg-gray-950 border-t border-gray-800 fade-in">
     <p class="mb-2 text-gray-400">&copy; 2025 Cleansh Technologies LLC. All rights reserved.</p>
-    <p class="mb-2 text-gray-400">`cleansh` is <span class="font-semibold text-white">open-source</span> and <span class="font-semibold text-white">privacy-first</span>. <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT Licensed</a>.</p>
+    <p class="mb-2 text-gray-400"><code>cleansh</code> is <span class="font-semibold text-white">open‑source</span> and <span class="font-semibold text-white">privacy‑first</span>. <a href="https://github.com/KarmaYama/cleansh/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="underline text-blue-400 hover:text-blue-300">MIT Licensed</a>.</p>
     <p>
-      <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh" target="_blank" rel="noopener noreferrer">Contribute on GitHub</a> |
-      <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh#readme" target="_blank" rel="noopener noreferrer">Full Documentation</a> |
-      <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a> |
-      <a class="underline text-blue-400 hover:text-blue-300" href="privacy.html">Privacy Information</a>
+      <a href="https://github.com/KarmaYama/cleansh" target="_blank" rel="noopener noreferrer" class="underline text-blue-400 hover:text-blue-300">Contribute on GitHub</a> |
+      <a href="https://github.com/KarmaYama/cleansh#readme" target="_blank" rel="noopener noreferrer" class="underline text-blue-400 hover:text-blue-300">Full Documentation</a> |
+      <a href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" class="underline text-blue-400 hover:text-blue-300">Changelog</a> |
+      <a href="privacy.html" class="underline text-blue-400 hover:text-blue-300">Privacy Information</a>
     </p>
   </footer>
 
   <script>
-    // JavaScript for section fade-in on scroll
     document.addEventListener('DOMContentLoaded', () => {
-      const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-      };
-
-      const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('appear');
-            observer.unobserve(entry.target); // Stop observing once it appears
+      // Fade-in observer
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('appear');
+            observer.unobserve(e.target);
           }
         });
-      }, observerOptions);
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-      document.querySelectorAll('section, .fade-in').forEach(section => {
-        section.classList.add('fade-in'); // Ensure all target elements have the fade-in class
-        observer.observe(section);
+      // Mobile menu toggle
+      document.getElementById('menu-toggle').addEventListener('click', () => {
+        document.getElementById('nav-mobile').classList.toggle('hidden');
       });
 
-      // --- Live Demo Logic (Client-side, Placeholder for cleansh integration) ---
+      // Theme toggle with persistence
+      const themeToggle = document.getElementById('theme-toggle');
+      let theme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      themeToggle.textContent = theme === 'dark' ? '🌙' : '☀️';
+      themeToggle.addEventListener('click', () => {
+        theme = (theme === 'dark') ? 'light' : 'dark';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        localStorage.setItem('theme', theme);
+        themeToggle.textContent = theme === 'dark' ? '🌙' : '☀️';
+      });
+
+      // Simple redaction demo logic
       const inputLog = document.getElementById('inputLog');
       const outputLog = document.getElementById('outputLog');
-      const redactButton = document.getElementById('redactButton');
       const copyButton = document.getElementById('copyButton');
-
-      // Simple client-side redaction (for demo purposes only)
-      function simpleRedact(text) {
-        let redactedText = text;
-        // Basic regex for demonstration (not comprehensive like cleansh)
-        redactedText = redactedText.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL_REDACTED]'); // Emails
-        redactedText = redactedText.replace(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g, '[IP_REDACTED]'); // IPs
-        redactedText = redactedText.replace(/\b(sk_live_[a-zA-Z0-9]{16,}|pk_live_[a-zA-Z0-9]{16,})\b/g, '[REDACTED_SECRET]'); // Stripe-like keys
-        redactedText = redactedText.replace(/user_token_[a-zA-Z0-9]{20,}/g, '[USER_TOKEN_REDACTED]'); // Example custom token
-        return redactedText;
-      }
-
-      redactButton.addEventListener('click', () => {
-        const originalText = inputLog.value;
-        const redactedText = simpleRedact(originalText); // Replace with actual cleansh integration
-        outputLog.value = redactedText;
+      document.getElementById('redactButton').addEventListener('click', () => {
+        const t = inputLog.value;
+        const r = t
+          .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL_REDACTED]')
+          .replace(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g, '[IP_REDACTED]')
+          .replace(/\b(sk_live_[A-Za-z0-9]{16,}|pk_live_[A-Za-z0-9]{16,})\b/g, '[REDACTED_SECRET]')
+          .replace(/user_token_[A-Za-z0-9]{20,}/g, '[USER_TOKEN_REDACTED]');
+        outputLog.value = r;
       });
-
       copyButton.addEventListener('click', () => {
-        if (outputLog.value) {
-          navigator.clipboard.writeText(outputLog.value)
-            .then(() => {
-              // Optional: Provide visual feedback like a tooltip or temporary text change
-              const originalText = copyButton.textContent;
-              copyButton.textContent = 'Copied!';
-              setTimeout(() => {
-                copyButton.textContent = originalText;
-              }, 1500);
-            })
-            .catch(err => {
-              console.error('Failed to copy text: ', err);
-              alert('Failed to copy text. Please try manually.');
-            });
-        }
+        if (!outputLog.value) return;
+        navigator.clipboard.writeText(outputLog.value)
+          .then(() => {
+            const old = copyButton.textContent;
+            copyButton.textContent = 'Copied!';
+            setTimeout(() => copyButton.textContent = old, 1500);
+          })
+          .catch(() => alert('Failed to copy—please copy manually.'));
       });
-
-      // Future: Integrate cleansh via WebAssembly or API endpoint here
-      // For example, if cleansh had a WASM module:
-      /*
-      async function loadCleanshWASM() {
-        const { default: init, redact } = await import('./cleansh_wasm.js'); // Assuming your WASM bindings
-        await init(); // Initialize WASM module
-        redactButton.addEventListener('click', () => {
-          const originalText = inputLog.value;
-          const redactedText = redact(originalText); // Call WASM function
-          outputLog.value = redactedText;
-        });
-      }
-      loadCleanshWASM();
-      */
     });
   </script>
 </body>
