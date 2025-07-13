@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Privacy information for Cleansh – Cleansh Technologies LLC's commitment to user data privacy." />
+  <title>Privacy Information – Cleansh</title>
+  <link rel="icon" href="cleansh.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-950 text-white font-sans antialiased">
+
+  <header class="bg-gray-950 p-6 z-50 relative">
+    <nav class="max-w-7xl mx-auto flex justify-between items-center">
+      <a href="index.html" class="text-3xl font-extrabold text-blue-400">cleansh</a>
+      <div class="space-x-6 text-lg">
+        <a href="index.html#features" class="text-gray-300 hover:text-white transition duration-200">Features</a>
+        <a href="index.html#use-cases" class="text-gray-300 hover:text-white transition duration-200">Use Cases</a>
+        <a href="index.html#future-plans" class="text-gray-300 hover:text-white transition duration-200">Roadmap</a>
+        <a href="index.html#install" class="text-gray-300 hover:text-white transition duration-200">Install</a>
+        <a href="index.html#adoption" class="text-gray-300 hover:text-white transition duration-200">Adoption</a>
+        <a href="https://github.com/KarmaYama/cleansh" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">GitHub</a>
+        <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Crates.io</a>
+        <a href="https://docs.rs/cleansh" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Docs.rs</a>
+        <a href="https://github.com/KarmaYama/cleansh/releases" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Releases</a>
+        <a href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Changelog</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-6 py-20 fade-in">
+    <h1 class="text-5xl font-bold mb-6 text-white text-center">Privacy Information for Cleansh</h1>
+    <p class="text-gray-400 text-sm mb-10 text-center">Last updated: July 13, 2025</p>
+
+    <p class="text-gray-300 text-lg mb-4 leading-relaxed">
+      <span style="font-weight: 700;">At Cleansh Technologies LLC, our commitment to your privacy is simple and straightforward: &#x20;</span>
+      <span style="font-weight: 700; color: #60a5fa;">`cleansh` does not collect any of your personal data.</span>
+    </p>
+
+    <h2 class="text-4xl font-bold mb-6 text-white mt-10">Our Approach to Your Privacy</h2>
+    <p class="text-gray-300 text-lg mb-4 leading-relaxed">`cleansh` is designed as a <span style="font-weight: 600;">local-first, stateless command-line utility.</span> This means it processes data entirely on your local machine and has no built-in mechanisms to send information externally. We believe in providing powerful tools that respect your privacy by design.</p>
+
+    <ul class="list-disc list-inside text-gray-300 text-lg space-y-2 mb-8">
+      <li>
+        <span style="font-weight: 700; color: #fff;">No Data Collection:</span>
+        `cleansh` does not collect, store, transmit, or share any personal data, usage data, or telemetry from your device.
+      </li>
+      <li>
+        <span style="font-weight: 700; color: #fff;">No Network Connections:</span>
+        The `cleansh` application does not initiate any outbound network connections for data collection purposes.
+      </li>
+      <li>
+        <span style="font-weight: 700; color: #fff;">No Tracking:</span>
+        We do not use cookies, web beacons, or any other tracking technologies within the `cleansh` application.
+      </li>
+      <li>
+        <span style="font-weight: 700; color: #fff;">Local Processing Only:</span>
+        All operations performed by `cleansh` occur locally on your computer. Your input and sanitized output remain entirely under your control.
+      </li>
+    </ul>
+
+    <hr style="border-top: 1px solid #374151; margin-top: 2.5rem; margin-bottom: 2.5rem;">
+
+    <h2 class="text-4xl font-bold mb-6 text-white mt-10">Dependencies and External Interactions</h2>
+    <p class="text-gray-300 text-lg mb-4 leading-relaxed">While `cleansh` is built not to collect data, like most software, it operates within an environment and relies on various underlying components and libraries to function. It's important to understand the scope of `cleansh`'s control:</p>
+    <ul class="list-disc list-inside text-gray-300 text-lg space-y-2 mb-8">
+      <li>
+        <span style="font-weight: 700; color: #fff;">Operating System and Environment:</span>
+        `cleansh` runs within your operating system (e.g., Windows, macOS, Linux), which is outside of our control. Your operating system, shell, or other software installed on your machine may collect data or interact with the network independently of `cleansh`. We recommend reviewing the privacy policies of your operating system and other installed software.
+      </li>
+      <li>
+        <span style="font-weight: 700; color: #fff;">Internal Dependencies (Rust Crates):</span>
+        `cleansh` is developed using Rust and utilizes various open-source libraries (crates) for specific functionalities. We carefully select and review these dependencies to ensure they align with our privacy principles and do not introduce network-based data collection. However, the behavior of these third-party libraries is governed by their respective licenses and maintainers, and while we aim to choose privacy-respecting ones, we do not control their inherent functionality. We encourage users to inspect the `Cargo.toml` file in the source code for a full list of dependencies if they have concerns.
+      </li>
+      <li>
+        <span style="font-weight: 700; color: #fff;">User Responsibility:</span>
+        Any data that `cleansh` processes (e.g., shell output piped into it, or data from files you direct it to read) is data that you provide and control. `cleansh`'s sole purpose is to sanitize this data and return it to you; it does not retain, log, or transmit it.
+      </li>
+    </ul>
+
+    <hr style="border-top: 1px solid #374151; margin-top: 2.5rem; margin-bottom: 2.5rem;">
+
+    <h2 class="text-4xl font-bold mb-6 text-white mt-10">AI-Assisted Codebase (Full Transparency)</h2>
+    <p class="text-gray-300 text-lg mb-4 leading-relaxed">The codebase of `cleansh` was developed in close collaboration with AI. We believe in full transparency regarding this process and want to assure our users of the integrity and quality of the software.</p>
+    <ul class="list-disc list-inside text-gray-300 text-lg space-y-2 mb-8">
+      <li>
+        <span style="font-weight: 700; color: #fff;">All code was generated under direct supervision and review</span>
+        by the project maintainer, who remains responsible for the logic, architecture, and decisions behind every component.
+      </li>
+      <li>
+        <span style="font-weight: 700; color: #fff;">Every generated segment was manually validated, tested, and iterated on</span>
+        to ensure correctness, security, and maintainability.
+      </li>
+      <li>`cleansh` is not a copy-paste artifact — it is an intentionally built CLI tool with test coverage, clear design principles, and continuous refinement.</li>
+      <li>We believe that AI is a tool — not a substitute for ownership — and we stand by the quality and originality of the final product.</li>
+    </ul>
+
+    <hr style="border-top: 1px solid #374151; margin-top: 2.5rem; margin-bottom: 2.5rem;">
+
+    <h2 class="text-4xl font-bold mb-6 text-white mt-10">Website Privacy (cleansh.netlify.app)</h2>
+    <p class="text-gray-300 text-lg mb-4 leading-relaxed">While the `cleansh` tool itself does not collect data, the website hosting its documentation (<a href="https://cleansh.netlify.app/" target="_blank" class="text-blue-400 hover:underline">cleansh.netlify.app</a>) may implicitly collect certain non-identifiable usage data through standard web hosting practices (e.g., server logs, traffic analytics provided by Netlify). This data is typically aggregated and used for operational purposes like understanding website traffic patterns and ensuring service availability. We do not use this information to identify individual users.</p>
+    <p class="text-gray-300 text-lg mb-4 leading-relaxed">For details on how Netlify handles data, please refer to their <a href="https://www.netlify.com/privacy/" target="_blank" class="text-blue-400 hover:underline">privacy policy</a>.</p>
+
+    <hr style="border-top: 1px solid #374151; margin-top: 2.5rem; margin-bottom: 2.5rem;">
+
+    <h2 class="text-4xl font-bold mb-6 text-white mt-10">Changes to this Privacy Information</h2>
+    <p class="text-gray-300 text-lg mb-4 leading-relaxed">We may update this Privacy Information from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. We will notify You of any significant changes by posting the updated information on this page. The "Last updated" date at the top of the page will indicate when the latest revisions were made.</p>
+
+    <hr style="border-top: 1px solid #374151; margin-top: 2.5rem; margin-bottom: 2.5rem;">
+
+    <h2 class="text-4xl font-bold mb-6 text-white mt-10">Contact Us</h2>
+    <p class="text-gray-300 text-lg mb-4 leading-relaxed">If you have any questions or concerns about `cleansh` and its privacy approach, please feel free to contact us:</p>
+    <ul class="list-disc list-inside text-gray-300 text-lg space-y-2 mb-8">
+      <li>
+        <p>By email: <a href="mailto:cleansshh@gmail.com" class="text-blue-400 hover:underline">cleansshh@gmail.com</a></p>
+      </li>
+    </ul>
+  </main>
+
+  <footer class="text-center text-gray-500 text-sm py-12 bg-gray-950 border-t border-gray-800">
+    <p class="mb-2 text-gray-400">&copy; 2025 Cleansh Technologies LLC. All rights reserved.</p>
+    <p class="mb-2 text-gray-400">`cleansh` is <span class="font-semibold text-white">open-source</span> and <span class="font-semibold text-white">privacy-first</span>. <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT Licensed</a>.</p>
+    <p>
+      <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh" target="_blank" rel="noopener noreferrer">Contribute on GitHub</a> |
+      <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh#readme" target="_blank" rel="noopener noreferrer">Full Documentation</a> |
+      <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a> |
+      <a class="underline text-blue-400 hover:text-blue-300" href="privacy.html">Privacy Information</a>
+    </p>
+  </footer>
+
+  <script>
+    // JavaScript for section fade-in on scroll (if needed, though less critical for a privacy policy page)
+    document.addEventListener('DOMContentLoaded', () => {
+      const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+      };
+
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('appear');
+            observer.unobserve(entry.target); // Stop observing once it appears
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('section, .fade-in').forEach(section => {
+        section.classList.add('fade-in'); // Ensure all target elements have the fade-in class
+        observer.observe(section);
+      });
+    });
+  </script>
+</body>
+</html>

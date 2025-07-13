@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="cleansh – A high-trust, single-purpose CLI tool that securely sanitizes terminal output for safe sharing. Secure by default, zero config, extendable." />
   <title>Cleansh – Secure Log & Terminal Output Redaction</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" href="cleansh.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -27,6 +27,7 @@
         <a href="https://docs.rs/cleansh" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Docs.rs</a>
         <a href="https://github.com/KarmaYama/cleansh/releases" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Releases</a>
         <a href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Changelog</a>
+        <a href="privacy.html" class="text-blue-400 hover:text-blue-300 transition duration-200 font-semibold">Privacy</a>
       </div>
     </nav>
   </header>
@@ -39,7 +40,7 @@
         Sanitize Terminal Output. <br class="hidden md:inline">Securely Share.
       </h1>
       <p class="text-gray-300 text-xl md:text-2xl mb-10 leading-relaxed font-light">
-        <span class="font-semibold text-white">cleansh</span> is a powerful, single-purpose CLI tool that intelligently redacts <strong class="font-semibold">IP addresses, emails, tokens, and absolute paths</strong> from your logs and terminal output. <br class="hidden md:inline">Built in Rust, it's fully local, open-source, and privacy-first. Currently in <strong class="font-semibold">active development (v0.1.2)</strong>, we value your feedback—please report any issues you encounter.
+        <span class="font-semibold text-white">cleansh</span> is a powerful, single-purpose CLI tool that intelligently redacts <span class="font-semibold">IP addresses, emails, tokens, and absolute paths</span> from your logs and terminal output. <br class="hidden md:inline">Built in Rust, it's fully local, open-source, and privacy-first. Currently in <span class="font-semibold">active development (v0.1.2)</span>, we value your feedback—please report any issues you encounter.
       </p>
       <div class="flex flex-col sm:flex-row gap-5 justify-center">
         <a href="#install" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-full font-bold text-xl transition duration-300 ease-in-out shadow-xl hover:shadow-2xl transform hover:scale-105">Get cleansh Now</a>
@@ -101,37 +102,37 @@
         <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
           <h3 class="text-2xl font-bold mb-4 text-blue-400">🛡 Secure by Default</h3>
           <p class="text-gray-400 leading-relaxed">
-            All redaction logic is <strong class="font-semibold">static and regex-based</strong>, preventing arbitrary code execution. `cleansh` operates <strong class="font-semibold">entirely locally with no external network calls or telemetry</strong>. Your sensitive data stays private.
+            All redaction logic is <span class="font-semibold">static and regex-based</span>, preventing arbitrary code execution. `cleansh` operates <span class="font-semibold">entirely locally with no external network calls or telemetry</span>. Your sensitive data stays private.
           </p>
         </div>
         <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
           <h3 class="text-2xl font-bold mb-4 text-green-400">✂️ Comprehensive Built-in Redactions</h3>
           <p class="text-gray-400 leading-relaxed">
-            Out-of-the-box detection for common sensitive data: <strong class="font-semibold">Emails, IPv4 addresses, generic tokens, JWTs, AWS/GCP/SSH keys, common hex secrets, and normalized absolute paths</strong> (Linux/macOS).
+            Out-of-the-box detection for common sensitive data: <span class="font-semibold">Emails, IPv4 addresses, generic tokens, JWTs, AWS/GCP/SSH keys, common hex secrets, and normalized absolute paths</span> (Linux/macOS).
           </p>
         </div>
         <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
           <h3 class="text-2xl font-bold mb-4 text-purple-400">⚙️ Flexible Custom YAML Rules</h3>
           <p class="text-gray-400 leading-relaxed">
-            Extend `cleansh` easily. Define your own <strong class="font-semibold">custom regex patterns in a YAML file</strong> to clean industry-specific tokens or unique data points. These rules intelligently merge with built-in defaults.
+            Extend `cleansh` easily. Define your own <span class="font-semibold">custom regex patterns in a YAML file</span> to clean industry-specific tokens or unique data points. These rules intelligently merge with built-in defaults.
           </p>
         </div>
         <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
           <h3 class="text-2xl font-bold mb-4 text-yellow-400">📋 Instant Clipboard Integration (`-c`)</h3>
           <p class="text-gray-400 leading-relaxed">
-            Streamline your workflow. With the simple `--clipboard` or `-c` flag, `cleansh` automatically copies the <strong class="font-semibold">sanitized output directly to your system clipboard</strong>, ready for pasting.
+            Streamline your workflow. With the simple <span class="font-semibold">`--clipboard` or `-c` flag</span>, `cleansh` automatically copies the <span class="font-semibold">sanitized output directly to your system clipboard</span>, ready for pasting.
           </p>
         </div>
         <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
           <h3 class="2xl font-bold mb-4 text-red-400">📂 Versatile Input/Output (`-o`)</h3>
           <p class="text-gray-400 leading-relaxed">
-            Designed for flexibility. `cleansh` works seamlessly with <strong class="font-semibold">stdin (piped input), file input</strong>, and can output to <strong class="font-semibold">stdout, the clipboard, or a specified file</strong> using `--out` or `-o`.
+            Designed for flexibility. `cleansh` works seamlessly with <span class="font-semibold">stdin (piped input), file input</span>, and can output to <span class="font-semibold">stdout, the clipboard, or a specified file</span> using `--out` or `-o`.
           </p>
         </div>
         <div class="bg-gray-900 p-8 rounded-2xl shadow-xl border border-gray-800 hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-2">
           <h3 class="text-2xl font-bold mb-4 text-teal-400">✨ Clear Diff View (`-d`)</h3>
           <p class="text-gray-400 leading-relaxed">
-            Understand exactly what `cleansh` redacts. Use the `--diff` or `-d` flag to <strong class="font-semibold">display a colored diff between the original and sanitized content</strong>, highlighting all changes for quick review.
+            Understand exactly what `cleansh` redacts. Use the <span class="font-semibold">`--diff` or `-d` flag</span> to <span class="font-semibold">display a colored diff between the original and sanitized content</span>, highlighting all changes for quick review.
           </p>
         </div>
       </div>
@@ -214,12 +215,12 @@
       <pre class="text-left break-words whitespace-pre-wrap overflow-x-auto">curl -sSf https://github.com/KarmaYama/cleansh/releases/latest/download/cleansh-installer.sh | sh</pre>
       <p class="text-gray-500 text-sm mt-4">This script downloads the latest pre-compiled binary for your system. It's the recommended way for most users.</p>
     </div>
-        <div class="bg-gray-950 rounded-2xl p-8 text-green-300 font-mono text-base shadow-2xl border border-gray-800">
-          <p class="text-white text-xl font-semibold mb-4">Install via Cargo (Rust)</p>
-          <pre class="text-left whitespace-pre-wrap">cargo install cleansh</pre>
-          <p class="text-gray-500 text-sm mt-4">If you have the Rust toolchain installed, use Cargo to compile and install `cleansh` directly from <a class="underline text-blue-400 hover:text-blue-300 font-semibold" href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer">crates.io</a>.</p>
-        </div>
+      <div class="bg-gray-950 rounded-2xl p-8 text-green-300 font-mono text-base shadow-2xl border border-gray-800">
+        <p class="text-white text-xl font-semibold mb-4">Install via Cargo (Rust)</p>
+        <pre class="text-left whitespace-pre-wrap">cargo install cleansh</pre>
+        <p class="text-gray-500 text-sm mt-4">If you have the Rust toolchain installed, use Cargo to compile and install `cleansh` directly from <a class="underline text-blue-400 hover:text-blue-300 font-semibold" href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer">crates.io</a>.</p>
       </div>
+    </div>
       <p class="text-center text-gray-400 text-base mt-10">
         Alternatively, <a class="underline text-blue-400 hover:text-blue-300 font-semibold" href="https://github.com/KarmaYama/cleansh/releases" target="_blank" rel="noopener noreferrer">download a pre-compiled binary</a> for Windows, macOS, or Linux directly from GitHub releases, or <a class="underline text-blue-400 hover:text-blue-300 font-semibold" href="https://github.com/KarmaYama/cleansh#building-from-source" target="_blank" rel="noopener noreferrer">build from source</a>.
       </p>
@@ -235,7 +236,8 @@
     <p>
       <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh" target="_blank" rel="noopener noreferrer">Contribute on GitHub</a> |
       <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh#readme" target="_blank" rel="noopener noreferrer">Full Documentation</a> |
-      <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a class="underline text-blue-400 hover:text-blue-300" href="https://github.com/KarmaYama/cleansh/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a> |
+      <a class="underline text-blue-400 hover:text-blue-300" href="privacy.html">Privacy Information</a>
     </p>
   </footer>
 
