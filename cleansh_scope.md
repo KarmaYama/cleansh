@@ -1,310 +1,90 @@
-# 🧭 cleansh – Full Scope & Enterprise Architecture Plan
+# 🧭 cleansh – Project Scope & Strategic Roadmap
 
-> A high-trust, single-purpose CLI tool that sanitizes terminal output for safe sharing.
-Secure by default. Zero config required. Extendable when needed.
+> A high-trust, single-purpose CLI tool that securely sanitizes terminal output for safe sharing. Secure by default. Zero config required. Extendable when needed.
 
----
 
-## 1. ✅ Core Capabilities – MVP
+## 1. Current State (Achieved as of v0.1.2)
 
-### 🎯 Primary Goal:
-Sanitize shell output piped via stdin (or loaded from a file), masking:
+### 🎯 Core Capabilities:
+`cleansh` currently provides robust sanitization of shell output (piped via stdin or loaded from a file), intelligently masking:
 
-* Emails
-* IP addresses
-* Tokens, JWTs, AWS keys, GCP keys
-* SSH keys and hex secrets
-* Absolute paths (e.g., `/Users/alex/...`) → `~/...`
+* **Emails**
+* **IPv4 addresses**
+* **Generic tokens, JWTs, AWS/GCP keys, SSH keys, and common hex secrets**
+* **Absolute paths** (e.g., `/Users/alex/...`) which are normalized to `~/...`
 
-### 💡 Optional (with flags):
-* Copy result to clipboard (`--clipboard`)
-* Show diff view of redactions (`--diff`)
-* Load custom redaction config (`--config config.yaml`)
-* Output to file (`--out result.txt`)
+### ✨ Key Features Implemented:
+* **Clipboard Integration (`--clipboard` / `-c`):** Automatically copies sanitized output to the system clipboard.
+* **Diff View (`--diff` / `-d`):** Displays a colored diff between original and redacted content, now with improved accuracy thanks to `diffy` (`0.1.1`).
+* **Custom Redaction Config (`--config config.yaml`):** Allows loading user-defined YAML rules for extended pattern matching. These rules intelligently merge with built-in defaults.
+* **Output to File (`--out result.txt` / `-o`):** Directs sanitized output to a specified file.
+* **Runtime Configuration:** Utilizes `.env` for settings like `LOG_LEVEL` and `CLIPBOARD_ENABLED`.
+* **Robust Error Handling & Logging:** Implemented with `anyhow`, `thiserror`, `log`, and `env_logger`.
+* **Comprehensive Testing:** Includes unit tests for regex accuracy, path normalization, and YAML parsing, as well as integration tests for I/O and flag behavior (with recent fixes for output consistency in `0.1.2`).
+* **Cross-Platform Distribution:** Packaged for easy installation via `cargo-dist` (curl script, prebuilt binaries for Windows, macOS, Linux) and `cargo install`.
+* **MIT Licensed:** Open-source and privacy-first.
+* **Secure by Design:** No runtime evaluations, no external network calls, immutable default rules, sandboxed YAML, and opt-in clipboard.
 
----
-
-## 2. 🧱 File Structure
-
-```
-
-cleansh/
-├── src/
-│   ├── main.rs                 \# CLI entrypoint, arg parsing
-│   ├── commands/
-│   │   └── cleansh.rs          \# Main CLI logic + config/flags
-│   └── tools/
-│       └── sanitize\_shell.rs   \# All regex, redaction, path normalization
-├── config/
-│   └── default\_rules.yaml      \# Embedded default rules (immutable)
-├── .env                        \# Runtime config (log level, debug mode, etc.)
-├── .gitignore
-├── Cargo.toml
-├── README.md
-├── LICENSE (MIT)
-
-````
+### 📈 Recent Milestones (from Changelog):
+* **v0.1.2 (2025-07-12):** Focused on output stability and refinement, resolving critical formatting issues and ensuring correct summary message display.
+* **v0.1.1 (2025-07-12):** Enhanced diff view accuracy by upgrading to `diffy`.
+* **v0.1.0 (2025-07-12):** Initial public release with core sanitization capabilities and foundational CLI features.
 
 ---
 
-## 3. ⚙ Configuration Strategy
+## 2. Strategic Roadmap & Future Enhancements (Post v0.1.2)
 
-### 1. Runtime Settings (from `.env`)
-Loaded using `dotenv` or `dotenvy`. Keys:
+This section outlines the progression of `cleansh` beyond its current robust state, focusing on adding more value, improving user experience, and expanding its reach. These align with your `Future-Proofing` section and `Phased Development` ideas.
 
-* `LOG_LEVEL=info`
-* `CLIPBOARD_ENABLED=true`
-* `DEFAULT_CONFIG=./config/default_rules.yaml`
+### Phase 1: Enhanced Core Value & UX (Target: v0.2.x - v0.5.x)
+* **1A. Expanded Built-in Redaction Rules:**
+    * **New Sensitive Data Types:** Integrate default rules for common sensitive data not yet covered: credit card numbers, phone numbers, GUIDs, full URLs, and specific API keys (e.g., GitHub, Stripe).
+    * **Advanced Regex Patterns:** Research and integrate more sophisticated regex patterns for higher accuracy and fewer false positives, potentially leveraging known patterns from security standards.
+* **1B. Interactive & "Dry Run" Mode (`--dry-run`):**
+    * Implement a flag that displays the sanitized output and summary *without* affecting files or clipboard, allowing users to safely preview redactions. This would be a crucial feature for trust and verification.
+* **1C. Configurable Redaction Placeholders:**
+    * Allow users to define custom replacement strings per rule (e.g., `[EMAIL_ADDRESS]`, `[AWS_TOKEN]`) in their YAML config, providing more context to redacted output.
+* **1D. Structured Output (JSON/YAML):**
+    * Introduce a flag (e.g., `--output-format json`) to output the sanitized content and a detailed redaction summary/log in a machine-readable format. This is crucial for pipeline integration and aligns with the "Sanitized Document Format" (SDF) idea.
 
-> Secure, minimal, easily overridable per deployment.
+### Phase 2: Foundation for Extensibility & Scalability (Target: v0.6.x - v0.9.x)
+* **2A. Core Plugin System for Rules (Initial Architecture):**
+    * **Design Plugin Interface:** Define clear, secure interfaces for external modules to contribute or modify redaction rules. Focus on static, compile-time loadable plugins initially to maintain security and performance.
+    * **Proof-of-Concept Plugin:** Develop a simple example plugin (e.g., for a very specific, niche token type) to validate the loading and integration mechanism.
+* **2B. Performance Benchmarking Suite:**
+    * Establish and integrate a dedicated benchmarking suite to consistently track and optimize performance, especially for large inputs and complex rule sets. This is vital for **optimizing performance**.
+* **2C. Modularity Refinement:**
+    * Continuously refactor internal components (e.g., `commands`, `tools`) to enhance **modularity** and maintain strict **separation of concerns**, preparing for more complex integrations.
 
-### 2. User Rule Config (Optional)
-Supports a user-defined YAML via `--config`. Parsed with `serde_yaml`.
-
-**Example:**
-```yaml
-rules:
-  - name: email
-    pattern: '[\w.+-]+@[\w-]+\.[\w.-]+'
-    replace_with: '[email]'
-  - name: ip
-    pattern: '\b\d{1,3}(\.\d{1,3}){3}\b'
-    replace_with: '[ip]'
-````
-
------
-
-## 4\. 🧠 Sanitizer Tool Design (in `sanitize_shell.rs`)
-
-### Internal Pipeline:
-
-```
-[ stdin or file input ]
-          ↓
-[ normalize paths (~) ]
-          ↓
-[ apply built-in regex rules ]
-          ↓
-[ apply optional user rules from YAML ]
-          ↓
-[ optionally copy to clipboard or output to file ]
-```
-
-### Engine Design:
-
-  * Uses `regex::RegexSet` for efficient multi-pattern matching.
-  * Immutable default rule-set embedded at compile time.
-  * Optional merge with YAML rules.
-  * Strip ANSI with `strip-ansi-escapes`.
-
------
-
-## 5\. 📊 Logging and Error Handling
-
-### Logging:
-
-  * Use `log` + `env_logger`
-  * Levels: `trace`, `debug`, `info`, `warn`, `error`
-  * Controlled via `.env` or CLI flag (`--debug`)
-
-### Error handling:
-
-  * Use `anyhow` for robust top-level error aggregation, `thiserror` for custom errors.
-  * All sanitization failures or I/O errors should be:
-      * Logged cleanly
-      * Not fatal unless explicitly blocking behavior
-
------
-
-## 6\. 🧪 Testing and Validations
-
-### Unit tests:
-
-  * Regex pattern accuracy
-  * Path normalization behavior
-  * YAML parsing logic
-
-### Integration tests:
-
-  * Simulate stdin piping
-  * Assert output match
-  * Clipboard behavior (mocked)
-
------
-
-## 7\. 🚀 Packaging & Distribution
-
-### 📦 Preferred Method: Prebuilt Cross-Platform Binaries via `cargo-dist`
-
-**One-line install:**
-
-```bash
-curl -sSf [https://cleansh.sh/install.sh](https://cleansh.sh/install.sh) | sh
-```
-
-**Build:**
-
-```bash
-cargo install cargo-dist
-cargo dist init
-cargo dist build
-```
-
-**Supports:**
-
-  * Windows (.exe)
-  * macOS (arm64 + x86)
-  * Linux (deb, rpm, tarball)
-  * Homebrew tap (optional)
-  * GitHub Releases auto-publish
-
-> Alternative: `cargo install cleansh` (via crates.io) for Rust devs
-
------
-
-## 8\. 📜 Metadata & License
-
-### Metadata (in `Cargo.toml`)
-
-```toml
-[package]
-name = "cleansh"
-version = "0.1.0"
-edition = "2021"
-description = "Sanitize your terminal output. One tool. One purpose."
-license = "MIT"
-repository = "[https://github.com/yourname/cleansh](https://github.com/yourname/cleansh)" # Update this to your repo URL
-readme = "README.md"
-categories = ["command-line-utilities", "security", "productivity"]
-keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
-```
-
-### License
-
-  * Use MIT. Include `LICENSE` file with proper headers in source.
-
------
-
-## 9\. 🔐 Security by Default
-
-| Feature                  | Security Principle                                |
-| :----------------------- | :------------------------------------------------ |
-| No runtime evals         | Everything static / regex-based                   |
-| No external calls        | No HTTP/cloud dependencies                        |
-| Immutable default rules  | Cannot be edited without recompile                |
-| Path redaction built-in  | Prevents leaking personal filesystem details      |
-| YAML sandboxed           | No execution, only declarative parsing            |
-| Clipboard output opt-in  | Disabled by default, not silent                   |
-
------
-
-## 10\. 🛠 Future-Proofing (Post v1.0)
-
-  * Plugin system: Load `/tools/*.rs` redactors dynamically
-  * VSCode extension or web GUI
-  * WebAssembly version for browser-based logs
-  * Custom Git hook to sanitize commit messages or patch diffs
-  * Subscription tier: auto-detect security tokens & dynamic secrets
-
------
-
-## 🧵 Summary
-
-| Area            | Stack/Choice                       |
-| :-------------- | :--------------------------------- |
-| Language        | Rust                               |
-| Config format   | .env + optional YAML               |
-| CLI parsing     | `clap` with derives                |
-| Regex engine    | `regex` crate                      |
-| Clipboard       | `arboard`                        |
-| Logging         | `log` + `env_logger`               |
-| Error handling  | `anyhow` + `thiserror`             |
-| Install method  | `cargo-dist` + curl script or `cargo install` |
-| License         | MIT                                |
-
-```
-
-future updates
-
+### Phase 3: Advanced Integrations & Ecosystem Expansion (Target: v1.0+)
+* **3A. WebAssembly (WASM) Version & Browser Demo:**
+    * Compile `cleansh` to WASM to enable client-side, browser-based log sanitization, powering a robust online demo that runs the *actual* `cleansh` logic. This directly supports the vision mentioned in the roadmap.
+* **3B. External Regex Engine/Custom Redaction Logic Plugins:**
+    * Explore allowing plugins to utilize alternative regex engines or custom, more complex (potentially AI-driven or context-aware) redaction logic for advanced use cases, while still safeguarding `cleansh`'s core security principles. This moves towards "Advanced Redaction Tiers."
+* **3C. Document Transformation & Input/Output Plugins:**
+    * **Input Plugins:** Develop interfaces and example plugins for parsing specific document types (e.g., PDF text extraction, Word document text extraction) into plain text for `cleansh` to process.
+    * **Output Plugins:** Design interfaces for plugins that can take `cleansh`'s structured output (SDF) and transform it back into a redacted document (e.g., a new redacted PDF, Markdown, or specialized database format). This aligns with your "Sanitized Document Format" idea.
+* **3D. Custom Git Hooks:**
+    * Provide tools or guidance for integrating `cleansh` as a pre-commit or post-merge Git hook to automatically sanitize commit messages or patch diffs.
+* **3E. Desktop GUI / VS Code Extension:**
+    * Explore building a lightweight graphical user interface or a VS Code extension for users who prefer a visual interaction, potentially leveraging the WASM core or `tauri`/`electron` for a desktop app.
 
 ---
 
-## Phased Development: Plugin System + New File Type
+## 3. Core Technical Stack & Principles (Confirmed & Ongoing)
 
-Let's break down how we can build this out logically, tackling the core challenges step by step. This keeps the project manageable while aiming for that powerful long-term vision:
-
-### Phase 1: Core Plugin Infrastructure & Rule Extension
-
-This phase focuses on establishing the foundation for plugins and expanding the types of redaction you can perform. This avoids the complexity of file parsing initially, letting you get the plugin mechanism right.
-
-* **1A. Design the Plugin Interface:** Define how plugins will interact with `cleansh`. This means deciding:
-    * **What data flows in and out of a plugin?** (e.g., text content, redaction rules, metadata).
-    * **How are plugins loaded?** (e.g., dynamically loaded libraries, separate executables communicating via IPC). Rust has excellent support for dynamic linking, which could be a strong candidate.
-    * **What capabilities can a plugin have?** (e.g., adding/modifying regex rules, custom redaction logic, specific output formatting).
-* **1B. Implement Basic Rule Plugins:** Create a simple example plugin that just adds a new custom redaction rule (perhaps using the existing `regex` crate or a slightly more complex Rust-native regex capability). This validates your plugin loading and rule merging mechanisms.
-* **1C. Develop Initial "Sanitized Document Format" (SDF) Definition:**
-    * **Start Simple:** Begin by defining a **text-based, structured format** (like a YAML or JSON schema) that `cleansh` can output.
-    * **Core Elements:** At a minimum, it should include the **sanitized content** and a **redaction summary/log** (what was redacted, where).
-    * **Future-Proofing:** Think about placeholders for future metadata (original filename, timestamps, sanitization parameters).
-    * **`cleansh`'s New Output Mode:** Modify `cleansh` to output this SDF instead of just plain text when a specific flag is used (e.g., `--format sdf`).
-
-### Phase 2: Input/Output Transformation Plugins (Document Handling)
-
-Once your core plugin system is solid and `cleansh` can output your new SDF, you can introduce plugins that handle different document types.
-
-* **2A. Input Plugin Interface for Document Parsing:** Define an interface for plugins that take a specific document type (e.g., PDF file path) and output **plain text** that `cleansh` can then sanitize. This decouples the parsing logic from `cleansh`'s core.
-* **2B. Implement a "PDF Text Extraction" Plugin:** This would be your first big challenge here. The plugin would use a Rust PDF parsing library (like `pdf-extract` or bindings to `poppler`/`pdfium`) to extract raw text from a PDF. It would then output this text, perhaps along with some basic structural markers, in a format `cleansh` expects.
-* **2C. Output Plugin Interface for Document Reconstruction/Transformation:** Define an interface for plugins that take `cleansh`'s **SDF output** and transform it into another format. This could be:
-    * Generating a *new*, redacted PDF from the SDF.
-    * Converting the SDF into a sanitized Word document.
-    * Exporting to a specialized database format.
-* **2D. Implement an "SDF to Redacted PDF" Plugin (Optional, Advanced):** This would be the most complex, as it involves not just text extraction but potentially re-rendering a PDF with redactions. A simpler initial approach might be an "SDF to Redacted Markdown" or "SDF to Redacted TXT with Markers" plugin.
-
-### Phase 3: Advanced Plugin Capabilities & External Regex Engines
-
-With the foundation in place, you can explore more sophisticated integrations.
-
-* **3A. Custom Redaction Logic Plugins:** Allow plugins to provide entirely custom sanitization logic that goes beyond simple regex (e.g., context-aware redaction, AI-driven anonymization).
-* **3B. External Regex Engine Plugin:** If a specific use case truly demands it, design a plugin that allows `cleansh` to offload complex pattern matching to an external, more specialized regex engine (e.g., one optimized for very large inputs, or specific pattern types). This keeps `cleansh`'s core simple, as you desired.
-
----
-
-
-### 1. Enhancing Core Functionality & UX (Short-term, High Impact)
-
-* **Expanded Redaction Rules:**
-    * **More Data Types:** Consider adding built-in rules for common sensitive data not yet covered: credit card numbers, social security numbers (or their UK equivalents like National Insurance numbers, post-migration), phone numbers, URLs, GUIDs, specific API keys (e.g., GitHub, Stripe), or even specific file paths on Windows.
-    * **Regex Libraries/Presets:** Research and integrate more advanced or specialized regex libraries that cater to a wider array of sensitive patterns more efficiently.
-    * **Contextual Redaction:** Explore if some redactions could be context-aware (e.g., redacting a number *only* if it appears next to "card" or "SSN"). This is more complex but powerful.
-
-* **Interactive Mode/Preview:**
-    * **"Dry Run" Mode:** A flag (e.g., `--dry-run` or `-n`) that shows what *would* be redacted without actually performing the redaction or outputting the sanitized string. This would be incredibly useful for users to verify rules.
-    * **Interactive Prompt for Ambiguous Matches:** For very sensitive or potentially ambiguous matches, could `cleansh` prompt the user (Y/N) before redacting? (Might be too complex for a CLI, but interesting to consider for a future TUI/GUI).
-
-* **Improved Output Flexibility:**
-    * **JSON/YAML Output:** For integration with other tools, allowing the sanitized content or even the redaction summary to be outputted in structured formats (JSON, YAML) would be a significant step towards scalability and modularity.
-    * **Configurable Redaction Placeholders:** Allow users to specify their own `[REDACTED]` strings per rule, e.g., `[CUSTOM_EMAIL]`, `[AWS_ID]`.
-
-### 2. Performance & Optimization (Ongoing)
-
-* **Benchmarking:** Establish a rigorous benchmarking suite to track performance as new features are added. This aligns with **optimizing performance**.
-* **Parallel Processing:** For very large inputs, investigate if sanitization can be parallelized (e.g., processing chunks of text concurrently, if the rules allow for it without cross-chunk dependencies).
-
-### 3. Modularity & Extensibility (Medium-term, Strategic)
-
-* **Plugin System for Rules:** This would be a more advanced feature, but imagine a `cleansh` where users could easily add new rule sets as external plugins without recompiling the main binary. This directly aligns with **modularity** and **scalable design patterns**.
-* **Separation of Concerns:** Continue to review the codebase (e.g., `commands`, `tools`, `ui`) to ensure a clear separation of concerns, making it easier to maintain and extend.
-
-### 4. Documentation & Community (Long-term Vision)
-
-* **Comprehensive Rule Documentation:** Detail each built-in rule, its regex pattern, and typical use cases in the `README.md` or a dedicated `RULES.md` file.
-* **Contribution Guidelines:** As the project matures, providing clear guidelines for contributors (e.g., on adding new rules, writing tests) will be crucial for community growth.
-* **User Guides/Cookbooks:** Create examples for common scenarios, like "How to use `cleansh` in a CI/CD pipeline" or "Creating your first custom rule."
-
-
-### **Immediate Next Steps I'd Recommend:**
-
-1.  **Review the `print_content` and `print_redaction_summary` functions:** Even though the tests pass now, the extra newline in `test_basic_sanitization` might indicate a subtle inconsistency in how newlines are handled at the end of output blocks. It might be worth a quick look to see if you can achieve the exact expected output without the extra newline (which might make the output cleaner for end-users), and then adjust the test expectation again. If it's intentional for separation, then the current test is fine.
-2.  **Expanded Redaction Rules:** This is a low-hanging fruit for immediate value. Start by identifying the next 2-3 most critical sensitive data types you want to redact.
-3.  **Basic "Dry Run" Mode:** A `--dry-run` flag that simply outputs the *sanitized* content without writing to file or clipboard, and *always* includes the summary. This would be a great debugging/preview feature.
+| Area                 | Stack/Choice                                  | Principle                                                                 |
+| :------------------- | :-------------------------------------------- | :------------------------------------------------------------------------ |
+| Language             | Rust                                          | Performance, memory safety, concurrency, robust CLI development.          |
+| Config Format        | `.env` + optional YAML                        | Flexibility, user extensibility, clear separation of runtime vs. rules.   |
+| CLI Parsing          | `clap` with derives                           | Ergonomic and powerful CLI interface.                                     |
+| Regex Engine         | `regex` crate                                 | Fast, safe, and robust regex processing.                                  |
+| Clipboard            | `arboard`                                     | Cross-platform clipboard integration.                                     |
+| Logging              | `log` + `env_logger`                          | Flexible, environment-controlled logging for debugging and user feedback. |
+| Error Handling       | `anyhow` + `thiserror`                        | Consistent and robust error management.                                   |
+| Install Method       | `cargo-dist` + curl script / `cargo install`  | Broad accessibility for both Rust and non-Rust developers.                |
+| License              | MIT                                           | Encourages adoption and contribution.                                     |
+| Security Principles  | No runtime evals, no external calls, immutable defaults, YAML sandboxing, opt-in clipboard. | **Secure by Default**; high-trust.                                        |
+| Modularity           | Structured `src` (commands, tools, ui), future plugin system. | Clean architecture, ease of maintenance and future expansion.             |
+| Test Coverage        | Comprehensive unit and integration tests.     | Ensures reliability and prevents regressions.                             |
 
