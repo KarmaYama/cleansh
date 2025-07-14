@@ -1,6 +1,6 @@
 [package]
 name = "cleansh"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/KarmaYama/cleansh"
@@ -62,6 +62,7 @@ winapi = "0.3"
 
 [features]
 default = [] 
+test-exposed = []
 clipboard = ["arboard"]
 
 # The profile that 'dist' will build with
@@ -72,3 +73,7 @@ lto = "thin"
 [lib]
 name = "cleansh"
 path = "src/lib.rs"
+
+[[bin]]
+name = "cleansh"
+path = "src/main.rs"

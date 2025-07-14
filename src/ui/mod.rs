@@ -6,7 +6,6 @@ pub mod output_format;
 /// Theme types and loading logic.
 pub mod theme;
 
-// FIX: Declare new modules
 /// Functions for displaying diff views.
 pub mod diff_viewer;
 

@@ -1,9 +1,11 @@
 // tests/sanitize_shell_integration_tests.rs
 
 // This is an integration test, so we import from the crate root
-use cleansh::config::{RedactionConfig, RedactionRule, RedactionSummaryItem};
-use cleansh::tools::sanitize_shell::{compile_rules, sanitize_content, CompiledRules}; // Import CompiledRules
-use cleansh::tools::validators; // Import validators module for programmatic checks
+use anyhow::Result;
+
+// Only import what's directly used in this test file
+use cleansh::test_exposed::config::{RedactionRule};
+use cleansh::test_exposed::tools::{compile_rules, sanitize_content};
 
 // Helper to create a basic rule for testing
 fn create_test_rule(
@@ -29,17 +31,18 @@ fn create_test_rule(
 }
 
 #[test]
-fn test_compile_rules_basic() {
+fn test_compile_rules_basic() -> Result<()> {
     let rules_vec = vec![ // Directly pass Vec<RedactionRule>
         create_test_rule("email", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL]", false, None, false, false, false),
         create_test_rule("ip", r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", "[IP]", false, None, false, false, false),
     ];
     let compiled = compile_rules(rules_vec, &[], &[]).unwrap();
     assert_eq!(compiled.rules.len(), 2); // Access .rules field
+    Ok(())
 }
 
 #[test]
-fn test_compile_rules_opt_in_not_enabled() {
+fn test_compile_rules_opt_in_not_enabled() -> Result<()> {
     let rules_vec = vec![ // Directly pass Vec<RedactionRule>
         create_test_rule("email", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL]", false, None, false, false, false),
         create_test_rule("aws_key", "AKIA[A-Z0-9]{16}", "[AWS_KEY]", true, None, false, false, false), // Opt-in
@@ -47,10 +50,22 @@ fn test_compile_rules_opt_in_not_enabled() {
     let compiled = compile_rules(rules_vec, &[], &[]).unwrap(); // Not enabled
     assert_eq!(compiled.rules.len(), 1);
     assert_eq!(compiled.rules[0].name, "email");
+    Ok(())
 }
 
 #[test]
-fn test_compile_rules_opt_in_enabled() {
+fn test_compile_rules_opt_in_missing_returns_empty() -> Result<()> {
+    let rules_vec = vec![
+        create_test_rule("secret_key", r"secret_\w+", "[REDACTED]", true, None, false, false, false),
+    ];
+    let compiled = compile_rules(rules_vec, &[], &[])?;
+    assert_eq!(compiled.rules.len(), 0);
+    Ok(())
+}
+
+
+#[test]
+fn test_compile_rules_opt_in_enabled() -> Result<()> {
     let rules_vec = vec![ // Directly pass Vec<RedactionRule>
         create_test_rule("email", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL]", false, None, false, false, false),
         create_test_rule("aws_key", "AKIA[A-Z0-9]{16}", "[AWS_KEY]", true, None, false, false, false), // Opt-in
@@ -63,10 +78,11 @@ fn test_compile_rules_opt_in_enabled() {
     .unwrap();
     assert_eq!(compiled.rules.len(), 2);
     assert!(compiled.rules.iter().any(|r| r.name == "aws_key"));
+    Ok(())
 }
 
 #[test]
-fn test_compile_rules_disabled() {
+fn test_compile_rules_disabled() -> Result<()> {
     let rules_vec = vec![ // Directly pass Vec<RedactionRule>
         create_test_rule("email", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL]", false, None, false, false, false),
         create_test_rule("aws_key", "AKIA[A-Z0-9]{16}", "[AWS_KEY]", true, None, false, false, false), // Opt-in
@@ -79,10 +95,11 @@ fn test_compile_rules_disabled() {
     .unwrap();
     assert_eq!(compiled.rules.len(), 1);
     assert_eq!(compiled.rules[0].name, "aws_key");
+    Ok(())
 }
 
 #[test]
-fn test_compile_rules_opt_in_and_disabled_conflict() {
+fn test_compile_rules_opt_in_and_disabled_conflict() -> Result<()> {
     let rules_vec = vec![ // Directly pass Vec<RedactionRule>
         create_test_rule("sensitive_data", "sensitive_text", "[REDACTED]", true, None, false, false, false),
     ];
@@ -93,10 +110,25 @@ fn test_compile_rules_opt_in_and_disabled_conflict() {
     )
     .unwrap();
     assert_eq!(compiled.rules.len(), 0);
+    Ok(())
 }
 
 #[test]
-fn test_sanitize_content_basic() {
+fn test_overlapping_rules_priority() -> Result<()> {
+    let rule_email = create_test_rule("email", r"(\w+)@example\.com", "[EMAIL]", false, None, false, false, false);
+    let rule_generic = create_test_rule("example_match", r"example\.com", "[DOMAIN]", false, None, false, false, false);
+    let compiled = compile_rules(vec![rule_email, rule_generic], &[], &[])?;
+    
+    let input = "user@example.com";
+    let (sanitized, summary) = sanitize_content(&input, &compiled);
+    assert_eq!(sanitized, "user@[DOMAIN]"); // Or assert against ambiguity if needed
+    assert_eq!(summary.len(), 2); // If both fire
+    Ok(())
+}
+
+
+#[test]
+fn test_sanitize_content_basic() -> Result<()> {
     let rule = create_test_rule("email", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL_REDACTED]", false, None, false, false, false);
     let compiled_rules = compile_rules(vec![rule], &[], &[]).unwrap(); // Use compile_rules to create CompiledRules struct
 
@@ -108,10 +140,11 @@ fn test_sanitize_content_basic() {
     assert_eq!(summary[0].occurrences, 1);
     assert_eq!(summary[0].original_texts, vec!["test@example.com"]);
     assert_eq!(summary[0].sanitized_texts, vec!["[EMAIL_REDACTED]"]);
+    Ok(())
 }
 
 #[test]
-fn test_sanitize_content_multiple_matches_same_rule() {
+fn test_sanitize_content_multiple_matches_same_rule() -> Result<()> {
     let rule = create_test_rule("email", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL_REDACTED]", false, None, false, false, false);
     let compiled_rules = compile_rules(vec![rule], &[], &[]).unwrap(); // Use compile_rules
 
@@ -129,10 +162,11 @@ fn test_sanitize_content_multiple_matches_same_rule() {
     expected_original_texts.sort(); // Ensure local sort as well for comparison
     assert_eq!(summary[0].original_texts, expected_original_texts);
     assert_eq!(summary[0].sanitized_texts, vec!["[EMAIL_REDACTED]"]);
+    Ok(())
 }
 
 #[test]
-fn test_sanitize_content_multiple_rules() {
+fn test_sanitize_content_multiple_rules() -> Result<()> {
     let email_rule = create_test_rule("email", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL]", false, None, false, false, false);
     let ip_rule = create_test_rule("ipv4_address", r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", "[IPV4]", false, None, false, false, false);
 
@@ -153,10 +187,11 @@ fn test_sanitize_content_multiple_rules() {
     assert_eq!(summary[1].occurrences, 1);
     assert_eq!(summary[1].original_texts, vec!["192.168.1.1"]);
     assert_eq!(summary[1].sanitized_texts, vec!["[IPV4]"]);
+    Ok(())
 }
 
 #[test]
-fn test_sanitize_content_with_ansi_escapes() {
+fn test_sanitize_content_with_ansi_escapes() -> Result<()> {
     let rule = create_test_rule("email", r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL]", false, None, false, false, false);
     let compiled_rules = compile_rules(vec![rule], &[], &[]).unwrap(); // Use compile_rules
 
@@ -168,12 +203,13 @@ fn test_sanitize_content_with_ansi_escapes() {
     assert_eq!(summary[0].occurrences, 1);
     assert_eq!(summary[0].original_texts, vec!["test@example.com"]);
     assert_eq!(summary[0].sanitized_texts, vec!["[EMAIL]"]);
+    Ok(())
 }
 
 // Tests for programmatic validation
 
 #[test]
-fn test_us_ssn_programmatic_validation_valid() {
+fn test_us_ssn_programmatic_validation_valid() -> Result<()> {
     let rule = create_test_rule(
         "us_ssn",
         r"\b(\d{3})-(\d{2})-(\d{4})\b", // Pattern with capturing groups
@@ -194,10 +230,11 @@ fn test_us_ssn_programmatic_validation_valid() {
     let mut expected_original_texts = vec!["123-45-6789".to_string(), "789-12-3456".to_string()];
     expected_original_texts.sort();
     assert_eq!(summary[0].original_texts, expected_original_texts);
+    Ok(())
 }
 
 #[test]
-fn test_us_ssn_programmatic_validation_invalid_area_000() {
+fn test_us_ssn_programmatic_validation_invalid_area_000() -> Result<()> {
     let rule = create_test_rule(
         "us_ssn",
         r"\b(\d{3})-(\d{2})-(\d{4})\b",
@@ -212,10 +249,11 @@ fn test_us_ssn_programmatic_validation_invalid_area_000() {
     let (sanitized_invalid_area_000, summary) = sanitize_content(text_invalid_area_000, &compiled_rules);
     assert_eq!(sanitized_invalid_area_000, "Invalid SSN: 000-12-3456.");
     assert!(summary.is_empty() || summary[0].occurrences == 0);
+    Ok(())
 }
 
 #[test]
-fn test_us_ssn_programmatic_validation_invalid_area_666() {
+fn test_us_ssn_programmatic_validation_invalid_area_666() -> Result<()> {
     let rule = create_test_rule(
         "us_ssn",
         r"\b(\d{3})-(\d{2})-(\d{4})\b",
@@ -230,10 +268,11 @@ fn test_us_ssn_programmatic_validation_invalid_area_666() {
     let (sanitized_invalid_area_666, summary) = sanitize_content(text_invalid_area_666, &compiled_rules);
     assert_eq!(sanitized_invalid_area_666, "Another invalid: 666-78-9012.");
     assert!(summary.is_empty() || summary[0].occurrences == 0);
+    Ok(())
 }
 
 #[test]
-fn test_us_ssn_programmatic_validation_invalid_area_9xx() {
+fn test_us_ssn_programmatic_validation_invalid_area_9xx() -> Result<()> {
     let rule = create_test_rule(
         "us_ssn",
         r"\b(\d{3})-(\d{2})-(\d{4})\b",
@@ -248,10 +287,11 @@ fn test_us_ssn_programmatic_validation_invalid_area_9xx() {
     let (sanitized_invalid_area_9xx, summary) = sanitize_content(text_invalid_area_9xx, &compiled_rules);
     assert_eq!(sanitized_invalid_area_9xx, "Area 9: 900-11-2222.");
     assert!(summary.is_empty() || summary[0].occurrences == 0);
+    Ok(())
 }
 
 #[test]
-fn test_us_ssn_programmatic_validation_invalid_group_00() {
+fn test_us_ssn_programmatic_validation_invalid_group_00() -> Result<()> {
     let rule = create_test_rule(
         "us_ssn",
         r"\b(\d{3})-(\d{2})-(\d{4})\b",
@@ -266,10 +306,11 @@ fn test_us_ssn_programmatic_validation_invalid_group_00() {
     let (sanitized_invalid_group_00, summary) = sanitize_content(text_invalid_group_00, &compiled_rules);
     assert_eq!(sanitized_invalid_group_00, "Group 00: 123-00-4567.");
     assert!(summary.is_empty() || summary[0].occurrences == 0);
+    Ok(())
 }
 
 #[test]
-fn test_us_ssn_programmatic_validation_invalid_serial_0000() {
+fn test_us_ssn_programmatic_validation_invalid_serial_0000() -> Result<()> {
     let rule = create_test_rule(
         "us_ssn",
         r"\b(\d{3})-(\d{2})-(\d{4})\b",
@@ -284,10 +325,11 @@ fn test_us_ssn_programmatic_validation_invalid_serial_0000() {
     let (sanitized_invalid_serial_0000, summary) = sanitize_content(text_invalid_serial_0000, &compiled_rules);
     assert_eq!(sanitized_invalid_serial_0000, "Serial 0000: 123-45-0000.");
     assert!(summary.is_empty() || summary[0].occurrences == 0);
+    Ok(())
 }
 
 #[test]
-fn test_uk_nino_programmatic_validation_valid() {
+fn test_uk_nino_programmatic_validation_valid() -> Result<()> {
     let rule = create_test_rule(
         "uk_nino",
         r"\b([A-CEGHJ-NPR-TW-Z]{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?([A-D])\b",
@@ -308,10 +350,11 @@ fn test_uk_nino_programmatic_validation_valid() {
     let mut expected_original_texts = vec!["AB123456A".to_string(), "PQ 12 34 56 B".to_string()];
     expected_original_texts.sort();
     assert_eq!(summary[0].original_texts, expected_original_texts);
+    Ok(())
 }
 
 #[test]
-fn test_uk_nino_programmatic_validation_invalid_prefix() {
+fn test_uk_nino_programmatic_validation_invalid_prefix() -> Result<()> {
     let rule = create_test_rule(
         "uk_nino",
         r"\b([A-CEGHJ-NPR-TW-Z]{2})\s?(\d{2})\s?(\d{2})\s?(\d{2})\s?([A-D])\b",
@@ -328,6 +371,7 @@ fn test_uk_nino_programmatic_validation_invalid_prefix() {
     // These should NOT be redacted due to programmatic validation
     assert_eq!(sanitized, "Invalid BG: BG123456A. Invalid GB: GB123456B. Invalid ZZ: ZZ123456C. Invalid DF: DF123456A. Invalid QV: QV123456B.");
     assert!(summary.is_empty()); // No redactions should have occurred
+    Ok(())
 }
 
 #[test]
@@ -347,7 +391,7 @@ fn test_compile_rules_invalid_regex_fails_fast() {
 
 #[test]
 fn test_compile_rules_pattern_too_long_fails_fast() {
-    use cleansh::config::MAX_PATTERN_LENGTH;
+    use cleansh::test_exposed::config::MAX_PATTERN_LENGTH;
     let long_pattern = "a".repeat(MAX_PATTERN_LENGTH + 1);
     let rules_vec = vec![
         create_test_rule("valid_rule", "abc", "[REDACTED]", false, None, false, false, false),

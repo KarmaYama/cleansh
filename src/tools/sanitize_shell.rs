@@ -1,12 +1,13 @@
 // src/tools/sanitize_shell.rs
 
-use anyhow::{Result, Context, anyhow};
+use anyhow::{Result, anyhow};
 use regex::{Regex, RegexBuilder};
 use std::collections::{HashMap, HashSet};
 use log::{debug, warn, error};
+// Removed `use std::io::Write;` as it's not directly used for `eprintln!` which is a macro.
 
-use crate::config::{RedactionRule, RedactionSummaryItem, MAX_PATTERN_LENGTH}; // Import MAX_PATTERN_LENGTH
-use crate::tools::validators; 
+use crate::config::{RedactionRule, RedactionSummaryItem, MAX_PATTERN_LENGTH};
+use crate::tools::validators;
 
 /// Represents a compiled redaction rule.
 #[derive(Debug)]
@@ -14,13 +15,13 @@ pub struct CompiledRule {
     pub regex: Regex,
     pub replace_with: String,
     pub name: String,
-    pub programmatic_validation: bool,
+    pub programmatic_validation: bool, // Correct spelling here
 }
 
 /// Represents all compiled rules for efficient sanitization.
 #[derive(Debug)]
 pub struct CompiledRules {
-    pub rules: Vec<CompiledRule>, // Made public for testing and access
+    pub rules: Vec<CompiledRule>,
 }
 
 /// Compiles a list of `RedactionRule`s into `CompiledRules` for efficient matching.
@@ -35,21 +36,32 @@ pub fn compile_rules(
     let enable_set: HashSet<&str> = enable_rules.iter().map(String::as_str).collect();
     let disable_set: HashSet<&str> = disable_rules.iter().map(String::as_str).collect();
 
+    eprintln!("[sanitize_shell.rs] DEBUG: compile_rules called with {} rules.", rules_to_compile.len());
+    eprintln!("[sanitize_shell.rs] DEBUG: enable_set: {:?}", enable_set);
+    eprintln!("[sanitize_shell.rs] DEBUG: disable_set: {:?}", disable_set);
+
+
     let mut compiled_rules = Vec::new();
     let mut compilation_errors = Vec::new();
 
     for rule in rules_to_compile {
-        let rule_name_str = rule.name.as_str();
+        let rule_name_for_debug = rule.name.clone();
+        let rule_name_str = rule_name_for_debug.as_str();
+
+        eprintln!("[sanitize_shell.rs] DEBUG: Processing rule: '{}', opt_in: {}", rule_name_str, rule.opt_in);
+
 
         // Check if rule is disabled
         if disable_set.contains(rule_name_str) {
-            debug!("Rule '{}' disabled by user, skipping compilation.", rule.name);
+            debug!("Rule '{}' disabled by user, skipping compilation.", rule_name_str);
+            eprintln!("[sanitize_shell.rs] DEBUG: Rule '{}' disabled, skipping.", rule_name_str);
             continue;
         }
 
         // Check opt-in rules: only compile if explicitly enabled
         if rule.opt_in && !enable_set.contains(rule_name_str) {
-            debug!("Opt-in rule '{}' not explicitly enabled, skipping compilation.", rule.name);
+            debug!("Opt-in rule '{}' not explicitly enabled, skipping compilation.", rule_name_str);
+            eprintln!("[sanitize_shell.rs] DEBUG: Opt-in rule '{}' not enabled, skipping.", rule_name_str);
             continue;
         }
 
@@ -57,11 +69,12 @@ pub fn compile_rules(
         if rule.pattern.len() > MAX_PATTERN_LENGTH {
             let error_msg = format!(
                 "Rule '{}': pattern length ({}) exceeds maximum allowed ({})",
-                rule.name,
+                rule_name_str,
                 rule.pattern.len(),
                 MAX_PATTERN_LENGTH
             );
             error!("Compilation error: {}", error_msg);
+            eprintln!("[sanitize_shell.rs] ERROR: {}", error_msg);
             compilation_errors.push(error_msg);
             continue;
         }
@@ -79,15 +92,18 @@ pub fn compile_rules(
                     regex,
                     replace_with: rule.replace_with,
                     name: rule.name,
-                    programmatic_validation: rule.programmatic_validation,
+                    programmatic_validation: rule.programmatic_validation, // Correct spelling here
                 });
+                eprintln!("[sanitize_shell.rs] DEBUG: Rule '{}' compiled successfully.", rule_name_str);
             }
             Err(e) => {
                 let error_msg = format!(
                     "Rule '{}': failed to compile regex pattern '{}': {}",
-                    rule.name, rule.pattern, e
+                    rule_name_str,
+                    rule.pattern, e
                 );
-                error!("Compilation error: {}", error_msg); // Log at error level
+                error!("Compilation error: {}", error_msg);
+                eprintln!("[sanitize_shell.rs] ERROR: {}", error_msg);
                 compilation_errors.push(error_msg);
             }
         }
@@ -99,8 +115,10 @@ pub fn compile_rules(
             compilation_errors.len(),
             compilation_errors.join("\n")
         );
-        Err(anyhow!(full_error_message)) // Return aggregated error
+        eprintln!("[sanitize_shell.rs] ERROR: {}", full_error_message);
+        Err(anyhow!(full_error_message))
     } else {
+        eprintln!("[sanitize_shell.rs] DEBUG: Finished compiling rules. Total compiled: {}", compiled_rules.len());
         Ok(CompiledRules { rules: compiled_rules })
     }
 }
@@ -115,22 +133,36 @@ pub fn sanitize_content(
     let mut sanitized_content = input_content.to_string();
     let mut summary_map: HashMap<String, RedactionSummaryItem> = HashMap::new();
 
+    eprintln!("[sanitize_shell.rs] DEBUG: sanitize_content called. Num compiled rules: {}", compiled_rules.rules.len());
+    eprintln!("[sanitize_shell.rs] DEBUG: Input content for sanitization: {:?}", input_content);
+
+
     for compiled_rule in &compiled_rules.rules {
         let rule_name = &compiled_rule.name;
         let mut occurrences = 0;
         let mut original_matches: HashSet<String> = HashSet::new();
         let mut sanitized_replacements: HashSet<String> = HashSet::new();
 
+        eprintln!("[sanitize_shell.rs] DEBUG: Applying rule: '{}'", rule_name);
+
+        eprintln!("[sanitize_shell.rs] DEBUG: Rule '{}' pattern: '{}'", rule_name, compiled_rule.regex.as_str());
+        eprintln!("[sanitize_shell.rs] DEBUG: Rule '{}' does pattern match input? {}", rule_name, compiled_rule.regex.is_match(&sanitized_content));
+
+
         sanitized_content = compiled_rule.regex.replace_all(&sanitized_content, |caps: &regex::Captures| {
             let original_match = caps.get(0).unwrap().as_str().to_string();
 
+            eprintln!("[sanitize_shell.rs] DEBUG: Rule '{}' captured: '{}'", rule_name, original_match);
+
+
             // Perform programmatic validation if enabled for the rule
-            let should_redact = if compiled_rule.programmatic_validation {
+            let should_redact = if compiled_rule.programmatic_validation { // Correct spelling here
                 match rule_name.as_str() {
                     "us_ssn" => validators::is_valid_ssn_programmatically(&original_match),
                     "uk_nino" => validators::is_valid_uk_nino_programmatically(&original_match),
                     _ => {
                         warn!("Programmatic validation enabled for rule '{}', but no specific validator function found. Redacting by default.", rule_name);
+                        eprintln!("[sanitize_shell.rs] WARN: Programmatic validation for '{}' no validator found. Redacting.", rule_name);
                         true // Default to redacting if no specific validator is found
                     }
                 }
@@ -138,13 +170,17 @@ pub fn sanitize_content(
                 true // No programmatic validation, always redact if regex matches
             };
 
+            eprintln!("[sanitize_shell.rs] DEBUG: Rule '{}' should_redact: {}", rule_name, should_redact);
+
             if should_redact {
                 occurrences += 1;
-                original_matches.insert(original_match); // Store unique original matches
+                original_matches.insert(original_match.clone()); // Store unique original matches
                 sanitized_replacements.insert(compiled_rule.replace_with.clone()); // Store unique sanitized replacements
+                eprintln!("[sanitize_shell.rs] DEBUG: Redacting '{}' with '{}' for rule '{}'", original_match, compiled_rule.replace_with, rule_name);
                 compiled_rule.replace_with.clone()
             } else {
                 debug!("Rule '{}' matched '{}' but programmatic validation failed. Keeping original text.", rule_name, original_match);
+                eprintln!("[sanitize_shell.rs] DEBUG: Rule '{}' match '{}' skipped due to programmatic validation.", rule_name, original_match);
                 original_match // Keep original text if programmatic validation fails
             }
         }).to_string();
@@ -159,6 +195,7 @@ pub fn sanitize_content(
             item.occurrences += occurrences;
             item.original_texts.extend(original_matches.into_iter());
             item.sanitized_texts.extend(sanitized_replacements.into_iter());
+            eprintln!("[sanitize_shell.rs] DEBUG: Rule '{}' resulted in {} redactions. First original match: {:?}", rule_name, occurrences, item.original_texts.get(0));
         }
     }
 
@@ -172,6 +209,6 @@ pub fn sanitize_content(
     // Sort the overall summary by rule name for deterministic output/tests
     summary.sort_by(|a, b| a.rule_name.cmp(&b.rule_name));
 
-
+    eprintln!("[sanitize_shell.rs] DEBUG: Sanitization complete. Final summary items: {}", summary.len());
     (sanitized_content, summary)
 }

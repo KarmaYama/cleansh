@@ -3,7 +3,7 @@
 use crate::ui::theme::{ThemeEntry, ThemeStyle};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
-use std::io::Write;
+use std::io::{self, Write}; // Import io for stderr
 use anyhow::Result; // Import Result for error handling
 use diffy::{create_patch, Line};
 
@@ -11,11 +11,12 @@ use diffy::{create_patch, Line};
 pub fn print_diff<W: Write>(
     original_content: &str,
     sanitized_content: &str,
-    writer: &mut W,
+    writer: &mut W, // This writer receives the actual diff lines (+/-)
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
 ) -> Result<()> {
     let diff_header = get_styled_text("\n--- Diff View ---", ThemeEntry::DiffHeader, theme_map);
-    writeln!(writer, "{}", diff_header)?;
+    // Changed to io::stderr()
+    writeln!(io::stderr(), "{}", diff_header)?;
 
     let patch = create_patch(original_content, sanitized_content);
 
@@ -34,7 +35,8 @@ pub fn print_diff<W: Write>(
             }
         }
     }
-    writeln!(writer, "{}", get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map))?;
+    // Changed to io::stderr()
+    writeln!(io::stderr(), "{}", get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map))?;
     Ok(())
 }
 

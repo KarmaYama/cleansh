@@ -4,22 +4,24 @@ use crate::config::RedactionSummaryItem;
 use crate::ui::theme::{ThemeEntry, ThemeStyle};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
-use std::io::Write;
+use std::io::{self, Write}; // Import io for stderr
 use anyhow::Result; // Import Result for error handling
 
 /// Prints a summary of redactions made to the given writer.
 pub fn print_summary<W: Write>(
     summary: &[RedactionSummaryItem],
-    writer: &mut W,
+    writer: &mut W, // This writer will now always be io::stderr() from run_cleansh
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
 ) -> Result<()> {
     if summary.is_empty() {
-        writeln!(writer, "\n{}\n", get_styled_text("No redactions applied.", ThemeEntry::Info, theme_map))?;
+        // Changed to io::stderr()
+        writeln!(io::stderr(), "\n{}\n", get_styled_text("No redactions applied.", ThemeEntry::Info, theme_map))?;
         return Ok(());
     }
 
     let header = get_styled_text("\n--- Redaction Summary ---", ThemeEntry::Header, theme_map);
-    writeln!(writer, "{}", header)?;
+    // Changed to io::stderr()
+    writeln!(io::stderr(), "{}", header)?;
 
     for item in summary {
         let rule_name_styled = get_styled_text(&item.rule_name, ThemeEntry::SummaryRuleName, theme_map);
@@ -31,20 +33,21 @@ pub fn print_summary<W: Write>(
         writeln!(writer, "{}{}", rule_name_styled, occurrences_styled)?;
 
         if !item.original_texts.is_empty() {
-            writeln!(writer, "  {}", get_styled_text("Original Examples:", ThemeEntry::Info, theme_map))?;
+            writeln!(writer, "    {}", get_styled_text("Original Examples:", ThemeEntry::Info, theme_map))?;
             for text in &item.original_texts {
-                writeln!(writer, "    - {}", text.red())?;
+                writeln!(writer, "        - {}", text.red())?;
             }
         }
 
         if !item.sanitized_texts.is_empty() {
-            writeln!(writer, "  {}", get_styled_text("Sanitized Examples:", ThemeEntry::Info, theme_map))?;
+            writeln!(writer, "    {}", get_styled_text("Sanitized Examples:", ThemeEntry::Info, theme_map))?;
             for text in &item.sanitized_texts {
-                writeln!(writer, "    - {}", text.green())?;
+                writeln!(writer, "        - {}", text.green())?;
             }
         }
     }
-    writeln!(writer, "{}\n", get_styled_text("-------------------------", ThemeEntry::Header, theme_map))?;
+    // Changed to io::stderr()
+    writeln!(io::stderr(), "{}\n", get_styled_text("-------------------------", ThemeEntry::Header, theme_map))?;
     Ok(())
 }
 
