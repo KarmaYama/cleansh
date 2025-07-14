@@ -196,7 +196,8 @@ pub fn sanitize_content(
                 true // No programmatic validation, always redact if regex matches
             };
 
-            debug!("Rule '{}' should_redact: {}", rule_name, should_redact);
+            // Changed from eprintln! to debug!
+            debug!("[sanitize_shell.rs] DEBUG: Rule '{}' should_redact: {}", rule_name, should_redact);
 
             if should_redact {
                 occurrences += 1;

@@ -47,29 +47,29 @@ impl RedactionConfig {
     /// Loads redaction rules from a YAML file.
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
-        eprintln!("[config.rs] DEBUG: Attempting to load config from file: {}", path.display());
+        debug!("[config.rs] Attempting to load config from file: {}", path.display());
         let text = std::fs::read_to_string(path)
             .with_context(|| format!("Failed to read config file {}", path.display()))?;
         let config: RedactionConfig = serde_yaml::from_str(&text)
             .with_context(|| format!("Failed to parse config file {}", path.display()))?;
 
-        eprintln!("[config.rs] DEBUG: Loaded {} rules from file {}.", config.rules.len(), path.display());
+        debug!("[config.rs] Loaded {} rules from file {}.", config.rules.len(), path.display());
         for rule in &config.rules {
-            eprintln!("[config.rs] DEBUG: File Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
+            debug!("[config.rs] File Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
         }
         Ok(config)
     }
 
     /// Loads default redaction rules from an embedded string.
     pub fn load_default_rules() -> Result<Self> {
-        eprintln!("[config.rs] DEBUG: Loading default rules from embedded string...");
+        debug!("[config.rs] Loading default rules from embedded string...");
         // Correct path relative to src/config.rs
         let default_yaml = include_str!("../config/default_rules.yaml");
         let config: RedactionConfig = serde_yaml::from_str(default_yaml).context("Failed to parse default rules")?;
 
-        eprintln!("[config.rs] DEBUG: Loaded {} default rules.", config.rules.len());
+        debug!("[config.rs] Loaded {} default rules.", config.rules.len());
         for rule in &config.rules {
-            eprintln!("[config.rs] DEBUG: Default Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
+            debug!("[config.rs] Default Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
         }
         Ok(config)
     }
@@ -82,15 +82,15 @@ pub fn merge_rules(
     user_config: Option<RedactionConfig>,
 ) -> RedactionConfig {
     let initial_default_count = default_config.rules.len();
-    eprintln!("[config.rs] DEBUG: merge_rules called. Initial default rules count: {}", initial_default_count);
+    debug!("[config.rs] merge_rules called. Initial default rules count: {}", initial_default_count);
 
     if let Some(user_cfg) = user_config {
-        eprintln!("[config.rs] DEBUG: User config provided. Merging {} user rules.", user_cfg.rules.len());
+        debug!("[config.rs] User config provided. Merging {} user rules.", user_cfg.rules.len());
         let user_rules_map: HashMap<String, RedactionRule> = user_cfg
             .rules.clone()
             .into_iter()
             .map(|rule| {
-                eprintln!("[config.rs] DEBUG: User rule to merge: '{}', Opt_in: {}", rule.name, rule.opt_in);
+                debug!("[config.rs] User rule to merge: '{}', Opt_in: {}", rule.name, rule.opt_in);
                 (rule.name.clone(), rule)
             })
             .collect();
@@ -99,10 +99,10 @@ pub fn merge_rules(
         default_config.rules.retain(|default_rule| {
             if user_rules_map.contains_key(&default_rule.name) {
                 debug!("Default rule '{}' overridden by user configuration.", default_rule.name);
-                eprintln!("[config.rs] DEBUG: Default rule '{}' overridden by user. Skipping default.", default_rule.name);
+                debug!("[config.rs] Default rule '{}' overridden by user. Skipping default.", default_rule.name);
                 false // Remove this default rule
             } else {
-                eprintln!("[config.rs] DEBUG: Keeping default rule: '{}', Opt_in: {}", default_rule.name, default_rule.opt_in);
+                debug!("[config.rs] Keeping default rule: '{}', Opt_in: {}", default_rule.name, default_rule.opt_in);
                 true // Keep this default rule
             }
         });
@@ -116,9 +116,9 @@ pub fn merge_rules(
             user_cfg.rules.len(), // This is the count of user rules passed
             default_config.rules.len() // This is the final count after merging
         );
-        eprintln!("[config.rs] DEBUG: Final merged rules count: {}", default_config.rules.len());
+        debug!("[config.rs] Final merged rules count: {}", default_config.rules.len());
         for rule in &default_config.rules {
-            eprintln!("[config.rs] DEBUG: Final Merged Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
+            debug!("[config.rs] Final Merged Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
         }
 
     } else {
@@ -126,9 +126,9 @@ pub fn merge_rules(
             "No user configuration provided. Using {} default rules.",
             default_config.rules.len()
         );
-        eprintln!("[config.rs] DEBUG: No user configuration to merge. Final rules count: {}", default_config.rules.len());
+        debug!("[config.rs] No user configuration to merge. Final rules count: {}", default_config.rules.len());
         for rule in &default_config.rules {
-            eprintln!("[config.rs] DEBUG: Final Merged Rule (no user config) - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
+            debug!("[config.rs] Final Merged Rule (no user config) - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
         }
     }
     default_config

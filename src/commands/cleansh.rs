@@ -29,13 +29,13 @@ pub fn run_cleansh(
     disable_rules: Vec<String>,
 ) -> Result<()> {
     info!("Starting cleansh operation.");
-    eprintln!("[cleansh.rs] DEBUG: Starting cleansh operation.");
-    eprintln!("[cleansh.rs] DEBUG: Received enable_rules: {:?}", enable_rules);
-    eprintln!("[cleansh.rs] DEBUG: Received disable_rules: {:?}", disable_rules);
+    debug!("[cleansh.rs] Starting cleansh operation.");
+    debug!("[cleansh.rs] Received enable_rules: {:?}", enable_rules);
+    debug!("[cleansh.rs] Received disable_rules: {:?}", disable_rules);
 
 
     let default_rules = RedactionConfig::load_default_rules()?;
-    eprintln!("[cleansh.rs] DEBUG: Loaded {} default rules in cleansh.", default_rules.rules.len());
+    debug!("[cleansh.rs] Loaded {} default rules in cleansh.", default_rules.rules.len());
 
 
     let user_rules = if let Some(path) = config_path {
@@ -45,26 +45,26 @@ pub fn run_cleansh(
             &format!("Loading custom rules from: {}", path.display()),
             theme_map,
         );
-        eprintln!("[cleansh.rs] DEBUG: Attempting to load custom rules from: {}", path.display());
+        debug!("[cleansh.rs] Attempting to load custom rules from: {}", path.display());
         let loaded_custom_rules = RedactionConfig::load_from_file(&path).with_context(|| {
             format!(
                 "Failed to load custom configuration from '{}'",
                 path.display()
             )
         })?;
-        eprintln!("[cleansh.rs] DEBUG: Loaded {} custom rules from {} in cleansh.", loaded_custom_rules.rules.len(), path.display());
+        debug!("[cleansh.rs] Loaded {} custom rules from {} in cleansh.", loaded_custom_rules.rules.len(), path.display());
         Some(loaded_custom_rules)
     } else {
-        eprintln!("[cleansh.rs] DEBUG: No custom config path provided in cleansh.");
+        debug!("[cleansh.rs] No custom config path provided in cleansh.");
         None
     };
 
     let merged_config = config::merge_rules(default_rules, user_rules);
-    eprintln!("[cleansh.rs] DEBUG: Merged config contains {} rules before compilation in cleansh.", merged_config.rules.len());
+    debug!("[cleansh.rs] Merged config contains {} rules before compilation in cleansh.", merged_config.rules.len());
 
 
     debug!("Compiling rules...");
-    eprintln!("[cleansh.rs] DEBUG: Calling compile_rules with {} rules, enable_rules: {:?}, disable_rules: {:?}",
+    debug!("[cleansh.rs] Calling compile_rules with {} rules, enable_rules: {:?}, disable_rules: {:?}",
         merged_config.rules.len(), enable_rules, disable_rules);
     // Pass the merged rules directly to compile_rules
     let compiled_rules = sanitize_shell::compile_rules(
@@ -73,12 +73,12 @@ pub fn run_cleansh(
         &disable_rules,
     )?;
     debug!("Rules compiled successfully.");
-    eprintln!("[cleansh.rs] DEBUG: Compiled {} rules successfully in cleansh.", compiled_rules.rules.len());
+    debug!("[cleansh.rs] Compiled {} rules successfully in cleansh.", compiled_rules.rules.len());
 
     // --- NEW DEBUG LINE ---
-    eprintln!("[cleansh.rs] DEBUG: Names of compiled rules available for sanitization:");
+    debug!("[cleansh.rs] Names of compiled rules available for sanitization:");
     for rule in &compiled_rules.rules {
-        eprintln!("[cleansh.rs] DEBUG: - {}", rule.name);
+        debug!("[cleansh.rs] - {}", rule.name);
     }
     // --- END NEW DEBUG LINE ---
 
@@ -93,9 +93,9 @@ pub fn run_cleansh(
         sanitized_content.len()
     );
 
-    eprintln!("DEBUG_CLEANSH: Original content: {:?}", input_content);
-    eprintln!("DEBUG_CLEANSH: Sanitized content: {:?}", sanitized_content);
-    eprintln!("DEBUG_CLEANSH: Redaction summary (num items): {:?}", summary.len());
+    // REMOVED: eprintln!("DEBUG_CLEANSH: Original content: {:?}", input_content);
+    // REMOVED: eprintln!("DEBUG_CLEANSH: Sanitized content: {:?}", sanitized_content);
+    debug!("DEBUG_CLEANSH: Redaction summary (num items): {:?}", summary.len());
 
 
     // Determine the primary output writer (stdout or file)
@@ -106,7 +106,7 @@ pub fn run_cleansh(
             &format!("Writing sanitized content to file: {}", path.display()),
             theme_map,
         );
-        eprintln!("[cleansh.rs] DEBUG: Outputting to file: {}", path.display());
+        debug!("[cleansh.rs] Outputting to file: {}", path.display());
         Box::new(
             fs::File::create(&path)
                 .with_context(|| format!("Failed to create output file: {}", path.display()))?,
@@ -118,7 +118,7 @@ pub fn run_cleansh(
             "Writing sanitized content to stdout.",
             theme_map,
         );
-        eprintln!("[cleansh.rs] DEBUG: Outputting to stdout.");
+        debug!("[cleansh.rs] Outputting to stdout.");
         Box::new(io::stdout())
     };
 
@@ -130,11 +130,11 @@ pub fn run_cleansh(
             "Generating and displaying diff.",
             theme_map,
         );
-        eprintln!("[cleansh.rs] DEBUG: Diff enabled.");
+        debug!("[cleansh.rs] Diff enabled.");
         diff_viewer::print_diff(input_content, &sanitized_content, &mut primary_output_writer, theme_map)?;
     } else {
         debug!("Printing sanitized content.");
-        eprintln!("[cleansh.rs] DEBUG: Diff disabled, printing sanitized content.");
+        debug!("[cleansh.rs] Diff disabled, printing sanitized content.");
         writeln!(primary_output_writer, "{}", sanitized_content)
             .context("Failed to write sanitized content")?;
     }
@@ -147,7 +147,7 @@ pub fn run_cleansh(
             "Displaying redaction summary.",
             theme_map,
         );
-        eprintln!("[cleansh.rs] DEBUG: Redaction summary enabled.");
+        debug!("[cleansh.rs] Redaction summary enabled.");
         redaction_summary::print_summary(&summary, &mut io::stderr(), theme_map)?;
     } else {
         debug!("Redaction summary display skipped per user request.");
@@ -156,13 +156,13 @@ pub fn run_cleansh(
             "Redaction summary display skipped per user request.",
             theme_map,
         );
-        eprintln!("[cleansh.rs] DEBUG: Redaction summary skipped.");
+        debug!("[cleansh.rs] Redaction summary skipped.");
     }
 
     // Clipboard handling
     if clipboard_enabled {
         debug!("Attempting to copy sanitized content to clipboard.");
-        eprintln!("[cleansh.rs] DEBUG: Clipboard enabled.");
+        debug!("[cleansh.rs] Clipboard enabled.");
         match copy_to_clipboard(&sanitized_content) {
             Ok(_) => {
                 info!("Sanitized content copied to clipboard successfully.");
@@ -184,7 +184,7 @@ pub fn run_cleansh(
     }
 
     info!("Cleansh operation completed.");
-    eprintln!("[cleansh.rs] DEBUG: Cleansh operation completed.");
+    debug!("[cleansh.rs] Cleansh operation completed.");
     Ok(())
 }
 
@@ -193,10 +193,10 @@ pub fn run_cleansh(
 #[cfg(feature = "clipboard")]
 fn copy_to_clipboard(content: &str) -> Result<()> {
     debug!("Attempting to acquire clipboard.");
-    eprintln!("[cleansh.rs] DEBUG: Acquiring clipboard.");
+    debug!("[cleansh.rs] Acquiring clipboard.");
     let mut clipboard = arboard::Clipboard::new().context("Failed to initialize clipboard")?;
     debug!("Setting clipboard text.");
-    eprintln!("[cleansh.rs] DEBUG: Setting clipboard text.");
+    debug!("[cleansh.rs] Setting clipboard text.");
     clipboard.set_text(content.to_string()).context("Failed to set clipboard text")?;
     Ok(())
 }
@@ -206,6 +206,6 @@ fn copy_to_clipboard(content: &str) -> Result<()> {
 #[allow(unused_variables)]
 fn copy_to_clipboard(content: &str) -> Result<()> {
     debug!("Clipboard feature not enabled. Skipping copy operation.");
-    eprintln!("[cleansh.rs] DEBUG: Clipboard feature not enabled.");
+    debug!("[cleansh.rs] Clipboard feature not enabled.");
     Err(anyhow::anyhow!("Clipboard feature is not enabled. Compile with --features clipboard to enable functionality."))
 }
