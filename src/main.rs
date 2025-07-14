@@ -1,3 +1,5 @@
+// src/main.rs
+
 // Standard library imports for I/O and path manipulation
 use std::io::{self, Read};
 use std::path::PathBuf;
@@ -6,7 +8,7 @@ use std::process::exit;
 use std::collections::HashMap;
 use std::env;
 
-// Third‑party crate imports for CLI parsing, logging, and error handling
+// Third-party crate imports for CLI parsing, logging, and error handling
 use anyhow::{Context, Result};
 use clap::{Parser, ArgAction};
 use log::{debug, info};
@@ -86,10 +88,13 @@ struct Cli {
     #[arg(long, help = "Do not display the redaction summary at the end of the output.", action = ArgAction::SetTrue)]
     no_redaction_summary: bool,
 
-    /// Comma-separated list of opt-in rule names to enable.
-    /// E.g., `--enable-rules "aws_secret_key,generic_hex_secret_32"`
-    #[arg(long, help = "Comma-separated list of opt-in rule names to enable (e.g., 'aws_secret_key,generic_hex_secret_32').")]
-    enable_rules: Option<String>,
+    /// Enable these opt-in rule names, comma-separated. E.g., `aws_secret_key,generic_token`.
+    #[clap(long = "enable-rules", value_delimiter = ',', help = "Enable these opt-in rule names (comma-separated).")]
+    enable_rules: Vec<String>,
+
+    /// Disable these rule names, comma-separated. E.g., `email,ipv4_address`.
+    #[clap(long = "disable-rules", value_delimiter = ',', help = "Disable these rule names (comma-separated).")]
+    disable_rules: Vec<String>,
 }
 
 /// The main entry point of the `cleansh` application.
@@ -113,31 +118,35 @@ fn main() -> Result<()> {
     let effective_clipboard = cli.clipboard && !cli.disable_clipboard;
     let effective_diff = cli.diff && !cli.disable_diff;
 
-    // Parse opt-in rules
-    let opt_in_rules: Vec<String> = cli.enable_rules
-        .clone() // <--- Added .clone() here to prevent partial move
-        .map(|s| s.split(',').map(|rule_name| rule_name.trim().to_string()).collect())
-        .unwrap_or_else(Vec::new);
-
-
     // 1. Initialize the logger.
+    // Set RUST_LOG environment variable based on effective_debug or LOG_LEVEL env var
     if effective_debug {
+        // FIX: Wrap env::set_var in unsafe block for Rust 2024 edition compatibility
         unsafe {
             env::set_var("RUST_LOG", "debug");
         }
     } else if env::var("RUST_LOG").is_err() {
         if let Ok(log_level_env) = env::var("LOG_LEVEL") {
+            // FIX: Wrap env::set_var in unsafe block for Rust 2024 edition compatibility
             unsafe {
                 env::set_var("RUST_LOG", log_level_env);
             }
         }
     }
-    logger::init_logger();
+    logger::init_logger(); // Initialize the logger after setting RUST_LOG
 
     info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
-    debug!("Parsed CLI arguments: {:?}", cli); // Now `cli` can be borrowed here
+    debug!("Parsed CLI arguments: {:?}", cli); // `cli` is still fully available here
+
+    // Clone necessary fields for ownership transfer to `run_cleansh`
+    let cloned_config_path = cli.config.clone();
+    let cloned_out_path = cli.out.clone();
+    let cloned_enable_rules = cli.enable_rules.clone();
+    let cloned_disable_rules = cli.disable_rules.clone();
+
     debug!("Effective Debug: {}, Effective Clipboard: {}, Effective Diff: {}", effective_debug, effective_clipboard, effective_diff);
-    debug!("Explicitly enabled opt-in rules: {:?}", opt_in_rules);
+    debug!("Explicitly enabled opt-in rules: {:?}", cloned_enable_rules);
+    debug!("Explicitly disabled rules: {:?}", cloned_disable_rules);
 
 
     // Load theme from file or use embedded defaults
@@ -185,11 +194,12 @@ fn main() -> Result<()> {
         &input_content,
         effective_clipboard, // Use effective value
         effective_diff,      // Use effective value
-        cli.config,
-        cli.out,
+        cloned_config_path,  // Pass cloned path
+        cloned_out_path,     // Pass cloned path
         cli.no_redaction_summary,
         &theme_map,
-        opt_in_rules, // Pass opt_in_rules
+        cloned_enable_rules, // Pass cloned rules
+        cloned_disable_rules, // Pass cloned rules
     ) {
         ui::output_format::print_error_message(
             &mut io::stderr(),

@@ -1,3 +1,5 @@
+// tests/cli_integration_tests.rs
+
 use anyhow::Result;
 #[allow(unused_imports)]
 use predicates::prelude::*;
@@ -11,6 +13,7 @@ use assert_cmd::Command;
 
 use strip_ansi_escapes::strip as strip_ansi_escapes_fn;
 
+// Helper to run the cleansh command with given input and arguments
 fn run_cleansh_command(input: &str, args: &[&str]) -> Command {
     let mut cmd = Command::cargo_bin("cleansh").unwrap();
     cmd.args(args);
@@ -18,6 +21,7 @@ fn run_cleansh_command(input: &str, args: &[&str]) -> Command {
     cmd
 }
 
+// Helper to strip ANSI escape codes from a string
 fn strip_ansi(s: &str) -> String {
     let cleaned = strip_ansi_escapes_fn(s);
     String::from_utf8_lossy(&cleaned).to_string()
@@ -27,7 +31,7 @@ fn strip_ansi(s: &str) -> String {
 fn extract_sanitized_content(output: &str) -> String {
     let mut lines: Vec<&str> = output.lines().collect();
 
-    // Filter out informational/meta lines
+    // Filter out informational/meta lines, summary, and diff lines
     lines.retain(|line| {
         !(line.contains("Reading input from stdin") ||
           line.contains("Reading input from file") ||
@@ -38,7 +42,9 @@ fn extract_sanitized_content(output: &str) -> String {
           line.contains("--- Redaction Summary ---") ||
           line.contains("-------------------------") ||
           line.contains("--- Diff View ---") ||
-          line.contains("-----------------"))
+          line.contains("-----------------") ||
+          line.trim().starts_with("Original Examples:") || // Filter new summary lines
+          line.trim().starts_with("Sanitized Examples:"))   // Filter new summary lines
     });
 
     // Join and trim to handle leading/trailing empty lines
@@ -66,17 +72,22 @@ fn test_basic_sanitization() -> Result<()> {
     let input = "My email is test@example.com and my IP is 192.168.1.1.";
     let expected_sanitized_content = "My email is [EMAIL_REDACTED] and my IP is [IPV4_REDACTED].";
     // Construct the full expected output including info messages and summary.
-    // The "Reading input from stdin..." is followed by a newline, then the summary,
-    // and finally the sanitized content (which is printed after the summary).
-    // Note: The extra newline after "Reading input from stdin..." is from output_format::print_info_message
-    // and then there's an inherent newline after the summary block.
+    // Updated to reflect the new detailed summary format and alphabetical order for rules.
     let expected_output_with_summary = format!(
         "Reading input from stdin...\n\n\
          --- Redaction Summary ---\n\
          email (1 occurrences)\n\
+           Original Examples:\n\
+             - test@example.com\n\
+           Sanitized Examples:\n\
+             - [EMAIL_REDACTED]\n\
          ipv4_address (1 occurrences)\n\
+           Original Examples:\n\
+             - 192.168.1.1\n\
+           Sanitized Examples:\n\
+             - [IPV4_REDACTED]\n\
          -------------------------\n\n{}\
-         ", // ADDED AN EXTRA NEWLINE HERE to match the actual output
+         ",
         expected_sanitized_content
     );
 
@@ -135,10 +146,10 @@ fn test_diff_view() -> Result<()> {
                                      panic!("Diff start marker not found: '{}'", stripped);
                                  });
     let diff_end_idx = stripped[diff_start_idx..].find(diff_end_marker)
-                                                 .map(|idx| idx + diff_start_idx)
-                                                 .unwrap_or_else(|| {
-                                                     panic!("Diff end marker not found after start: '{}'", stripped);
-                                                 });
+                                         .map(|idx| idx + diff_start_idx)
+                                         .unwrap_or_else(|| {
+                                             panic!("Diff end marker not found after start: '{}'", stripped);
+                                         });
 
     let diff = &stripped[diff_start_idx..diff_end_idx];
 
@@ -154,8 +165,8 @@ fn test_output_to_file() -> Result<()> {
     let expected = "This is a test with sensitive info: [EMAIL_REDACTED]";
     let file = NamedTempFile::new()?;
     let path = file.path().to_str().unwrap();
-    // Add --no-clipboard and --no-redaction_summary
-    let output = run_cleansh_command(input, &["-o", path, "--no-clipboard", "--no-redaction_summary"]).assert().success().get_output().stdout.clone();
+    // Add --no-clipboard and --no-redaction-summary
+    let output = run_cleansh_command(input, &["-o", path, "--no-clipboard", "--no-redaction-summary"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
     assert!(stripped.contains("Written to file."));
     assert!(!stripped.contains("--- Redaction Summary ---")); // Summary should be suppressed
@@ -173,19 +184,21 @@ fn test_custom_config_file() -> Result<()> {
     description: "A custom secret pattern."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false
   - name: "email"
     pattern: "([a-z]+@[a-z]+\\.org)"
     replace_with: "[ORG_EMAIL_REDACTED]"
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false
 "#;
     let mut config_file = NamedTempFile::new()?;
     config_file.write_all(config_yaml.as_bytes())?;
     let path = config_file.path().to_str().unwrap();
     let input = "My email is user@example.com and another is user@test.org. My secret is MYSECRET-1234.";
     let expected = "My email is user@example.com and another is [ORG_EMAIL_REDACTED]. My secret is [CUSTOM_SECRET_REDACTED].";
-    // Add --no-clipboard and --no-redaction_summary
-    let output = run_cleansh_command(input, &["--config", path, "--no-clipboard", "--no-redaction_summary"]).assert().success().get_output().stdout.clone();
+    // Add --no-clipboard and --no-redaction-summary
+    let output = run_cleansh_command(input, &["--config", path, "--no-clipboard", "--no-redaction-summary"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
     let actual = extract_sanitized_content(&stripped); // Now extract_sanitized_content filters info messages
     assert_eq!(actual, expected);
@@ -196,8 +209,8 @@ fn test_custom_config_file() -> Result<()> {
 fn test_absolute_path_redaction() -> Result<()> {
     let input = "Accessing /home/user/documents/report.pdf and /Users/admin/logs/app.log";
     let expected = "Accessing ~/home/user/documents/report.pdf and ~/Users/admin/logs/app.log";
-    // Add --no-clipboard and --no-redaction_summary
-    let output = run_cleansh_command(input, &["--no-clipboard", "--no-redaction_summary"]).assert().success().get_output().stdout.clone();
+    // Add --no-clipboard and --no-redaction-summary
+    let output = run_cleansh_command(input, &["--no-clipboard", "--no-redaction-summary"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
     let actual = extract_sanitized_content(&stripped);
     assert_eq!(actual, expected);
@@ -210,8 +223,8 @@ fn test_no_redactions() -> Result<()> {
     // When --no-redaction-summary is present, we should NOT see "No redactions applied.".
     // We expect the "Reading input from stdin..." message followed by the original content.
     let expected = format!("Reading input from stdin...\n{}", input);
-    // Add --no-clipboard and --no-redaction_summary
-    let output = run_cleansh_command(input, &["--no-clipboard", "--no-redaction_summary"]).assert().success().get_output().stdout.clone();
+    // Add --no-clipboard and --no-redaction-summary
+    let output = run_cleansh_command(input, &["--no-clipboard", "--no-redaction-summary"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
     let actual = extract_no_redaction_output(&stripped); // Use custom extractor
     assert_eq!(actual, expected.trim());
@@ -223,7 +236,7 @@ fn test_opt_in_rule_not_enabled_by_default() -> Result<()> {
     let input = "My AWS secret key is aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789/+=.";
     let expected = "My AWS secret key is aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789/+=."; // Should NOT be redacted
     // aws_secret_key is opt-in and not enabled in args
-    let output = run_cleansh_command(input, &["--no-clipboard", "--no-redaction_summary"]).assert().success().get_output().stdout.clone();
+    let output = run_cleansh_command(input, &["--no-clipboard", "--no-redaction-summary"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
     let actual = extract_sanitized_content(&stripped);
     assert_eq!(actual, expected);
@@ -235,7 +248,7 @@ fn test_opt_in_rule_enabled() -> Result<()> {
     let input = "My AWS secret key is aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789/+=.";
     let expected = "My AWS secret key is [AWS_SECRET_KEY_REDACTED]."; // Should be redacted
     // Enable aws_secret_key via --enable-rules
-    let output = run_cleansh_command(input, &["--enable-rules", "aws_secret_key", "--no-clipboard", "--no-redaction_summary"]).assert().success().get_output().stdout.clone();
+    let output = run_cleansh_command(input, &["--enable-rules", "aws_secret_key", "--no-clipboard", "--no-redaction-summary"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
     let actual = extract_sanitized_content(&stripped);
     assert_eq!(actual, expected);
@@ -247,7 +260,7 @@ fn test_multiple_opt_in_rules_enabled() -> Result<()> {
     let input = "My AWS secret key is aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789/+=. And a generic hex: 0123456789abcdef0123456789abcdef.";
     let expected = "My AWS secret key is [AWS_SECRET_KEY_REDACTED]. And a generic hex: [HEX_SECRET_32_REDACTED]."; // Both should be redacted
     // Enable both aws_secret_key and generic_hex_secret_32
-    let output = run_cleansh_command(input, &["--enable-rules", "aws_secret_key,generic_hex_secret_32", "--no-clipboard", "--no-redaction_summary"]).assert().success().get_output().stdout.clone();
+    let output = run_cleansh_command(input, &["--enable-rules", "aws_secret_key,generic_hex_secret_32", "--no-clipboard", "--no-redaction-summary"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
     let actual = extract_sanitized_content(&stripped);
     assert_eq!(actual, expected);
@@ -258,10 +271,15 @@ fn test_multiple_opt_in_rules_enabled() -> Result<()> {
 fn test_opt_in_rule_enabled_with_summary() -> Result<()> {
     let input = "My AWS secret key is aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789/+=.";
     let expected_sanitized_content = "My AWS secret key is [AWS_SECRET_KEY_REDACTED].";
+    // Updated to reflect the new detailed summary format.
     let expected_summary_output = format!(
         "Reading input from stdin...\n\n\
          --- Redaction Summary ---\n\
          aws_secret_key (1 occurrences)\n\
+           Original Examples:\n\
+             - aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789/+=.\n\
+           Sanitized Examples:\n\
+             - [AWS_SECRET_KEY_REDACTED]\n\
          -------------------------\n\n{}\
          ",
         expected_sanitized_content
@@ -280,9 +298,9 @@ fn test_opt_in_rule_not_in_config() -> Result<()> {
     let input = "email@example.com and a fake secret 1234-abcd-SECRET.";
     let expected = "[EMAIL_REDACTED] and a fake secret 1234-abcd-SECRET.";
 
-    let output = run_cleansh_command(input, &["--enable-rules", "non_existent_rule", "--no-clipboard", "--no-redaction_summary"]).assert().success().get_output().stdout.clone();
+    let output = run_cleansh_command(input, &["--enable-rules", "non_existent_rule", "--no-clipboard", "--no-redaction-summary"]).assert().success().get_output().stdout.clone();
     let stripped = strip_ansi(&String::from_utf8_lossy(&output));
     let actual = extract_sanitized_content(&stripped);
-    assert_eq!(actual, expected); 
+    assert_eq!(actual, expected);
     Ok(())
 }

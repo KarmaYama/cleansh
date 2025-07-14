@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.5] - 2025-07-16 or earlier – Phase 1: Refined Default Redaction Rules
+## [0.1.5] - 2025-07-25 or earlier – Phase 1: Refined Default Redaction Rules
 
 ### Added
 
@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     * **Windows Absolute Paths** (`C:\…`, `\\Server\Share\…`)
     * **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`)
     * **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
+* **New CLI Flags for Enhanced Control:**
+    * `--no-redaction-summary`: Suppress the display of the redaction summary at the end of the output.
+    * `--enable-rules`: Allow users to explicitly enable opt-in redaction rules by name (comma-separated).
+    * `--disable-rules`: Allow users to explicitly disable any redaction rules by name (comma-separated).
+
 
 ### Changed
 
@@ -47,7 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     * **Generic Token** – unchanged pattern, but description now flags as **opt‑in only** due to high false‑positive risk.
 * **Identifiers & Financial**
     * **Credit Cards** – **Pattern significantly updated** to incorporate major BINs (Bank Identification Numbers) for enhanced precision, replacing the broad `13-16 digit` match; description now explicitly notes “no Luhn check.”
-    * **US SSN / UK NINO** – remain highly precise, with hyphens or built‑in date/area exclusions.
+    * **US SSN** – **Enhanced with programmatic validation** to prevent redaction of known invalid or unallocated patterns (e.g., area codes '000', '666', or '9xx'; group code '00'; serial number '0000'). This improves accuracy by filtering out common placeholder or test SSNs, ensuring only truly valid-looking SSNs are considered for redaction. The rule remains highly precise with hyphen matching.
+    * **UK NINO** – remains highly precise, with hyphens or built‑in date/area exclusions.
     * **South African ID Numbers** – **Pattern refined** for more accurate format matching of YYMMDDSSSCCZ, including citizenship; no Luhn check.
 * **Filesystem Paths**
     * **Linux/macOS** – refined to target common user home directories (`/home`, `/Users`) for sensitive path redaction.

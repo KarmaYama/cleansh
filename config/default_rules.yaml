@@ -6,6 +6,7 @@ rules:
     description: "Standard email address (supports TLDs up to 63 chars)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   # ==== NETWORK IDENTIFIERS ====
   - name: "ipv4_address"
@@ -14,6 +15,7 @@ rules:
     description: "Strict IPv4 address with each octet in 0–255."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "ipv6_address"
     pattern: '\\b(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}\\b'
@@ -21,6 +23,7 @@ rules:
     description: "Uncompressed IPv6 address (8 groups of 1–4 hex digits). Compressed (::) forms not covered by default."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   # ==== AUTH TOKENS & KEYS ====
   - name: "jwt_token"
@@ -29,6 +32,7 @@ rules:
     description: "JSON Web Token (three Base64URL-encoded segments)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "github_pat"
     pattern: '\\bghp_[A-Za-z0-9]{36}\\b'
@@ -36,6 +40,7 @@ rules:
     description: "Classic GitHub PAT (40 chars, prefix ghp_)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "github_pat_fine_grained"
     pattern: '\\bgithub_pat_[A-Za-z0-9_]{72}\\b'
@@ -43,6 +48,7 @@ rules:
     description: "GitHub fine‑grained PAT (72 chars, prefix github_pat_)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "stripe_secret"
     pattern: '\\b(?:sk_live_|sk_test_|rk_live_)[A-Za-z0-9]{24}\\b'
@@ -50,6 +56,7 @@ rules:
     description: "Stripe keys (live/test/restricted), 24 alphanumeric chars."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "aws_access_key"
     pattern: '\\b(?:AKIA|ASIA)[0-9A-Z]{16}\\b'
@@ -57,6 +64,7 @@ rules:
     description: "AWS Access Key ID (20 chars, prefixes AKIA/ASIA)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "aws_secret_key"
     pattern: '\\b[A-Za-z0-9/+=]{40}\\b'
@@ -65,6 +73,7 @@ rules:
     multiline: false
     dot_matches_new_line: false
     opt_in: true
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "gcp_api_key"
     pattern: '\\bAIza[0-9A-Za-z-_]{35}\\b'
@@ -72,6 +81,7 @@ rules:
     description: "Google Cloud API Key (prefix AIza, 39 chars)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "google_oauth_token"
     pattern: '\\bya29\\.[A-Za-z0-9_\\-]{20,120}\\b'
@@ -79,6 +89,7 @@ rules:
     description: "Google OAuth token (prefix ya29., 20–120 chars)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "ssh_private_key"
     pattern: '(-----BEGIN (?:RSA|DSA|EC|OPENSSH) PRIVATE KEY-----[\\s\\S]*?-----END (?:RSA|DSA|EC|OPENSSH) PRIVATE KEY-----)'
@@ -86,6 +97,7 @@ rules:
     description: "SSH private key block (RSA/DSA/EC/OpenSSH), multiline."
     multiline: true
     dot_matches_new_line: true
+    programmatic_validation: false # Explicitly set for clarity
 
   # ==== GENERIC SECRET PATTERNS ====
   - name: "generic_hex_secret_32"
@@ -95,6 +107,7 @@ rules:
     multiline: false
     dot_matches_new_line: false
     opt_in: true
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "generic_hex_secret_64"
     pattern: '\\b[0-9A-Fa-f]{64}\\b'
@@ -103,6 +116,7 @@ rules:
     multiline: false
     dot_matches_new_line: false
     opt_in: true
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "generic_token"
     pattern: '\\b(?:[a-z_]+_[a-z0-9_]+|[A-Z]{3,}[A-Z0-9]*)\\b'
@@ -110,7 +124,8 @@ rules:
     description: "Generic token pattern (e.g. access_token_12345, TOKENXYZ). **Opt‑in only: High false positive risk.**"
     multiline: false
     dot_matches_new_line: false
-    opt_in: true # Per your description
+    opt_in: true
+    programmatic_validation: false # Explicitly set for clarity
 
   # ==== IDENTIFIERS & FINANCIAL ====
   - name: "credit_card"
@@ -119,13 +134,17 @@ rules:
     description: "13–16 digit CC numbers (format only, no Luhn check, major brands only)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: true # Requires Luhn algorithm or similar for validity
 
   - name: "us_ssn"
-    pattern: '\\b(?!666|000|9\\d{2})\\d{3}-(?!00)\\d{2}-(?!0{4})\\d{4}\\b'
+    # Simplified regex pattern for format matching only (DDD-DD-DDDD)
+    # Stricter validation for invalid numbers will be handled programmatically.
+    pattern: '\\b(\\d{3})-(\\d{2})-(\\d{4})\\b'
     replace_with: "[US_SSN_REDACTED]"
-    description: "US SSN (XXX‑XX‑XXXX), excluding invalid area/group numbers."
+    description: "US SSN (XXX‑XX‑XXXX) format. Stricter validation handled in code."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: true # Requires programmatic validation for invalid numbers (000, 666, 9xx areas, 00 groups, 0000 serials)
 
   - name: "uk_nino"
     pattern: '\\b(?!BG|GB|NK|KN|TN|NT|ZZ)[A-CEGHJ-NPR-TW-Z]{2}\\s?\\d{2}\\s?\\d{2}\\s?\\d{2}\\s?[A-D]\\b'
@@ -133,6 +152,7 @@ rules:
     description: "UK National Insurance Number (two letters, six digits, one letter, with optional spaces)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: true # Requires programmatic validation for invalid prefixes and suffixes
 
   - name: "sa_id"
     # Revised pattern for accurate SA ID format (no Luhn check)
@@ -141,6 +161,7 @@ rules:
     description: "South African ID (13 digits: YYMMDDSSSCCZ, format only, no Luhn check)."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: true # Requires Luhn algorithm and other checksums for validity (e.g. 10-12-2025 rule)
 
   # ==== DEVICE & FILE PATHS ====
   - name: "absolute_linux_path"
@@ -149,6 +170,7 @@ rules:
     description: "Linux absolute path under /home/username."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "absolute_macos_path"
     pattern: '\\b/Users/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\\b'
@@ -156,6 +178,7 @@ rules:
     description: "macOS absolute path under /Users/username."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   - name: "windows_path"
     pattern: '\\b(?:[A-Za-z]:\\\\(?:[^\\\\\\s<>:"/|?*]+\\\\)*[^\\\\\\s<>:"/|?*]+)\\b'
@@ -163,6 +186,7 @@ rules:
     description: "Absolute Windows path with drive letter and subdirectories."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   # ==== Slack Webhook URLs ====
   - name: "slack_webhook_url"
@@ -171,6 +195,7 @@ rules:
     description: "Slack webhook URL token."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity
 
   # ==== Basic Auth Headers ====
   - name: "http_basic_auth"
@@ -179,3 +204,4 @@ rules:
     description: "Base64-encoded HTTP Basic Auth header."
     multiline: false
     dot_matches_new_line: false
+    programmatic_validation: false # Explicitly set for clarity

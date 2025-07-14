@@ -17,17 +17,23 @@
 │   │   └── 📄 mod.rs
 │   ├── 📁 tools
 │   │   ├── 📄 mod.rs
+│   │   ├── 📄 validators.rs
 │   │   └── 📄 sanitize_shell.rs
 │   ├── 📁 ui
 │   │   ├── 📄 mod.rs
 │   │   ├── 📄 output_format.rs
+│   │   ├── 📄 diff_viewer.rs
+│   │   ├── 📄 redaction_summary.rs
 │   │   └── 📄 theme.rs
 │   ├── 📄 config.rs
 │   ├── 📄 lib.rs
 │   ├── 📄 logger.rs
 │   └── 📄 main.rs
 ├── 📁 tests
-│   └── 📄 cleansh_integration.rs
+│   ├── 📄 cleansh_integration_tests.rs
+│   ├── 📄 cli_integration_tests.rs
+│   ├── 📄 config_integration_tests.rs
+│   └── 📄 sanitize_shell_integration_tests.rs
 ├── 📁 website
 │   ├── 📁 src
 │   │   ├── 📄 custom.css
