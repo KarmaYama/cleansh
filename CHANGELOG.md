@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.5] - 2025-07-25 or earlier – Phase 1: Refined Default Redaction Rules
+## [0.1.5] - 2025-07-25 – Or earlier Phase 1: Refined Default Redaction Rules
 
 ### Added
 
@@ -23,59 +23,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     * **Windows Absolute Paths** (`C:\…`, `\\Server\Share\…`)
     * **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`)
     * **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
+
 * **New CLI Flags for Enhanced Control:**
     * `--no-redaction-summary`: Suppress the display of the redaction summary at the end of the output.
     * `--enable-rules`: Allow users to explicitly enable opt-in redaction rules by name (comma-separated).
     * `--disable-rules`: Allow users to explicitly disable any redaction rules by name (comma-separated).
 
+* **ANSI Escape Stripping Layer:**
+    * All input content is now **sanitized for ANSI escape codes** prior to applying redaction rules, to eliminate evasion via terminal formatting.
+    * Uses [`strip-ansi-escapes`](https://crates.io/crates/strip-ansi-escapes) to remove colors, cursor movements, and other terminal decorations.
+    * Adds resilience against malicious payloads disguised with ANSI codes.
+
+* **Test-Only Feature Flags Introduced**:
+    * Internal-only `test-exposed` feature gate allows targeted unit test access to private module logic without exporting in production.
+    * Adds support for `clipboard` integration via feature flag toggling to isolate platform-specific code during builds.
+
+* **Redaction Summary Enhancements**:
+    * Output summaries now display **unique original and sanitized values** per rule.
+    * Summary sorting and formatting is **deterministic** for CI and diff-based output validation.
+
+* **Extensive Integration Tests**:
+    * New integration tests validate:
+        * ANSI-stripping effectiveness (`test_sanitize_content_with_ansi_escapes`)
+        * Clipboard output (`test_run_cleansh_clipboard_copy`)
+        * Rule opt-in and opt-out behaviors
+        * Redaction summary toggling
+        * Edge cases like overlapping rules and invalid formats
 
 ### Changed
 
-* **Anchoring & Boundaries**
-    * Added `\b` word‑boundaries or full anchors to *every* regex to eliminate partial / substring matches.
-* **Contact Info**
-    * **Email** – now supports uppercase, digits and up to 63‑char TLDs (`.[A-Za-z]{2,63}`) to cover modern gTLDs.
-* **Network Identifiers**
-    * **IPv4** – tightened per‑octet ranges to `0–255` with full validation.
-    * **IPv6** – added uncompressed rule; description now notes compressed forms (`::`) are not covered in this phase.
-* **Auth Tokens & Keys**
-    * **JWT Token** - Description updated to use standard ASCII hyphen-minus (`-`).
-    * **GitHub Access** – classic `ghp_…` rule remains; added `github_pat_…` for fine‑grained tokens.
-    * **Stripe** – unified `sk_live_`, `sk_test_`, `rk_live_` under one rule (24 chars).
-    * **AWS** – expanded prefixes to include both `AKIA` and `ASIA`; all keys now fully anchored.
-    * **AWS Secret Access Key** – **Now opt-in only** due to high false positive risk from generic Base64 patterns.
-    * **GCP** – `AIza…` rule unchanged but re‑anchored.
-    * **Google OAuth** – length bound refined to 20–120 chars.
-    * **SSH keys** – block pattern refined to include full BEGIN/END delimiters (`-----…-----`), uses `[\s\S]*?` for safe multiline matching.
-* **Generic Secrets**
-    * **32‑ and 64‑char hex** – exact‑length patterns, fully anchored. **Now opt-in only** due to high false positive risk from matching common hashes or IDs.
-    * **Generic Token** – unchanged pattern, but description now flags as **opt‑in only** due to high false‑positive risk.
-* **Identifiers & Financial**
-    * **Credit Cards** – **Pattern significantly updated** to incorporate major BINs (Bank Identification Numbers) for enhanced precision, replacing the broad `13-16 digit` match; description now explicitly notes “no Luhn check.”
-    * **US SSN** – **Enhanced with programmatic validation** to prevent redaction of known invalid or unallocated patterns (e.g., area codes '000', '666', or '9xx'; group code '00'; serial number '0000'). This improves accuracy by filtering out common placeholder or test SSNs, ensuring only truly valid-looking SSNs are considered for redaction. The rule remains highly precise with hyphen matching.
-    * **UK NINO** – remains highly precise, with hyphens or built‑in date/area exclusions.
-    * **South African ID Numbers** – **Pattern refined** for more accurate format matching of YYMMDDSSSCCZ, including citizenship; no Luhn check.
-* **Filesystem Paths**
-    * **Linux/macOS** – refined to target common user home directories (`/home`, `/Users`) for sensitive path redaction.
-    * **Windows** – unchanged but fully anchored, supports drive‑letter paths; description clarifies that UNC paths are not extensively covered by this rule.
+* **Regex Patterns**
+    * Added `\b` anchors or full start/end matches to all regex rules to reduce partial/substring false positives.
+    * Restructured complex regexes for clarity, with new comments in YAML-based rule definitions.
+
+* **Rule Management System**
+    * Now respects `opt_in: true` and filters rules at runtime using `--enable-rules` and `--disable-rules`.
+    * Unknown `--enable-rule` names are ignored with a debug warning, ensuring robust fail-safe behavior.
+
+* **Filesystem Path Rules**
+    * **Windows** path redaction now uses clear anchors and broader detection of drive letters.
+    * **Linux/macOS** rules refocused to redacting only home/user directories (`/home/`, `/Users/`).
+
+* **Programmatic Validation Improvements**
+    * **US SSN**:
+        * Rejects invalid area codes (`000`, `666`, `9xx`)
+        * Rejects group code `00` and serial `0000`
+    * **UK NINO**:
+        * Filters invalid prefixes (`BG`, `GB`, `NK`, etc.)
+        * Enforces middle numeric and suffix character rules
 
 ### Improved
 
-* **Regex Clarity & Maintainability**
-    * Replaced greedy wildcards with specific quantifiers.
-    * Modularized complex rules into comment‑annotated YAML entries.
-    * Documented known limitations (e.g. full‑compression IPv6, no Luhn, specific Windows path types).
-* **Performance & Security**
-    * Ensured all patterns compile efficiently under Rust’s `regex` crate (RE2‑style, no backtracking pitfalls).
-    * Introduced `opt_in: true` flag for high false-positive risk rules (AWS Secret Key, generic hex, generic token) to align with "secure by default" principle.
-    * Avoided nested quantifiers or lookaround constructs that could risk ReDoS.
-* **Future‑Proofing**
-    * Prepared hooks for Phase 2: entropy thresholds, contextual analysis, Luhn–post‑processing.
-    * Updated descriptions to guide opt‑in/opt‑out of broad or high‑risk rules.
+* **Security & Reliability**
+    * Avoids regex constructs that could trigger excessive backtracking (no nested quantifiers, lookbehinds).
+    * Pattern compilation size-limited to 10 MB per regex to avoid runtime slowdowns or ReDoS conditions.
+
+* **Diagnostics**
+    * Rich debug logs now include:
+        * Which rule matched what text
+        * Whether programmatic validation passed or failed
+        * Summary statistics per rule
+
+* **Code Maintainability**
+    * Refactored `sanitize_shell.rs` to separate `CompiledRule` and `CompiledRules` structs.
+    * Clearer variable naming (`stripped_input`, `summary_map`, `should_redact`) improves code readability.
+    * Better test coverage over configuration edge cases and redaction behavior.
+
+* **Build System**
+    * Improved feature flag usage (`test-exposed`, `clipboard`) to modularize platform-specific and test-only behaviors.
+    * Now compiles cleanly under all `cargo test` and `cargo build --no-default-features` scenarios.
+
+* **Changelog Process**
+    * This release formalizes adherence to [Keep a Changelog](https://keepachangelog.com) structure and detailed Markdown documentation for every behavioral change, feature, and security enhancement.
 
 ---
 
-*All notable changes for this release—building a robust “secure by default” foundation for cleansh’s evolving redaction engine.*
+*This release represents a major leap forward in `cleansh`'s accuracy, testability, and secure-by-default foundation. It lays the groundwork for future enhancements such as entropy-based token detection, contextual redaction, and Luhn checksum integration in Phase 2.*
 
 ---
 

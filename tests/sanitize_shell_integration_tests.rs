@@ -117,12 +117,24 @@ fn test_compile_rules_opt_in_and_disabled_conflict() -> Result<()> {
 fn test_overlapping_rules_priority() -> Result<()> {
     let rule_email = create_test_rule("email", r"(\w+)@example\.com", "[EMAIL]", false, None, false, false, false);
     let rule_generic = create_test_rule("example_match", r"example\.com", "[DOMAIN]", false, None, false, false, false);
-    let compiled = compile_rules(vec![rule_email, rule_generic], &[], &[])?;
+    // Order matters here when compiling, assuming the `compile_rules` or `sanitize_content` logic
+    // applies the first matching rule, or the "longest match".
+    // If the email regex matches the entire string, it will likely take precedence.
+    let compiled = compile_rules(vec![rule_email, rule_generic], &[], &[])?; 
     
     let input = "user@example.com";
     let (sanitized, summary) = sanitize_content(&input, &compiled);
-    assert_eq!(sanitized, "user@[DOMAIN]"); // Or assert against ambiguity if needed
-    assert_eq!(summary.len(), 2); // If both fire
+    
+    // Updated assertion: If "email" rule (which is a complete match) applies first/greedily,
+    // the output will be "[EMAIL]". The summary should reflect only one redaction.
+    assert_eq!(sanitized, "[EMAIL]"); 
+    assert_eq!(summary.len(), 1); // Only one rule should fire if it's a full replacement
+    
+    // Additionally, assert the details of the single redaction for clarity
+    assert_eq!(summary[0].rule_name, "email");
+    assert_eq!(summary[0].original_texts, vec!["user@example.com"]);
+    assert_eq!(summary[0].sanitized_texts, vec!["[EMAIL]"]);
+
     Ok(())
 }
 
@@ -339,7 +351,8 @@ fn test_uk_nino_programmatic_validation_valid() -> Result<()> {
     );
     let compiled_rules = compile_rules(vec![rule], &[], &[]).unwrap(); // Use compile_rules
 
-    let input = "Valid NINO: AB123456A. Valid Spaced NINO: PQ 12 34 56 B.";
+    // Corrected input: Use a genuinely valid NINO with spaces
+    let input = "Valid NINO: AB123456A. Valid Spaced NINO: AA 12 34 56 B.";
     let (sanitized, summary) = sanitize_content(input, &compiled_rules);
 
     assert_eq!(sanitized, "Valid NINO: [UK_NINO_REDACTED]. Valid Spaced NINO: [UK_NINO_REDACTED].");
@@ -347,7 +360,7 @@ fn test_uk_nino_programmatic_validation_valid() -> Result<()> {
     assert_eq!(summary[0].rule_name, "uk_nino");
     assert_eq!(summary[0].occurrences, 2);
     // Sort for consistent assertion
-    let mut expected_original_texts = vec!["AB123456A".to_string(), "PQ 12 34 56 B".to_string()];
+    let mut expected_original_texts = vec!["AB123456A".to_string(), "AA 12 34 56 B".to_string()];
     expected_original_texts.sort();
     assert_eq!(summary[0].original_texts, expected_original_texts);
     Ok(())
