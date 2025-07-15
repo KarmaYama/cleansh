@@ -36,3 +36,6 @@ test_input.txt
 temp_original.txt
 sanitized_output.txt
 test_input_redactions.txt
+custom_rules.yaml
+diff_output.txt
+sanitized_output_file.txt
