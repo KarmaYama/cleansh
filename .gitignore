@@ -32,3 +32,6 @@ Thumbs.db
 .#*
 
 /website/node_modules/
+test_input.txt
+temp_original.txt
+sanitized_output.txt

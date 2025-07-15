@@ -150,7 +150,7 @@ rules:
     description: "13–16 digit CC numbers (format only, no Luhn check, major brands only)."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: true
+    programmatic_validation: false
 
   - name: "us_ssn"
     pattern: |-
@@ -178,7 +178,7 @@ rules:
     description: "South African ID (13 digits: YYMMDDSSSCCZ, format only, no Luhn check)."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: true
+    programmatic_validation: false
 
   # ==== DEVICE & FILE PATHS ====
   - name: "absolute_linux_path"

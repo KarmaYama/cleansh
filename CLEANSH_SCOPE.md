@@ -101,3 +101,24 @@ This section outlines the progression of `cleansh` beyond its current robust sta
 
 ---
 
+
+---
+
+### TODO: Add `--quiet` Flag Full Support and Tests
+
+**Description:**
+Implement a `--quiet` CLI flag in `cleansh` to suppress all logs, diff output, and redaction summaries for cleaner UX and script-friendly output.
+
+**Current Status:**
+
+* Basic `--quiet` flag added and hooked into main CLI parser and logging setup.
+* Passed `quiet` flag into `run_cleansh` to conditionally suppress some output.
+
+**Next Steps:**
+
+* Update `run_cleansh` and related UI modules (`diff_viewer`, `redaction_summary`, `output_format`) to fully respect `quiet` mode.
+* Add integration and unit tests covering both quiet and verbose modes to ensure consistent behavior and no regressions.
+* Document the `--quiet` flag usage in README and help messages.
+
+---
+
