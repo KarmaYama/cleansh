@@ -108,13 +108,82 @@ fn test_basic_sanitization() -> Result<()> {
     Ok(())
 }
 
-// Ensure this test only compiles and runs when the "clipboard" feature is enabled.
+// Renamed from `test_clipboard_output` based on the log, or this is a new test.
+// Apply the CI skip logic here.
 #[cfg(feature = "clipboard")]
+#[test]
+fn test_run_cleansh_clipboard_copy() -> Result<()> {
+    // Skip in CI (no GUI / no X11 clipboard)
+    if std::env::var("CI").is_ok() {
+        eprintln!("Skipping clipboard test in CI (no display)");
+        return Ok(());
+    }
+
+    let input = "My email is test@example.com";
+    let expected_stdout = "My email is [EMAIL_REDACTED]\n"; // Expected output based on your previous logs
+    let expected_stderr_contains = vec![
+        "Reading input from stdin...",
+        "Writing sanitized content to file:", // This implies output to file
+        "Sanitized content copied to clipboard successfully.",
+        // Add other expected logs if necessary
+    ];
+
+    let config_yaml = r#"rules:
+  - name: "email"
+    pattern: "([a-z]+@[a-z]+\\.com)"
+    replace_with: "[EMAIL_REDACTED]"
+    description: "Email address."
+    multiline: false
+    dot_matches_new_line: false
+    programmatic_validation: false
+    opt_in: false
+"#;
+    let mut config_file = NamedTempFile::new()?;
+    config_file.write_all(config_yaml.as_bytes())?;
+    let config_path = config_file.path().to_str().unwrap();
+
+    let output_file = NamedTempFile::new()?;
+    let output_path = output_file.path().to_str().unwrap();
+
+
+    let assert_result = run_cleansh_command(input, &[
+        "-c", // Copy to clipboard
+        "-o", output_path, // Output to file
+        "--config", config_path, // Custom config
+        "--no-redaction-summary",
+    ]).success();
+
+    let stdout = strip_ansi(&String::from_utf8_lossy(&assert_result.get_output().stdout));
+    let stderr = strip_ansi(&String::from_utf8_lossy(&assert_result.get_output().stderr));
+
+    eprint!("\n--- STDOUT Captured ---\n");
+    eprintln!("{}", stdout);
+    eprintln!("--- END STDOUT ---\n");
+    eprint!("\n--- STDERR Captured ---\n");
+    eprintln!("{}", stderr);
+    eprintln!("--- END STDERR ---\n");
+
+    assert_eq!(stdout, ""); // When outputting to file, stdout should be empty
+
+    for msg in expected_stderr_contains {
+        assert!(stderr.contains(msg), "Stderr missing: '{}'\nFull stderr:\n{}", msg, stderr);
+    }
+
+    let file_contents = fs::read_to_string(output_path)?;
+    assert_eq!(file_contents, expected_stdout);
+
+    // This part tries to read the clipboard, which will fail in CI even if the copy "succeeds" internally.
+    // If you need to verify clipboard *content* locally, you'd do it here.
+    // However, the test's purpose seems to be primarily about *invoking* the clipboard logic.
+    // Since we are skipping in CI, this part is safe.
+
+    Ok(())
+}
+
+
 #[test]
 fn test_clipboard_output() -> Result<()> {
     // Skip in CI (no GUI / no X11 clipboard)
-    // This provides a runtime skip for CI environments that might still compile this test
-    // if the 'clipboard' feature is enabled for other reasons, but don't have a graphical session.
     if std::env::var("CI").is_ok() {
         eprintln!("Skipping clipboard test in CI (no display)"); 
         return Ok(());
