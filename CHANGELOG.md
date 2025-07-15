@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.5] - 2025-07-25 – Or earlier Phase 1: Refined Default Redaction Rules
+## [0.1.5] Phase 1: Refined Default Redaction Rules And More
 
 ### Added
 
