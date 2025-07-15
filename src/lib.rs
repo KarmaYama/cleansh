@@ -39,7 +39,7 @@ pub struct Cli {
     pub debug: bool,
     #[arg(long = "no-debug", action = ArgAction::SetTrue)]
     pub disable_debug: bool,
-    #[arg(value_name = "INPUT")]
+    #[arg(short = 'i', long, value_name = "FILE")] // MODIFIED: Added short and long attributes
     pub input_file: Option<PathBuf>,
     #[arg(long, value_name = "FILE")]
     pub theme: Option<PathBuf>,
