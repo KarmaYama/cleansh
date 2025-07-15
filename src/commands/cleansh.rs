@@ -164,6 +164,7 @@ pub fn run_cleansh(
     if clipboard_enabled {
         debug!("Attempting to copy sanitized content to clipboard.");
         debug!("[cleansh.rs] Clipboard enabled.");
+        // Replaced `?` with a `match` block to gracefully handle clipboard errors
         match copy_to_clipboard(&sanitized_content) {
             Ok(_) => {
                 info!("Sanitized content copied to clipboard successfully.");
