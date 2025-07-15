@@ -39,8 +39,18 @@ pub struct Cli {
     pub debug: bool,
     #[arg(long = "no-debug", action = ArgAction::SetTrue)]
     pub disable_debug: bool,
-    #[arg(short = 'i', long, value_name = "FILE")] // MODIFIED: Added short and long attributes
-    pub input_file: Option<PathBuf>,
+
+    // MODIFIED: Separate the input file argument into a named flag and a positional argument.
+    // This allows both `--input-file <FILE>` and `<FILE>` (positional) to work.
+    #[arg(short = 'i', long = "input-file", value_name = "FILE", help = "Input file to sanitize via a named flag.")]
+    pub input_file_flag: Option<PathBuf>,
+
+    // This defines the optional positional argument.
+    // `conflicts_with` ensures that if `--input-file` is used, this positional argument cannot be used,
+    // which prevents ambiguity and provides clear error messages if the user tries both.
+    #[arg(value_name = "INPUT", conflicts_with = "input_file_flag", help = "Input file to sanitize (positional argument, alternative to -i/--input-file).")]
+    pub positional_input: Option<PathBuf>,
+
     #[arg(long, value_name = "FILE")]
     pub theme: Option<PathBuf>,
     #[arg(long, action = ArgAction::SetTrue)]
@@ -110,8 +120,10 @@ pub fn run(cli: Cli) -> Result<()> {
 
     // Read input
     let mut input_content = String::new();
-    if let Some(path) = cli.input_file.as_ref() {
-        // Changed to stderr
+    // Prioritize the named flag (`input_file_flag`), then fall back to the positional argument (`positional_input`).
+    let input_path = cli.input_file_flag.or(cli.positional_input);
+
+    if let Some(path) = input_path.as_ref() {
         ui::output_format::print_info_message(
             &mut io::stderr(),
             &format!("Reading input from file: {}", path.display()),
@@ -120,7 +132,6 @@ pub fn run(cli: Cli) -> Result<()> {
         input_content = fs::read_to_string(path)
             .with_context(|| format!("Failed to read input from {}", path.display()))?;
     } else {
-        // Changed to stderr
         ui::output_format::print_info_message(
             &mut io::stderr(),
             "Reading input from stdin...",
