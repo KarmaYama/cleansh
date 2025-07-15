@@ -24,7 +24,6 @@ jobs:
       - name: Install cargo-rdme
         run: cargo install cargo-rdme
 
-      # 👇 NEW: Ensure README.md exists (or create it from scratch if needed)
       - name: Generate README.md if missing
         run: |
           if [ ! -f README.md ]; then
@@ -32,12 +31,11 @@ jobs:
             cargo rdme > README.md
           fi
 
-      # ✅ Check if README.md is up to date with lib.rs
       - name: Check README.md consistency
         run: git diff --exit-code README.md
 
       - name: Build
         run: cargo build --verbose
 
-      - name: Run tests (skipping clipboard-specific tests in CI if necessary)
-        run: cargo test --verbose
+      - name: Run tests (with test-exposed and clipboard features)
+        run: cargo test --features "test-exposed clipboard" --verbose 
