@@ -1,3 +1,6 @@
+// src/commands/cleansh.rs
+
+
 use anyhow::{Context, Result};
 use log::{debug, info, warn};
 use std::io::{self, Write};
