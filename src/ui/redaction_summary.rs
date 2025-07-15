@@ -33,14 +33,16 @@ pub fn print_summary<W: Write>(
         writeln!(writer, "{}{}", rule_name_styled, occurrences_styled)?;
 
         if !item.original_texts.is_empty() {
-            writeln!(writer, "    {}", get_styled_text("Original Examples:", ThemeEntry::Info, theme_map))?;
+            // Changed "Original Examples:" to "Original Values:"
+            writeln!(writer, "    {}", get_styled_text("Original Values:", ThemeEntry::Info, theme_map))?;
             for text in &item.original_texts {
                 writeln!(writer, "        - {}", text.red())?;
             }
         }
 
         if !item.sanitized_texts.is_empty() {
-            writeln!(writer, "    {}", get_styled_text("Sanitized Examples:", ThemeEntry::Info, theme_map))?;
+            // Changed "Sanitized Examples:" to "Sanitized Values:"
+            writeln!(writer, "    {}", get_styled_text("Sanitized Values:", ThemeEntry::Info, theme_map))?;
             for text in &item.sanitized_texts {
                 writeln!(writer, "        - {}", text.green())?;
             }
