@@ -9,7 +9,7 @@ use anyhow::Result;
 use std::env;
 use std::fs;
 use std::io;
-use log::{info};
+use log::{info, LevelFilter}; // Import LevelFilter here
 use dotenvy;
 
 pub mod commands;
@@ -89,20 +89,29 @@ pub mod test_exposed {
 pub fn run(cli: Cli) -> Result<()> {
     dotenvy::dotenv().ok();
 
-    // Logging and flags
-    let effective_debug = cli.debug && !cli.disable_debug;
-    let effective_clipboard = cli.clipboard && !cli.disable_clipboard;
-    let effective_diff = cli.diff && !cli.disable_diff;
-    if effective_debug {
-        unsafe { env::set_var("RUST_LOG", "debug") }
-    } else if env::var("RUST_LOG").is_err() {
-        if let Ok(val) = env::var("LOG_LEVEL") {
-            unsafe { env::set_var("RUST_LOG", val) }
-        }
-    }
-    logger::init_logger();
+    // Determine the effective debug logging level based on CLI flags.
+    // --no-debug takes precedence. If --debug is set AND --no-debug is NOT,
+    // then enable debug logging. Otherwise, default to no explicit override.
+    let effective_log_level = if cli.debug && !cli.disable_debug {
+        Some(LevelFilter::Debug)
+    } else if cli.disable_debug {
+        // If --no-debug is specifically set, ensure no debug logs,
+        // effectively setting a higher filter level (e.g., Info or Warn).
+        // Let's set it to Info, as Debug is explicitly suppressed.
+        // `env_logger` defaults to Warn if `RUST_LOG` isn't set, so setting to Info
+        // means messages at Info, Warn, Error, and Trace will appear.
+        Some(LevelFilter::Info)
+    } else {
+        // No explicit --debug or --no-debug, let RUST_LOG or default take over.
+        None
+    };
+
+    logger::init_logger(effective_log_level); // Pass the determined log level to the logger
     info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
 
+    let effective_clipboard = cli.clipboard && !cli.disable_clipboard;
+    let effective_diff = cli.diff && !cli.disable_diff;
+    
     // Theme map
     let theme_map: HashMap<ui::theme::ThemeEntry, ui::theme::ThemeStyle> =
         if let Some(t) = cli.theme.as_ref() {
@@ -164,3 +173,4 @@ pub fn run(cli: Cli) -> Result<()> {
     info!("cleansh finished successfully.");
     Ok(())
 }
+

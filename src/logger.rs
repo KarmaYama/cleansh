@@ -3,21 +3,30 @@ use env_logger::{Builder, Target};
 use log::LevelFilter;
 use std::io::Write; 
 
-/// Initializes the application's logger.
+/// Initializes the application's logger with an optional explicit log level.
 ///
-/// It sets up `env_logger` to output logs to stderr,
-/// with a **warn-level default filter** unless overridden by `RUST_LOG` environment variable.
+/// It sets up `env_logger` to output logs to stderr.
+/// The `explicit_level` parameter, if `Some`, will override any `RUST_LOG`
+/// environment variable. Otherwise, `RUST_LOG` will be parsed,
+/// defaulting to `LevelFilter::Warn`.
 /// Logs are formatted to include timestamp, level, and module path.
-pub fn init_logger() {
-    Builder::new()
-        .filter_level(LevelFilter::Warn) // Changed default log level from Info to Warn
-        .parse_env("RUST_LOG") // Allow RUST_LOG env var to override this default
+pub fn init_logger(explicit_level: Option<LevelFilter>) {
+    let mut builder = Builder::new();
+
+    if let Some(level) = explicit_level {
+        // If an explicit level is provided, use it and clear RUST_LOG parsing
+        // to ensure it takes precedence over environment variables.
+        builder.filter_level(level);
+    } else {
+        // Otherwise, allow RUST_LOG env var to override the default Warn level
+        builder.filter_level(LevelFilter::Warn);
+        builder.parse_env("RUST_LOG");
+    }
+
+    builder
         .target(Target::Stderr) // Log to standard error
         .format(|buf, record| {
             // Custom format: [LEVEL MODULE_PATH] MESSAGE
-            // Note: Timestamp is typically added by env_logger if you use `format_timestamp_millis()` etc.
-            // If you want a timestamp, you'd add `buf.timestamp_millis()` or similar here.
-            // For now, matching your existing format.
             writeln!(
                 buf,
                 "[{}] [{}] {}",

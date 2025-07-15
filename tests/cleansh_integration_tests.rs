@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use strip_ansi_escapes;
 
 // Import the specific function and types needed from the main crate
-// UPDATED: Now accessing via `cleansh::test_exposed::`
 use cleansh::test_exposed::commands::run_cleansh;
 use cleansh::test_exposed::config;
 use cleansh::test_exposed::ui::theme::{self, ThemeEntry};
@@ -252,12 +251,18 @@ fn test_run_cleansh_diff_output() -> Result<()> {
     let output = std::fs::read_to_string(&output_file_path)?;
     let output_stripped = strip_ansi_escapes::strip_str(&output); // Strip ANSI escape codes
 
-    // When diff is enabled AND output is to a file, the diff content itself goes to the file.
-    // The summary, if enabled, would still go to stderr/console.
-    // Assert that common diff indicators and the changed lines are present.
-    assert!(output_stripped.contains("-Original email: test@example.com"));
-    assert!(output_stripped.contains("+Original email: [EMAIL]"));
-    assert!(output_stripped.contains(" Another line.")); // Note the leading space for context lines
+    // Assert that the diff output contains correctly formatted lines.
+    // The `\n` characters should be interpreted as actual newlines, not literal strings.
+    // We'll check for the presence of the exact lines expected in a multi-line diff.
+    let expected_diff_output_part = vec![
+        "-Original email: test@example.com",
+        "+Original email: [EMAIL]",
+        " Another line.",
+    ].join("\n"); // Join with actual newlines
+
+    assert!(output_stripped.contains(&expected_diff_output_part), "Expected diff part not found:\n{}", expected_diff_output_part);
+    assert!(!output_stripped.contains("\\n"), "Diff output should not contain literal \\n sequences."); // Explicitly check for absence of literal \n
+
     assert!(!output_stripped.contains("--- Redaction Summary ---")); // Summary should not be in the diff file output.
 
     Ok(())

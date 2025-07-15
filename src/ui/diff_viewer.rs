@@ -15,44 +15,52 @@ pub fn print_diff<W: Write>(
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
     enable_colors: bool, // NEW PARAMETER: Indicates if the writer supports ANSI colors
 ) -> Result<()> {
-    // Diff header always goes to stderr (console) and should be colored if stderr is a TTY.
-    // The `get_styled_text` helper, when used here, will use the `enable_colors` parameter
-    // for this specific diff_viewer call, which might be different from stderr's TTY status.
-    // To ensure consistent coloring for stderr output messages (like headers),
-    // it's generally best if those helpers always check `io::stderr().is_terminal()` internally
-    // or are explicitly called to use a separate `stderr_supports_color` flag from `run_cleansh`.
-    // For now, let's pass `true` to `get_styled_text` for these console messages,
-    // assuming stderr is usually a TTY, and focus the `enable_colors` for the `writer`.
-    let diff_header = get_styled_text("\n--- Diff View ---", ThemeEntry::DiffHeader, theme_map, true); // Always attempt colors for stderr header
+    let diff_header = get_styled_text("\n--- Diff View ---", ThemeEntry::DiffHeader, theme_map, true);
     writeln!(io::stderr(), "{}", diff_header)?;
 
     let patch = create_patch(original_content, sanitized_content);
 
     for hunk in patch.hunks() {
         for line_change in hunk.lines() {
-            match line_change {
-                Line::Delete(s) => {
-                    if enable_colors {
-                        writeln!(writer, "{}{}", "-".red(), s.red())?; // Apply red color
-                    } else {
-                        writeln!(writer, "-{}", s)?; // Plain text
+            let content_str = match line_change {
+                Line::Delete(s) => s,
+                Line::Insert(s) => s,
+                Line::Context(s) => s,
+            };
+
+            // FIX: Replace literal "\\n" with actual newlines AND then split the resulting string
+            // into individual lines to ensure each segment is printed on its own line.
+            // This handles cases where diffy might return `\n` literally for multi-line inputs,
+            // or if the input itself contained literal `\n` characters.
+            let s_with_actual_newlines = content_str.replace("\\n", "\n");
+
+            // Split the string by actual newlines and print each segment.
+            // This handles cases where a single `diffy::Line` might represent multiple
+            // visual lines due to embedded `\n` characters.
+            for segment in s_with_actual_newlines.lines() {
+                match line_change {
+                    Line::Delete(_) => {
+                        if enable_colors {
+                            writeln!(writer, "{}{}", "-".red(), segment.red())?;
+                        } else {
+                            writeln!(writer, "-{}", segment)?;
+                        }
                     }
-                }
-                Line::Insert(s) => {
-                    if enable_colors {
-                        writeln!(writer, "{}{}", "+".green(), s.green())?; // Apply green color
-                    } else {
-                        writeln!(writer, "+{}", s)?; // Plain text
+                    Line::Insert(_) => {
+                        if enable_colors {
+                            writeln!(writer, "{}{}", "+".green(), segment.green())?;
+                        } else {
+                            writeln!(writer, "+{}", segment)?;
+                        }
                     }
-                }
-                Line::Context(s) => {
-                    writeln!(writer, " {}", s)?; // Context lines are never colored by `diffy`
+                    Line::Context(_) => {
+                        writeln!(writer, " {}", segment)?;
+                    }
                 }
             }
         }
     }
-    // Diff footer always goes to stderr (console) and should be colored if stderr is a TTY.
-    writeln!(io::stderr(), "{}", get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map, true))?; // Always attempt colors for stderr footer
+    writeln!(io::stderr(), "{}", get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map, true))?;
     Ok(())
 }
 
@@ -61,7 +69,7 @@ fn get_styled_text(
     text: &str,
     entry: ThemeEntry,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
-    enable_colors: bool, // NEW PARAMETER: Use this to decide whether to apply colors
+    enable_colors: bool,
 ) -> String {
     if enable_colors {
         if let Some(style) = theme_map.get(&entry) {
@@ -69,10 +77,8 @@ fn get_styled_text(
                 return text.color(color.to_ansi_color()).to_string();
             }
         }
-        // Fallback to white if no specific theme color is found but colors are enabled
         text.color(owo_colors::AnsiColors::White).to_string()
     } else {
-        // If colors are disabled, return the plain text
         text.to_string()
     }
 }
