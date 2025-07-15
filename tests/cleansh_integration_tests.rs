@@ -161,6 +161,13 @@ fn test_run_cleansh_no_redaction_summary() -> Result<()> {
 #[cfg(feature = "clipboard")] // Only run if clipboard feature is enabled
 fn test_run_cleansh_clipboard_copy() -> Result<()> {
     test_setup::setup_logger();
+
+    // Skip this test if running in a CI environment (headless, no display server)
+    if std::env::var("CI").is_ok() {
+        eprintln!("Skipping test_run_cleansh_clipboard_copy in CI (no display/X11)");
+        return Ok(());
+    }
+
     let input = "email: test@example.com";
     let config = config::RedactionConfig {
         rules: vec![config::RedactionRule {
