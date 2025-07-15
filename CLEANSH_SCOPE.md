@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Current State (Achieved as of v0.1.2)
+## 1. Current State (Achieved as of v0.1.5)
 
 ### 🎯 Core Capabilities:
 `cleansh` currently provides robust sanitization of shell output (piped via stdin or loaded from a file), intelligently masking:
@@ -13,6 +13,17 @@
 * **IPv4 addresses**
 * **Generic tokens, JWTs, AWS/GCP keys, SSH keys, and common hex secrets**
 * **Absolute paths** (e.g., `/Users/alex/...`) which are normalized to `~/...`
+* **GitHub PATs** (`ghp_…`)
+* **GitHub fine‑grained PATs** (`github_pat_…`, 72 chars)
+* **Stripe keys** (`sk_live_…`, `sk_test_…`, `rk_live_…`)
+* **Google OAuth tokens** (`ya29.…`, 20–120 chars)
+* **IPv6 addresses** (full uncompressed form, 8×1–4 hex digits)
+* **US Social Security Numbers (SSN)**
+* **UK National Insurance Numbers (NINO)**
+* **South African ID Numbers**
+* **Windows Absolute Paths** (`C:\…`, `\\Server\Share\…`)
+* **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`)
+* **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
 
 ### ✨ Key Features Implemented:
 * **Clipboard Integration (`--clipboard` / `-c`):** Automatically copies sanitized output to the system clipboard.
@@ -20,32 +31,24 @@
 * **Custom Redaction Config (`--config config.yaml`):** Allows loading user-defined YAML rules for extended pattern matching. These rules intelligently merge with built-in defaults.
 * **Output to File (`--out result.txt` / `-o`):** Directs sanitized output to a specified file.
 * **Runtime Configuration:** Utilizes `.env` for settings like `LOG_LEVEL` and `CLIPBOARD_ENABLED`.
-* **Robust Error Handling & Logging:** Implemented with `anyhow`, `thiserror`, `log`, and `env_logger`.
-* **Comprehensive Testing:** Includes unit tests for regex accuracy, path normalization, and YAML parsing, as well as integration tests for I/O and flag behavior (with recent fixes for output consistency in `0.1.2`).
+* **Robust Error Handling & Logging:** Implemented with `anyhow`, `thiserror`, `log`, and `env_logger`. **Default log level is now `WARN`**, providing a quieter experience by default. The `--quiet` (`-q`) flag is also fully supported.
+* **Comprehensive Testing:** Includes unit tests for regex accuracy, path normalization, and YAML parsing, as well as integration tests for I/O and flag behavior (with recent fixes for output consistency in `0.1.2`), and extensive new tests for ANSI stripping, clipboard, and rule management.
 * **Cross-Platform Distribution:** Packaged for easy installation via `cargo-dist` (curl script, prebuilt binaries for Windows, macOS, Linux) and `cargo install`.
 * **MIT Licensed:** Open-source and privacy-first.
 * **Secure by Design:** No runtime evaluations, no external network calls, immutable default rules, sandboxed YAML, and opt-in clipboard.
+* **ANSI Escape Stripping Layer:** All input content is now **sanitized for ANSI escape codes** prior to applying redaction rules.
 
 ### 📈 Recent Milestones (from Changelog):
+* **v0.1.5 (2025-07-25 – Or earlier):** **Phase 1 Complete.** Includes refined default redaction rules, new CLI flags for enhanced control (`--no-redaction-summary`, `--enable-rules`, `--disable-rules`, `--quiet`), ANSI escape stripping, enhanced redaction summaries, extensive integration tests, and a default `WARN` logging level.
 * **v0.1.2 (2025-07-12):** Focused on output stability and refinement, resolving critical formatting issues and ensuring correct summary message display.
 * **v0.1.1 (2025-07-12):** Enhanced diff view accuracy by upgrading to `diffy`.
 * **v0.1.0 (2025-07-12):** Initial public release with core sanitization capabilities and foundational CLI features.
 
 ---
 
-## 2. Strategic Roadmap & Future Enhancements (Post v0.1.2)
+## 2. Strategic Roadmap & Future Enhancements (Post v0.1.5)
 
 This section outlines the progression of `cleansh` beyond its current robust state, focusing on adding more value, improving user experience, and expanding its reach.
-
-### Phase 1: Enhanced User Control & Minor Enhancements (Target: v0.1.5 - v0.2.0)
-* **1A. Refined Default Redaction Rules:**
-    * (Under research) Improve existing regex patterns for accuracy and to reduce false positives.
-    * **Basic Windows Path Redaction:** Add a default rule for `C:\Users\...` paths to `default_rules.yaml` to improve cross-platform utility.
-* **1B. Improved Rule Management & Prioritization:**
-    * **Explicit Rule Ordering/Prioritization:** Add a `priority` field to the `Rule` struct (e.g., `priority: 100`, where a lower number indicates higher priority). Rules will be sorted and applied by priority during the `compile_rules` step, ensuring more specific rules can run before broader ones.
-    * **Rule Disabling:** Introduce an `enabled: bool` field to the `Rule` struct (e.g., `enabled: false` in YAML) to allow users to disable specific default or custom rules.
-* **1C. Configurable Redaction Placeholders:**
-    * Implement support for using `$` (capture group) variables within `replace_with` strings in custom YAML rules (e.g., `[EMAIL_DOMAIN:$2]`). This provides more context in the redacted output by allowing parts of the original match to be preserved or referenced.
 
 ### Phase 2: Advanced Redaction Strategies & Performance (Target: v0.2.x - v0.3.x)
 * **2A. More Sophisticated Redaction Options:**
@@ -100,25 +103,3 @@ This section outlines the progression of `cleansh` beyond its current robust sta
 | Test Coverage | Comprehensive unit and integration tests. | Ensures reliability and prevents regressions. |
 
 ---
-
-
----
-
-### TODO: Add `--quiet` Flag Full Support and Tests
-
-**Description:**
-Implement a `--quiet` CLI flag in `cleansh` to suppress all logs, diff output, and redaction summaries for cleaner UX and script-friendly output.
-
-**Current Status:**
-
-* Basic `--quiet` flag added and hooked into main CLI parser and logging setup.
-* Passed `quiet` flag into `run_cleansh` to conditionally suppress some output.
-
-**Next Steps:**
-
-* Update `run_cleansh` and related UI modules (`diff_viewer`, `redaction_summary`, `output_format`) to fully respect `quiet` mode.
-* Add integration and unit tests covering both quiet and verbose modes to ensure consistent behavior and no regressions.
-* Document the `--quiet` flag usage in README and help messages.
-
----
-

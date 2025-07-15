@@ -14,13 +14,15 @@ pub fn init_logger(explicit_level: Option<LevelFilter>) {
     let mut builder = Builder::new();
 
     if let Some(level) = explicit_level {
-        // If an explicit level is provided, use it and clear RUST_LOG parsing
-        // to ensure it takes precedence over environment variables.
+        // If an explicit level is provided (e.g., from --debug, --no-debug, or --quiet),
+        // use it and ensure it takes precedence.
         builder.filter_level(level);
     } else {
-        // Otherwise, allow RUST_LOG env var to override the default Warn level
-        builder.filter_level(LevelFilter::Warn);
-        builder.parse_env("RUST_LOG");
+        // If no explicit level is provided, the default log level will be WARN.
+        // This means INFO and DEBUG messages are suppressed by default.
+        // However, the RUST_LOG environment variable can still override this default.
+        builder.filter_level(LevelFilter::Warn); // <--- THIS IS THE KEY CHANGE FOR DEFAULT SILENCE
+        builder.parse_env("RUST_LOG"); // Still allow RUST_LOG to override the default
     }
 
     builder

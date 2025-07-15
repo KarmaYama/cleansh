@@ -9,7 +9,7 @@ use anyhow::Result;
 use std::env;
 use std::fs;
 use std::io;
-use log::{info, LevelFilter}; // Import LevelFilter here
+use log::{info, LevelFilter};
 use dotenvy;
 
 pub mod commands;
@@ -17,7 +17,7 @@ pub mod config;
 pub mod logger;
 pub mod tools;
 pub mod ui;
-pub mod utils; // NEW: Expose the new utils module
+pub mod utils;
 
 /// CLI definition
 #[derive(Parser, Debug)]
@@ -39,15 +39,13 @@ pub struct Cli {
     pub debug: bool,
     #[arg(long = "no-debug", action = ArgAction::SetTrue)]
     pub disable_debug: bool,
+    // ADDED: quiet flag
+    #[arg(short = 'q', long, action = ArgAction::SetTrue, help = "Suppress informational output, only show warnings and errors.")]
+    pub quiet: bool,
 
-    // MODIFIED: Separate the input file argument into a named flag and a positional argument.
-    // This allows both `--input-file <FILE>` and `<FILE>` (positional) to work.
     #[arg(short = 'i', long = "input-file", value_name = "FILE", help = "Input file to sanitize via a named flag.")]
     pub input_file_flag: Option<PathBuf>,
 
-    // This defines the optional positional argument.
-    // `conflicts_with` ensures that if `--input-file` is used, this positional argument cannot be used,
-    // which prevents ambiguity and provides clear error messages if the user tries both.
     #[arg(value_name = "INPUT", conflicts_with = "input_file_flag", help = "Input file to sanitize (positional argument, alternative to -i/--input-file).")]
     pub positional_input: Option<PathBuf>,
 
@@ -79,7 +77,6 @@ pub mod test_exposed {
         pub use crate::ui::redaction_summary;
         pub use crate::ui::diff_viewer;
     }
-    // NEW: Expose redaction utilities for testing
     pub mod utils {
         pub use crate::utils::redaction::*;
     }
@@ -90,23 +87,25 @@ pub fn run(cli: Cli) -> Result<()> {
     dotenvy::dotenv().ok();
 
     // Determine the effective debug logging level based on CLI flags.
-    // --no-debug takes precedence. If --debug is set AND --no-debug is NOT,
-    // then enable debug logging. Otherwise, default to no explicit override.
-    let effective_log_level = if cli.debug && !cli.disable_debug {
+    // Order of precedence: --quiet > --no-debug > --debug > RUST_LOG env var > default Warn
+    let effective_log_level = if cli.quiet {
+        // If --quiet is set, suppress all info/debug, only show Warn, Error, Trace.
+        Some(LevelFilter::Warn)
+    } else if cli.debug && !cli.disable_debug {
+        // If --debug is set AND --no-debug is NOT, enable debug logging.
         Some(LevelFilter::Debug)
     } else if cli.disable_debug {
         // If --no-debug is specifically set, ensure no debug logs,
-        // effectively setting a higher filter level (e.g., Info or Warn).
-        // Let's set it to Info, as Debug is explicitly suppressed.
-        // `env_logger` defaults to Warn if `RUST_LOG` isn't set, so setting to Info
-        // means messages at Info, Warn, Error, and Trace will appear.
+        // effectively setting a higher filter level (Info, Warn, Error, Trace).
         Some(LevelFilter::Info)
     } else {
-        // No explicit --debug or --no-debug, let RUST_LOG or default take over.
+        // No explicit verbosity flags, let RUST_LOG or the default Warn in logger::init_logger apply.
         None
     };
 
-    logger::init_logger(effective_log_level); // Pass the determined log level to the logger
+    logger::init_logger(effective_log_level);
+    // This info message will now be suppressed by default due to LevelFilter::Warn in logger.rs
+    // unless RUST_LOG is set to info/debug or --debug is used.
     info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
 
     let effective_clipboard = cli.clipboard && !cli.disable_clipboard;
@@ -129,10 +128,10 @@ pub fn run(cli: Cli) -> Result<()> {
 
     // Read input
     let mut input_content = String::new();
-    // Prioritize the named flag (`input_file_flag`), then fall back to the positional argument (`positional_input`).
     let input_path = cli.input_file_flag.or(cli.positional_input);
 
     if let Some(path) = input_path.as_ref() {
+        // This info message will now be suppressed by default
         ui::output_format::print_info_message(
             &mut io::stderr(),
             &format!("Reading input from file: {}", path.display()),
@@ -141,6 +140,7 @@ pub fn run(cli: Cli) -> Result<()> {
         input_content = fs::read_to_string(path)
             .with_context(|| format!("Failed to read input from {}", path.display()))?;
     } else {
+        // This info message will now be suppressed by default
         ui::output_format::print_info_message(
             &mut io::stderr(),
             "Reading input from stdin...",
@@ -170,7 +170,7 @@ pub fn run(cli: Cli) -> Result<()> {
         std::process::exit(1);
     }
 
+    // This info message will also be suppressed by default
     info!("cleansh finished successfully.");
     Ok(())
 }
-
