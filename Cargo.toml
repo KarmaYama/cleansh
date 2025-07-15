@@ -55,7 +55,9 @@ cargo-audit = "0.21.2"
 [dev-dependencies]
 assert_cmd = "2.0"
 predicates = "3.0"
-tempfile = "3.10" 
+tempfile = "3.10"
+#test-env-log = "0.2.8"
+test-log = "0.2.18"
 
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3"

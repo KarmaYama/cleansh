@@ -47,6 +47,9 @@ a robust, pre‑configured solution for data sanitization, with flexible options
 **Sanitize your terminal output. One tool. One purpose.**
 
 ---
+### Development Environment Setup
+
+For the best Rust Analyzer experience in VS Code, the project includes a `.vscode/settings.json` that enables necessary Cargo features like `test-exposed` and `clipboard`.
 
 ## 2. Core Capabilities – Current Version (**v0.1.2**)
 

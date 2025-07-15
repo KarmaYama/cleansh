@@ -3,8 +3,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
-use log::debug; // Keep log::debug for consistency, but eprintln! will be our primary debug tool here
-
+use log::debug; 
 /// Maximum allowed length for a regex pattern string.
 /// This prevents excessively large or potentially malicious regexes.
 pub const MAX_PATTERN_LENGTH: usize = 500; // Example: 500 characters
@@ -95,11 +94,13 @@ pub fn merge_rules(
             })
             .collect();
 
+        let mut overridden_count = 0;
         // Retain default rules that are NOT overridden by user rules
         default_config.rules.retain(|default_rule| {
             if user_rules_map.contains_key(&default_rule.name) {
                 debug!("Default rule '{}' overridden by user configuration.", default_rule.name);
                 debug!("[config.rs] Default rule '{}' overridden by user. Skipping default.", default_rule.name);
+                overridden_count += 1;
                 false // Remove this default rule
             } else {
                 debug!("[config.rs] Keeping default rule: '{}', Opt_in: {}", default_rule.name, default_rule.opt_in);
@@ -108,13 +109,16 @@ pub fn merge_rules(
         });
 
         // Extend with all user rules (including those that overrode defaults)
+        let added_user_rules_count = user_rules_map.len() - overridden_count;
         default_config.rules.extend(user_rules_map.into_values());
         
         debug!(
-            "Merged rules: {} default rules, {} user rules. Total rules: {}",
-            initial_default_count, // This is the count of default rules initially passed
-            user_cfg.rules.len(), // This is the count of user rules passed
-            default_config.rules.len() // This is the final count after merging
+            "Merged rules summary: {} default rules initially, {} user rules processed. Overrode {} defaults, added {} new user rules. Final total rules: {}",
+            initial_default_count,
+            user_cfg.rules.len(),
+            overridden_count,
+            added_user_rules_count,
+            default_config.rules.len()
         );
         debug!("[config.rs] Final merged rules count: {}", default_config.rules.len());
         for rule in &default_config.rules {

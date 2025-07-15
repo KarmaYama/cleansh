@@ -17,6 +17,7 @@ pub mod config;
 pub mod logger;
 pub mod tools;
 pub mod ui;
+pub mod utils; // NEW: Expose the new utils module
 
 /// CLI definition
 #[derive(Parser, Debug)]
@@ -67,6 +68,10 @@ pub mod test_exposed {
         pub use crate::ui::output_format;
         pub use crate::ui::redaction_summary;
         pub use crate::ui::diff_viewer;
+    }
+    // NEW: Expose redaction utilities for testing
+    pub mod utils {
+        pub use crate::utils::redaction::*;
     }
 }
 

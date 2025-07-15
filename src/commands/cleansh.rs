@@ -1,4 +1,3 @@
-// src/commands/cleansh.rs
 use anyhow::{Context, Result};
 use log::{debug, info, warn};
 use std::io::{self, Write};
@@ -93,8 +92,7 @@ pub fn run_cleansh(
         sanitized_content.len()
     );
 
-    // REMOVED: eprintln!("DEBUG_CLEANSH: Original content: {:?}", input_content);
-    // REMOVED: eprintln!("DEBUG_CLEANSH: Sanitized content: {:?}", sanitized_content);
+    
     debug!("DEBUG_CLEANSH: Redaction summary (num items): {:?}", summary.len());
 
 

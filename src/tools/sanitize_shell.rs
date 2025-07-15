@@ -1,13 +1,15 @@
-// src/tools/sanitize_shell.rs
-
 use anyhow::{Result, anyhow};
 use regex::{Regex, RegexBuilder};
 use std::collections::{HashMap, HashSet};
-use log::{debug, warn, error}; // Ensure `log` crate macros are in scope
-use strip_ansi_escapes::strip; // Correct import for the strip function
+use log::{debug, warn, error};
+use strip_ansi_escapes::strip;
+
+// Import the moved functions and macro from the new utility module
+use crate::utils::redaction::{pii_debug, redact_sensitive};
 
 use crate::config::{RedactionRule, RedactionSummaryItem, MAX_PATTERN_LENGTH};
 use crate::tools::validators;
+
 
 /// Represents a compiled redaction rule.
 #[derive(Debug)]
@@ -15,7 +17,7 @@ pub struct CompiledRule {
     pub regex: Regex,
     pub replace_with: String,
     pub name: String,
-    pub programmatic_validation: bool, // Correct spelling here
+    pub programmatic_validation: bool,
 }
 
 /// Represents all compiled rules for efficient sanitization.
@@ -92,15 +94,14 @@ pub fn compile_rules(
                     regex,
                     replace_with: rule.replace_with,
                     name: rule.name,
-                    programmatic_validation: rule.programmatic_validation, // Correct spelling here
+                    programmatic_validation: rule.programmatic_validation,
                 });
                 debug!("Rule '{}' compiled successfully.", rule_name_str);
             }
             Err(e) => {
                 let error_msg = format!(
-                    "Rule '{}': failed to compile regex pattern '{}': {}",
-                    rule_name_str,
-                    rule.pattern, e
+                    "Rule '{}': failed to compile regex pattern: {}",
+                    rule_name_str, e // Removed rule.pattern from log
                 );
                 error!("Compilation error: {}", error_msg);
                 compilation_errors.push(error_msg);
@@ -161,29 +162,32 @@ pub fn sanitize_content(
     let mut summary_map: HashMap<String, RedactionSummaryItem> = HashMap::new();
 
     debug!("sanitize_content called. Num compiled rules: {}", compiled_rules.rules.len());
-    debug!("Input content for sanitization (after ANSI strip): {:?}", stripped_input);
+    // Avoid logging entire input content
+    debug!("Sanitize called. Input content length: {}", stripped_input.len());
 
 
     for compiled_rule in &compiled_rules.rules {
         let rule_name = &compiled_rule.name;
         let mut occurrences = 0;
         let mut original_matches: HashSet<String> = HashSet::new();
-        let mut sanitized_replacements: HashSet<String> = HashSet::new();
+        let mut sanitized_replacements: HashSet<String> = HashSet::new(); // Use a HashSet to store unique sanitized values
 
         debug!("Applying rule: '{}'", rule_name);
 
-        debug!("Rule '{}' pattern: '{}'", rule_name, compiled_rule.regex.as_str());
-        debug!("Rule '{}' does pattern match input? {}", rule_name, compiled_rule.regex.is_match(&sanitized_content));
+        // Avoid logging full regex patterns
+        debug!("Rule '{}' compiled.", rule_name);
+        pii_debug!("Rule '{}' does pattern match input? {}", rule_name, compiled_rule.regex.is_match(&sanitized_content));
 
 
         sanitized_content = compiled_rule.regex.replace_all(&sanitized_content, |caps: &regex::Captures| {
             let original_match = caps.get(0).unwrap().as_str().to_string();
 
-            debug!("Rule '{}' captured: '{}'", rule_name, original_match);
+            // Redact sensitive values in logs
+            pii_debug!("Rule '{}' captured match (original): {}", rule_name, redact_sensitive(&original_match));
 
 
             // Perform programmatic validation if enabled for the rule
-            let should_redact = if compiled_rule.programmatic_validation { // Correct spelling here
+            let should_redact: bool = if compiled_rule.programmatic_validation {
                 match rule_name.as_str() {
                     "us_ssn" => validators::is_valid_ssn_programmatically(&original_match),
                     "uk_nino" => validators::is_valid_uk_nino_programmatically(&original_match),
@@ -196,17 +200,16 @@ pub fn sanitize_content(
                 true // No programmatic validation, always redact if regex matches
             };
 
-            // Changed from eprintln! to debug!
-            debug!("[sanitize_shell.rs] DEBUG: Rule '{}' should_redact: {}", rule_name, should_redact);
-
             if should_redact {
                 occurrences += 1;
                 original_matches.insert(original_match.clone()); // Store unique original matches
                 sanitized_replacements.insert(compiled_rule.replace_with.clone()); // Store unique sanitized replacements
-                debug!("Redacting '{}' with '{}' for rule '{}'", original_match, compiled_rule.replace_with, rule_name);
+                // Redact sensitive values in logs
+                pii_debug!("Redacting '{}' with '{}' for rule '{}'", redact_sensitive(&original_match), redact_sensitive(&compiled_rule.replace_with), rule_name);
                 compiled_rule.replace_with.clone()
             } else {
-                debug!("Rule '{}' matched '{}' but programmatic validation failed. Keeping original text.", rule_name, original_match);
+                // Redact sensitive values in logs
+                pii_debug!("Rule '{}' matched '{}' but programmatic validation failed. Keeping original text.", rule_name, redact_sensitive(&original_match));
                 original_match // Keep original text if programmatic validation fails
             }
         }).to_string();
@@ -219,9 +222,11 @@ pub fn sanitize_content(
                 sanitized_texts: Vec::new(),
             });
             item.occurrences += occurrences;
-            item.original_texts.extend(original_matches.into_iter());
-            item.sanitized_texts.extend(sanitized_replacements.into_iter());
-            debug!("Rule '{}' resulted in {} redactions. First original match: {:?}", rule_name, occurrences, item.original_texts.get(0));
+            // CORRECTED: Populate original_texts and sanitized_texts
+            item.original_texts.extend(original_matches.drain()); // Use drain to move ownership from HashSet
+            item.sanitized_texts.extend(sanitized_replacements.drain()); // Use drain to move ownership from HashSet
+
+            debug!("Rule '{}' resulted in {} redactions.", rule_name, occurrences);
         }
     }
 

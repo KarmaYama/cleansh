@@ -84,6 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         * Whether programmatic validation passed or failed
         * Summary statistics per rule
 
+* **Logging Setup**
+    * Refined the internal logging configuration for tests, ensuring debug messages are **conditionally logged only when explicitly enabled** via the `CLEANSH_ALLOW_DEBUG_PII` environment variable. This significantly enhances security by preventing accidental Personal Identifiable Information (PII) leakage into logs in non-development environments.
+    * Integrated the `test-log` crate (formerly `test-env-log`) to provide a robust and idiomatic solution for managing `env_logger` initialization in test suites. This allows tests to precisely control their logging output and avoids interference from external `RUST_LOG` settings, leading to more reliable and deterministic test results.
+    * Wrapped environment variable modifications (`std::env::set_var`, `std::env::remove_var`) in `unsafe` blocks within test code and doctests, acknowledging the potential global side effects and adhering to Rust's safety guidelines.
+
 * **Code Maintainability**
     * Refactored `sanitize_shell.rs` to separate `CompiledRule` and `CompiledRules` structs.
     * Clearer variable naming (`stripped_input`, `summary_map`, `should_redact`) improves code readability.
@@ -94,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     * Now compiles cleanly under all `cargo test` and `cargo build --no-default-features` scenarios.
 
 * **Changelog Process**
-    * This release formalizes adherence to [Keep a Changelog](https://keepachangelog.com) structure and detailed Markdown documentation for every behavioral change, feature, and security enhancement.
+    * This release formalizes adherence to [Keep a Changelog](https://keepachagelogs.com) structure and detailed Markdown documentation for every behavioral change, feature, and security enhancement.
 
 ---
 
