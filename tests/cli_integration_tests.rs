@@ -1,6 +1,6 @@
 // tests/cli_integration_tests.rs
 use anyhow::Result;
-use anyhow::Context; // This import is marked as unused in your CI, we'll keep it for now.
+use anyhow::Context;
 #[allow(unused_imports)]
 use predicates::prelude::*;
 use tempfile::NamedTempFile;
@@ -108,16 +108,18 @@ fn test_basic_sanitization() -> Result<()> {
     Ok(())
 }
 
-// Add this cfg attribute to skip the test when the "clipboard" feature is not enabled.
-#[cfg(feature = "clipboard")] // <-- ADDED THIS LINE
+// Ensure this test only compiles and runs when the "clipboard" feature is enabled.
+#[cfg(feature = "clipboard")]
 #[test]
 fn test_clipboard_output() -> Result<()> {
-    // This `if` block can now potentially be removed or kept as an extra guard,
-    // but the #[cfg] attribute is the primary mechanism for compilation-time exclusion.
-    // if std::env::var("CI").is_ok() {
-    //     eprintln!("Skipping clipboard test in CI (headless environment)");
-    //     return Ok(());
-    // }
+    // Skip in CI (no GUI / no X11 clipboard)
+    // This provides a runtime skip for CI environments that might still compile this test
+    // if the 'clipboard' feature is enabled for other reasons, but don't have a graphical session.
+    if std::env::var("CI").is_ok() {
+        eprintln!("Skipping clipboard test in CI (no display)"); 
+        return Ok(());
+    }
+
     let input = "Secret JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
     let expected_stdout = "Secret JWT: [JWT_REDACTED]\n";
     let expected_stderr_contains = vec![
