@@ -1,6 +1,5 @@
 // tests/cli_integration_tests.rs
 use anyhow::Result;
-use anyhow::Context;
 #[allow(unused_imports)]
 use predicates::prelude::*;
 use tempfile::NamedTempFile;
@@ -202,8 +201,9 @@ fn test_clipboard_output() -> Result<()> {
         "[DEBUG] [cleansh::tools::sanitize_shell] Rule 'jwt_token' does pattern match input? true",
     ];
 
-    let _clipboard = arboard::Clipboard::new()
-        .with_context(|| "Failed to get clipboard")?;
+    // REMOVED THE FOLLOWING LINE:
+    // let _clipboard = arboard::Clipboard::new()
+    //     .with_context(|| "Failed to get clipboard")?;
 
 
     let assert_result = run_cleansh_command(input, &["-c", "--no-redaction-summary"]).success();
