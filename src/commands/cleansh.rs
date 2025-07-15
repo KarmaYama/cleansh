@@ -1,9 +1,7 @@
 // src/commands/cleansh.rs
-
-
 use anyhow::{Context, Result};
 use log::{debug, info, warn};
-use std::io::{self, Write};
+use std::io::{self, Write, IsTerminal}; // ADD IsTerminal here
 use std::path::PathBuf;
 use std::fs;
 use crate::ui::diff_viewer;
@@ -99,8 +97,8 @@ pub fn run_cleansh(
     debug!("DEBUG_CLEANSH: Redaction summary (num items): {:?}", summary.len());
 
 
-    // Determine the primary output writer (stdout or file)
-    let mut primary_output_writer: Box<dyn Write> = if let Some(path) = output_path {
+    // Determine the primary output writer (stdout or file) and if it supports colors
+    let (mut primary_output_writer, output_supports_color): (Box<dyn Write>, bool) = if let Some(path) = output_path {
         info!("Writing sanitized content to file: {}", path.display());
         output_format::print_info_message(
             &mut io::stderr(),
@@ -108,9 +106,12 @@ pub fn run_cleansh(
             theme_map,
         );
         debug!("[cleansh.rs] Outputting to file: {}", path.display());
-        Box::new(
-            fs::File::create(&path)
-                .with_context(|| format!("Failed to create output file: {}", path.display()))?,
+        (
+            Box::new(
+                fs::File::create(&path)
+                    .with_context(|| format!("Failed to create output file: {}", path.display()))?,
+            ),
+            false, // Files generally do not support ANSI colors, so explicitly set to false
         )
     } else {
         info!("Writing sanitized content to stdout.");
@@ -120,7 +121,9 @@ pub fn run_cleansh(
             theme_map,
         );
         debug!("[cleansh.rs] Outputting to stdout.");
-        Box::new(io::stdout())
+        let stdout = io::stdout();
+        let supports_color = stdout.is_terminal(); // Check if stdout is connected to a TTY
+        (Box::new(stdout), supports_color)
     };
 
     // Output logic
@@ -132,15 +135,19 @@ pub fn run_cleansh(
             theme_map,
         );
         debug!("[cleansh.rs] Diff enabled.");
-        diff_viewer::print_diff(input_content, &sanitized_content, &mut primary_output_writer, theme_map)?;
+        // Pass the output_supports_color flag to print_diff
+        diff_viewer::print_diff(input_content, &sanitized_content, &mut primary_output_writer, theme_map, output_supports_color)?;
     } else {
         debug!("Printing sanitized content.");
         debug!("[cleansh.rs] Diff disabled, printing sanitized content.");
+        // When not in diff mode, just write the sanitized_content.
+        // `sanitize_shell::sanitize_content` ensures the `sanitized_content` itself is plain text
+        // (by stripping input ANSI), so no further stripping is needed here.
         writeln!(primary_output_writer, "{}", sanitized_content)
             .context("Failed to write sanitized content")?;
     }
 
-    // Redaction Summary handling
+    // Redaction Summary handling (always to stderr, so always check stderr's TTY)
     if !no_redaction_summary {
         debug!("Displaying redaction summary.");
         output_format::print_info_message(
@@ -164,7 +171,6 @@ pub fn run_cleansh(
     if clipboard_enabled {
         debug!("Attempting to copy sanitized content to clipboard.");
         debug!("[cleansh.rs] Clipboard enabled.");
-        // Replaced `?` with a `match` block to gracefully handle clipboard errors
         match copy_to_clipboard(&sanitized_content) {
             Ok(_) => {
                 info!("Sanitized content copied to clipboard successfully.");
