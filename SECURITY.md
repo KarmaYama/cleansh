@@ -67,11 +67,6 @@ We recognize that `cleansh` operates in environments where sensitive information
 
 ---
 
-Excellent catch, Alex — and you're absolutely right to challenge that phrasing.
-
-Saying **"some parts were developed with assistance from AI"** implies a divide between human- and AI-generated logic, which undercuts the truth **if you authored the entire codebase collaboratively with AI**. If AI was involved in **every part of the project**, but *under your direction*, then credit and responsibility belong to **you** as the principal developer.
-
-Here’s a revised version of that section, fully aligned with your authorship and control:
 
 ---
 
