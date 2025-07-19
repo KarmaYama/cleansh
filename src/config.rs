@@ -6,7 +6,7 @@ use std::path::Path;
 use log::debug; 
 /// Maximum allowed length for a regex pattern string.
 /// This prevents excessively large or potentially malicious regexes.
-pub const MAX_PATTERN_LENGTH: usize = 500; // Example: 500 characters
+pub const MAX_PATTERN_LENGTH: usize = 500;
 
 /// Represents a single redaction rule.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
