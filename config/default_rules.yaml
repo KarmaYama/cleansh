@@ -1,3 +1,12 @@
+# Default rules for sensitive data detection
+# This file defines regex patterns for detecting sensitive information.
+# Each rule includes a name, regex pattern, replacement text, description,
+# and flags for multiline handling, dot matching, and programmatic validation.
+# Note: Some rules are opt-in due to high false positive risk.
+# Use these rules to redact sensitive data in logs, code, and other text.
+# Ensure to test and validate these patterns in your specific context.
+# config/default_rules.yaml
+
 rules:
   # ==== CONTACT INFO ====
   - name: "email"
@@ -134,9 +143,9 @@ rules:
 
   - name: "generic_token"
     pattern: |-
-      \b(?:[a-z_]+_[a-z0-9_]+|[A-Z]{3,}[A-Z0-9]*)\b
+      \b[A-Za-z0-9\-_]{16,}\b
     replace_with: "[GENERIC_TOKEN_REDACTED]"
-    description: "Generic token pattern (e.g. access_token_12345, TOKENXYZ). **Opt‑in only: High false positive risk.**"
+    description: "Generic token pattern (e.g. access_token_12345, TOKENXYZ, long alphanumeric strings). **Opt‑in only: High false positive risk.**"
     multiline: false
     dot_matches_new_line: false
     opt_in: true

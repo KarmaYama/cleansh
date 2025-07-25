@@ -1,3 +1,6 @@
+// tests/cleansh_integration_tests.rs
+// This file contains integration tests for the cleansh application.
+
 use anyhow::Result;
 use anyhow::Context;
 use std::collections::HashMap;
@@ -77,6 +80,7 @@ fn test_run_cleansh_basic_sanitization() -> Result<()> {
         false, // clipboard_enabled
         false, // diff_enabled
         Some(temp_config_file), // config_path
+        None, // rules_config_name: Added this argument with None
         Some(output_file_path.clone()), // output_path
         false, // no_redaction_summary (this means summary *should* be displayed on console/stderr, but not captured here)
         &get_default_theme_map(),
@@ -138,6 +142,7 @@ fn test_run_cleansh_no_redaction_summary() -> Result<()> {
         false,
         false,
         Some(temp_config_file),
+        None, // rules_config_name: Added this argument with None
         Some(output_file_path.clone()),
         true, // no_redaction_summary = true
         &get_default_theme_map(),
@@ -192,6 +197,7 @@ fn test_run_cleansh_clipboard_copy() -> Result<()> {
         true, // clipboard_enabled = true
         false,
         Some(temp_config_file),
+        None, // rules_config_name: Added this argument with None
         Some(output_file_path.clone()), // Output to file, *and* clipboard
         true, // No summary for cleaner test focus
         &get_default_theme_map(),
@@ -241,6 +247,7 @@ fn test_run_cleansh_diff_output() -> Result<()> {
         false,
         true, // diff_enabled = true
         Some(temp_config_file),
+        None, // rules_config_name: Added this argument with None
         Some(output_file_path.clone()), // Output to file
         true, // No summary to focus on diff
         &get_default_theme_map(),

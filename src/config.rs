@@ -1,9 +1,13 @@
 // src/config.rs
-use anyhow::{Context, Result};
+// Configuration management for cleansh, including redaction rules and themes.
+
+use anyhow::{Context, Result}; // Added 'bail' for cleaner error handling
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
-use log::debug; 
+use log::debug;
+use std::fmt; // Import for custom error message
+
 /// Maximum allowed length for a regex pattern string.
 /// This prevents excessively large or potentially malicious regexes.
 pub const MAX_PATTERN_LENGTH: usize = 500;
@@ -41,6 +45,20 @@ pub struct RedactionSummaryItem {
     pub sanitized_texts: Vec<String>, // Stores unique sanitized replacements
 }
 
+// Custom error type for rule config not found
+#[derive(Debug)]
+pub struct RuleConfigNotFoundError {
+    pub config_name: String,
+}
+
+impl fmt::Display for RuleConfigNotFoundError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Rule configuration '{}' not found.", self.config_name)
+    }
+}
+
+impl std::error::Error for RuleConfigNotFoundError {}
+
 
 impl RedactionConfig {
     /// Loads redaction rules from a YAML file.
@@ -71,6 +89,36 @@ impl RedactionConfig {
             debug!("[config.rs] Default Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
         }
         Ok(config)
+    }
+
+    /// Sets the active rule configuration based on the provided name.
+    /// This method filters the `rules` vector in-place.
+    ///
+    /// Available configurations:
+    /// - "default": All rules loaded from the default config are passed through.
+    ///              Opt-in rules are *not* filtered here; that's handled in `compile_rules`.
+    /// - "strict": All rules (both non-opt-in and opt-in) are active.
+    /// - Custom configurations could be added here if defined in the YAML.
+    pub fn set_active_rules_config(&mut self, config_name: &str) -> Result<()> {
+        debug!("[config.rs] Setting active rules configuration to: '{}'", config_name);
+        match config_name {
+            "default" => {
+                // In Option 2, we remove the opt_in filtering here.
+                // The `default` configuration now means the base set of rules loaded from the config file.
+                // Opt-in filtering will be handled exclusively in `sanitize_shell::compile_rules`.
+                debug!("[config.rs] 'default' config applied. All rules loaded from config will be passed to compilation.");
+                // Removed: self.rules.retain(|rule| { /* ... filtering logic ... */ });
+            }
+            "strict" => {
+                // Keep all rules, including opt-in ones. No filtering needed.
+                debug!("[config.rs] 'strict' config applied. All rules ({} total) are active.", self.rules.len());
+            }
+            // Add other named configurations here if needed
+            _ => {
+                return Err(RuleConfigNotFoundError { config_name: config_name.to_string() }.into());
+            }
+        }
+        Ok(())
     }
 }
 
@@ -111,7 +159,7 @@ pub fn merge_rules(
         // Extend with all user rules (including those that overrode defaults)
         let added_user_rules_count = user_rules_map.len() - overridden_count;
         default_config.rules.extend(user_rules_map.into_values());
-        
+
         debug!(
             "Merged rules summary: {} default rules initially, {} user rules processed. Overrode {} defaults, added {} new user rules. Final total rules: {}",
             initial_default_count,

@@ -14,6 +14,7 @@
 ├── 📁 src
 │   ├── 📁 commands
 │   │   ├── 📄 cleansh.rs
+│   │   ├── 📄 stats.rs
 │   │   └── 📄 mod.rs
 │   ├── 📁 tools
 │   │   ├── 📄 mod.rs
@@ -27,14 +28,16 @@
 │   │   └── 📄 theme.rs
 │   ├── 📁 utils
 │   │   ├── 📄 redaction.rs
+│   │   ├── 📄 app_state.rs
 │   │   └── 📄 mod.rs
 │   ├── 📄 config.rs
-│   ├── 📄 lib.rs
+│   ├── 📄 lib.rs --> holds cli flags and commands 
 │   ├── 📄 logger.rs
-│   └── 📄 main.rs
+│   └── 📄 main.rs --> just an entry point
 ├── 📁 tests
 │   ├── 📄 cleansh_integration_tests.rs
 │   ├── 📄 cli_integration_tests.rs
+│   ├── 📄 full_stats_tests.rs
 │   ├── 📄 config_integration_tests.rs
 │   └── 📄 sanitize_shell_integration_tests.rs
 ├── 📁 website

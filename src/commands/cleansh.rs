@@ -1,16 +1,22 @@
+//! Cleansh command implementation for sanitizing terminal output.
+// This module handles the main functionality of Cleansh, including
+//! reading input, applying redaction rules, and outputting sanitized content. 
 // src/commands/cleansh.rs
+
 use anyhow::{Context, Result};
 use log::{debug, info, warn};
-use std::io::{self, Write, IsTerminal}; // ADD IsTerminal here
+use std::io::{self, Write, IsTerminal};
 use std::path::PathBuf;
 use std::fs;
+use std::collections::HashMap;
 use crate::ui::diff_viewer;
 use crate::ui::redaction_summary;
 
 
-use crate::config::{self, RedactionConfig};
+use crate::config::{self, RedactionConfig, RedactionSummaryItem};
 use crate::tools::sanitize_shell;
 use crate::ui::{output_format, theme};
+use crate::utils::redaction::RedactionMatch;
 
 /// Runs the core sanitization logic.
 ///
@@ -22,6 +28,7 @@ pub fn run_cleansh(
     clipboard_enabled: bool,
     diff_enabled: bool,
     config_path: Option<PathBuf>,
+    rules_config_name: Option<String>, // <--- THIS WAS THE MISSING ARGUMENT IN THE DEFINITION
     output_path: Option<PathBuf>,
     no_redaction_summary: bool,
     theme_map: &std::collections::HashMap<theme::ThemeEntry, theme::ThemeStyle>,
@@ -59,8 +66,14 @@ pub fn run_cleansh(
         None
     };
 
-    let merged_config = config::merge_rules(default_rules, user_rules);
+    let mut merged_config = config::merge_rules(default_rules, user_rules);
     debug!("[cleansh.rs] Merged config contains {} rules before compilation in cleansh.", merged_config.rules.len());
+
+    // Apply rule configuration name if provided
+    if let Some(name) = rules_config_name { // This block now has the `rules_config_name`
+        merged_config.set_active_rules_config(&name)?;
+        debug!("[cleansh.rs] Active rules config set to: {}", name);
+    }
 
 
     debug!("Compiling rules...");
@@ -85,7 +98,7 @@ pub fn run_cleansh(
 
     // Perform sanitization
     // sanitize_content no longer returns a Result, handles its own errors
-    let (sanitized_content, summary) =
+    let (sanitized_content, all_redaction_matches) =
         sanitize_shell::sanitize_content(input_content, &compiled_rules);
     debug!(
         "Content sanitized. Original length: {}, Sanitized length: {}",
@@ -93,7 +106,9 @@ pub fn run_cleansh(
         sanitized_content.len()
     );
 
-    
+
+    // Build the RedactionSummaryItem from the raw RedactionMatch vector
+    let summary = build_redaction_summary_from_matches(&all_redaction_matches);
     debug!("DEBUG_CLEANSH: Redaction summary (num items): {:?}", summary.len());
 
 
@@ -216,4 +231,41 @@ fn copy_to_clipboard(content: &str) -> Result<()> {
     debug!("Clipboard feature not enabled. Skipping copy operation.");
     debug!("[cleansh.rs] Clipboard feature not enabled.");
     Err(anyhow::anyhow!("Clipboard feature is not enabled. Compile with --features clipboard to enable functionality."))
+}
+
+/// Builds a `Vec<RedactionSummaryItem>` from a `Vec<RedactionMatch>`.
+/// This aggregates individual matches into a summary grouped by rule.
+fn build_redaction_summary_from_matches(
+    matches: &[RedactionMatch],
+) -> Vec<RedactionSummaryItem> {
+    let mut summary_map: HashMap<String, RedactionSummaryItem> = HashMap::new();
+
+    for m in matches {
+        let item = summary_map.entry(m.rule_name.clone()).or_insert_with(|| RedactionSummaryItem {
+            rule_name: m.rule_name.clone(),
+            occurrences: 0,
+            original_texts: Vec::new(),
+            sanitized_texts: Vec::new(),
+        });
+        item.occurrences += 1;
+        // Only add unique original and sanitized strings
+        if !item.original_texts.contains(&m.original_string) {
+            item.original_texts.push(m.original_string.clone());
+        }
+        if !item.sanitized_texts.contains(&m.sanitized_string) {
+            item.sanitized_texts.push(m.sanitized_string.clone());
+        }
+    }
+
+    // Sort original_texts and sanitized_texts within each summary item for consistent output
+    for item in summary_map.values_mut() {
+        item.original_texts.sort();
+        item.sanitized_texts.sort();
+    }
+
+    let mut summary: Vec<RedactionSummaryItem> = summary_map.into_values().collect();
+    // Sort the overall summary by rule name for deterministic output/tests
+    summary.sort_by(|a, b| a.rule_name.cmp(&b.rule_name));
+
+    summary
 }

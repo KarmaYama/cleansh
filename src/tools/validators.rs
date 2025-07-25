@@ -1,5 +1,3 @@
-// src/tools/validators.rs
-
 /// Helper function to validate SSN based on US Social Security Administration rules.
 /// This implementation aims for a robust programmatic check without external data.
 /// It validates the structural components against known invalid patterns.
@@ -7,6 +5,7 @@
 /// A real-world, fully compliant SSN validation might require access to historical
 /// issuance patterns or verification services, which is beyond the scope of a
 /// purely programmatic string validation.
+//src/utils/validators.rs
 pub fn is_valid_ssn_programmatically(ssn: &str) -> bool {
     let parts: Vec<&str> = ssn.split('-').collect();
     if parts.len() != 3 {

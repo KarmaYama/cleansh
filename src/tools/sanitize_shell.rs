@@ -1,13 +1,15 @@
+// src/tools/sanitize_shell.rs
+
 use anyhow::{Result, anyhow};
 use regex::{Regex, RegexBuilder};
-use std::collections::{HashMap, HashSet};
-use log::{debug, warn, error};
+use std::collections::HashSet;
+use log::{debug};
 use strip_ansi_escapes::strip;
 
 // Import the moved functions and macro from the new utility module
-use crate::utils::redaction::{pii_debug, redact_sensitive};
+use crate::utils::redaction::{pii_debug, redact_sensitive, RedactionMatch};
 
-use crate::config::{RedactionRule, RedactionSummaryItem, MAX_PATTERN_LENGTH};
+use crate::config::{RedactionRule, MAX_PATTERN_LENGTH};
 use crate::tools::validators;
 
 
@@ -76,7 +78,7 @@ pub fn compile_rules(
                 rule.pattern.len(),
                 MAX_PATTERN_LENGTH
             );
-            error!("Compilation error: {}", error_msg);
+            debug!("Compilation error: {}", error_msg); // Changed to debug for this specific error as it's an internal constraint
             compilation_errors.push(error_msg);
             continue;
         }
@@ -96,15 +98,16 @@ pub fn compile_rules(
                     name: rule.name,
                     programmatic_validation: rule.programmatic_validation,
                 });
-                debug!("Rule '{}' compiled successfully.", rule_name_str);
+                debug!("Rule '{}' compiled successfully.", rule_name_str); // This is a general debug, not PII sensitive
             }
             Err(e) => {
                 let error_msg = format!(
                     "Rule '{}': failed to compile regex pattern: {}",
-                    rule_name_str, e // Removed rule.pattern from log
+                    rule_name_str, e
                 );
-                error!("Compilation error: {}", error_msg);
+                debug!("Compilation error: {}", error_msg); // Changed to debug for this specific error as it's an internal constraint
                 compilation_errors.push(error_msg);
+                continue; // Continue to next rule instead of returning early
             }
         }
     }
@@ -122,8 +125,7 @@ pub fn compile_rules(
             compilation_errors.len(),
             compilation_errors.join("\n")
         );
-        error!("{}", full_error_message); // Use log::error! for the final error
-        Err(anyhow!(full_error_message))
+        Err(anyhow!(full_error_message)) // Return a single anyhow error with all messages
     } else {
         debug!("Finished compiling rules. Total compiled: {}", compiled_rules.len());
         Ok(CompiledRules { rules: compiled_rules })
@@ -132,67 +134,67 @@ pub fn compile_rules(
 
 /// Sanitizes the input content using the compiled rules.
 ///
-/// Returns the sanitized content and a summary of redactions made.
+/// Returns the sanitized content and a vector of all individual `RedactionMatch` instances found.
 pub fn sanitize_content(
     input_content: &str,
     compiled_rules: &CompiledRules,
-) -> (String, Vec<RedactionSummaryItem>) {
+) -> (String, Vec<RedactionMatch>) {
     // Step 1: Strip ANSI escape codes from the input content
-    // strip() returns Vec<u8> directly.
     let stripped_bytes = strip(input_content.as_bytes());
 
     let stripped_input = match String::from_utf8(stripped_bytes) {
         Ok(s) => s,
         Err(e) => {
-            warn!(
+            debug!(
                 "Invalid UTF-8 after ANSI stripping: {}. Falling back to lossy conversion.",
                 e
             );
-            // Fallback to original content bytes for lossy conversion if the stripped bytes
-            // are not valid UTF-8. This might mean the original input was already problematic,
-            // or stripping introduced an issue (less likely, but possible).
-            // The test expects "test@example.com" for original_texts, so we need to ensure
-            // that the string passed to replace_all is clean. If the stripped_bytes are invalid,
-            // we should probably still try to process them, but use the lossy conversion to get a String.
-            String::from_utf8_lossy(e.as_bytes()).to_string() // Use the bytes from the error to convert lossily
+            String::from_utf8_lossy(e.as_bytes()).to_string()
         }
     };
 
     let mut sanitized_content = stripped_input.clone(); // Start with the stripped content
-    let mut summary_map: HashMap<String, RedactionSummaryItem> = HashMap::new();
+    let mut all_redaction_matches: Vec<RedactionMatch> = Vec::new(); // NEW: Collect all individual matches
 
     debug!("sanitize_content called. Num compiled rules: {}", compiled_rules.rules.len());
-    // Avoid logging entire input content
     debug!("Sanitize called. Input content length: {}", stripped_input.len());
 
 
     for compiled_rule in &compiled_rules.rules {
         let rule_name = &compiled_rule.name;
-        let mut occurrences = 0;
-        let mut original_matches: HashSet<String> = HashSet::new();
-        let mut sanitized_replacements: HashSet<String> = HashSet::new(); // Use a HashSet to store unique sanitized values
+        let replace_with_val = compiled_rule.replace_with.clone(); // Clone once per rule for the closure
 
-        debug!("Applying rule: '{}'", rule_name);
+        debug!("Applying rule: '{}'", rule_name); // This is a general debug, not PII sensitive
+        debug!("Rule '{}' compiled.", rule_name); // This is a general debug, not PII sensitive
 
-        // Avoid logging full regex patterns
-        debug!("Rule '{}' compiled.", rule_name);
-        pii_debug!("Rule '{}' does pattern match input? {}", rule_name, compiled_rule.regex.is_match(&sanitized_content));
-
+        // This pii_debug! is guarded by the outer if, as it's not strictly PII itself,
+        // but indicates a PII-related process.
+        if std::env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
+            pii_debug!("Rule '{}' does pattern match input? {}", rule_name, compiled_rule.regex.is_match(&sanitized_content));
+        }
 
         sanitized_content = compiled_rule.regex.replace_all(&sanitized_content, |caps: &regex::Captures| {
             let original_match = caps.get(0).unwrap().as_str().to_string();
 
-            // Redact sensitive values in logs
-            pii_debug!("Rule '{}' captured match (original): {}", rule_name, redact_sensitive(&original_match));
+            // This is the key change: Always log "captured match", but redact content if CLEANSH_ALLOW_DEBUG_PII is not set.
+            let debug_match_content = if std::env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
+                original_match.clone() // PII allowed, show original
+            } else {
+                redact_sensitive(&original_match) // PII not allowed, show redacted
+            };
+            pii_debug!(
+                "Rule '{}' captured match (original): {}",
+                rule_name,
+                debug_match_content
+            );
 
-
-            // Perform programmatic validation if enabled for the rule
+            // Perform programmatic validation ONLY to decide on ACTUAL REDACTION
             let should_redact: bool = if compiled_rule.programmatic_validation {
                 match rule_name.as_str() {
                     "us_ssn" => validators::is_valid_ssn_programmatically(&original_match),
                     "uk_nino" => validators::is_valid_uk_nino_programmatically(&original_match),
                     _ => {
-                        warn!("Programmatic validation enabled for rule '{}', but no specific validator function found. Redacting by default.", rule_name);
+                        debug!("Programmatic validation enabled for rule '{}', but no specific validator function found. Redacting by default.", rule_name);
                         true // Default to redacting if no specific validator is found
                     }
                 }
@@ -201,45 +203,30 @@ pub fn sanitize_content(
             };
 
             if should_redact {
-                occurrences += 1;
-                original_matches.insert(original_match.clone()); // Store unique original matches
-                sanitized_replacements.insert(compiled_rule.replace_with.clone()); // Store unique sanitized replacements
-                // Redact sensitive values in logs
-                pii_debug!("Redacting '{}' with '{}' for rule '{}'", redact_sensitive(&original_match), redact_sensitive(&compiled_rule.replace_with), rule_name);
-                compiled_rule.replace_with.clone()
+                all_redaction_matches.push(RedactionMatch {
+                    rule_name: rule_name.clone(),
+                    original_string: original_match.clone(),
+                    sanitized_string: replace_with_val.clone(),
+                });
+
+                // Guard for 'Added RedactionMatch' debug line (contains original, so guard it)
+                if std::env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
+                    debug!("Added RedactionMatch for rule '{}'. Current total matches: {}", rule_name, all_redaction_matches.len());
+                }
+
+                // This pii_debug! uses redact_sensitive, so it's already safe.
+                // It will be printed if PII debug is enabled, showing the redacted version.
+                pii_debug!("Redacting '{}' with '{}' for rule '{}'", redact_sensitive(&original_match), redact_sensitive(&replace_with_val), rule_name);
+                replace_with_val.clone() // Return the replacement for `replace_all`
             } else {
-                // Redact sensitive values in logs
+                // This pii_debug! uses redact_sensitive, so it's already safe.
+                // It will be printed if PII debug is enabled, showing the redacted version.
                 pii_debug!("Rule '{}' matched '{}' but programmatic validation failed. Keeping original text.", rule_name, redact_sensitive(&original_match));
                 original_match // Keep original text if programmatic validation fails
             }
         }).to_string();
-
-        if occurrences > 0 {
-            let item = summary_map.entry(rule_name.clone()).or_insert_with(|| RedactionSummaryItem {
-                rule_name: rule_name.clone(),
-                occurrences: 0,
-                original_texts: Vec::new(),
-                sanitized_texts: Vec::new(),
-            });
-            item.occurrences += occurrences;
-            // CORRECTED: Populate original_texts and sanitized_texts
-            item.original_texts.extend(original_matches.drain()); // Use drain to move ownership from HashSet
-            item.sanitized_texts.extend(sanitized_replacements.drain()); // Use drain to move ownership from HashSet
-
-            debug!("Rule '{}' resulted in {} redactions.", rule_name, occurrences);
-        }
     }
 
-    // Sort original_texts and sanitized_texts within each summary item for consistent output
-    for item in summary_map.values_mut() {
-        item.original_texts.sort();
-        item.sanitized_texts.sort();
-    }
-
-    let mut summary: Vec<RedactionSummaryItem> = summary_map.into_values().collect();
-    // Sort the overall summary by rule name for deterministic output/tests
-    summary.sort_by(|a, b| a.rule_name.cmp(&b.rule_name));
-
-    debug!("Sanitization complete. Final summary items: {}", summary.len());
-    (sanitized_content, summary)
+    debug!("Sanitization complete. Total individual matches found: {}", all_redaction_matches.len());
+    (sanitized_content, all_redaction_matches) // Return both sanitized content and all matches
 }

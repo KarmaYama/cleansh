@@ -1,19 +1,15 @@
-// src/ui/output_format.rs
+//src/ui/output_format.rs
+
 
 use crate::ui::theme::{ThemeEntry, ThemeStyle};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
 use std::io::Write;
-// Removed diffy imports as print_diff_view is moved
-
-// Removed: /// Prints the content to the given writer.
-// Removed: pub fn print_content<W: Write>(writer: &mut W, content: &str) {
-// Removed:     let _ = write!(writer, "{}", content);
-// Removed: }
 
 /// Helper to get a styled string based on the theme.
 /// Returns an owned String that implements Display.
-fn get_styled_text(
+/// Made pub(crate) for use by other ui modules.
+pub(crate) fn get_styled_text(
     text: &str,
     entry: ThemeEntry,
     theme_map: &HashMap<ThemeEntry, ThemeStyle>,
@@ -27,6 +23,18 @@ fn get_styled_text(
     text.color(owo_colors::AnsiColors::White).to_string()
 }
 
+/// Prints a general message to the given writer, with an optional theme entry for styling.
+/// If `theme_entry` is `None`, it defaults to `ThemeEntry::Info`.
+pub fn print_message<W: Write>(
+    writer: &mut W,
+    message: &str,
+    theme_map: &HashMap<ThemeEntry, ThemeStyle>,
+    theme_entry: Option<ThemeEntry>,
+) {
+    let final_theme_entry = theme_entry.unwrap_or(ThemeEntry::Info); // Default to Info
+    let styled_message = get_styled_text(&format!("{}\n", message), final_theme_entry, theme_map);
+    let _ = write!(writer, "{}", styled_message);
+}
 
 /// Prints an informational message to the given writer, styled by the theme.
 pub fn print_info_message<W: Write>(

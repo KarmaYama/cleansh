@@ -1,13 +1,13 @@
 # Cleansh – Sanitize Your Terminal Output, Securely.
 
-[![CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml) [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml) [![crates.io](https://img.shields.io/crates/v/cleansh.svg)](https://crates.io/crates/cleansh) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml) [![CodeQL](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql) [![Netlify Status](https://api.netlify.com/api/v1/badges/2586fe1f-e613-4516-9dd8-6e4f06e58935/deploy-status)](https://app.netlify.com/projects/cleansh/deploys)
+[![CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml) [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml) [![crates.io](https://img.shields.io/crates/v/cleansh.svg)](https://crates.io/crates/cleansh) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml) [![Netlify Status](https://api.netlify.com/api/v1/badges/2586fe1f-e613-4516-9dd8-6e4f06e58935/deploy-status)](https://app.netlify.com/projects/cleansh/deploys)
 
-**[Contributing Guidelines](CONTRIBUTING.md)** | **[Code of Conduct](CODE_OF_CONDUCT.md)** | **[Changelog](CHANGELOG.md)** | **[Project Scope](CLEANSH_SCOPE.md)** | **[Security Policy](SECURITY.md)** | **[Trademark Policy](TRADEMARK.md)**
+**[Contributing Guidelines](CONTRIBUTING.md)** | **[Code of Conduct](CODE_OF_CONDUCT.md)** | **[Changelog](CHANGELOG.md)** | **[Project Scope & Vision](CLEANSH_SCOPE.md)** | **[Security Policy](SECURITY.md)** | **[Trademark Policy](TRADEMARK.md)**
 
 > Cleansh is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
 > It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed.
 > The project is in active development, with **`v0.1.5`** bringing significant enhancements to redaction accuracy, security, and user control.
-> Your feedback is valued. Please report any issues you encounter.
+> We value your feedback. Please report any issues you encounter.
 
 ---
 
@@ -21,17 +21,12 @@
 | &nbsp;&nbsp;&nbsp;&nbsp;2.2. Advanced Features (with flags) |
 | [3. Usage Examples](#3-usage-examples) |
 | [4. Known Issues](#4-known-issues) |
-| [5. Project Structure](#5-project-structure) |
-| [6. Configuration Strategy](#6-configuration-strategy) |
-| [7. Clipboard Support](#7-clipboard-support) |
-| [8. Sanitizer Engine Design](#8-sanitizer-engine-design) |
-| [9. Logging and Error Handling](#9-logging-and-error-handling) |
-| [10. Testing and Validations](#10-testing-and-validations) |
-| [11. Packaging & Distribution](#11-packaging--distribution) |
-| [12. Metadata & License](#12-metadata--license) |
-| [13. Security by Default Principles](#13-security-by-default-principles) |
-| [14. Future‑Proofing (Post v1.0 Aspirations)](#14-future-proofing-post-v10-aspirations) |
-| [15. Summary of Technology Stack](#15-summary-of-technology-stack) |
+| [5. Configuration Strategy](#5-configuration-strategy) |
+| [6. Clipboard Support](#6-clipboard-support) |
+| [7. Security by Default Principles](#7-security-by-default-principles) |
+| [8. Vision for cleansh 1.0.0 & Beyond](#8-vision-for-cleansh-100--beyond) |
+| [9. Installation & Getting Started](#9-installation--getting-started) |
+| [10. License](#10-license) |
 
 ---
 
@@ -45,15 +40,60 @@ a robust, pre‑configured solution for data sanitization, with flexible options
 **Sanitize your terminal output. One tool. One purpose.**
 
 ---
-### Development Environment Setup
 
-For the best Rust Analyzer experience in VS Code, the project includes a `.vscode/settings.json` that enables necessary Cargo features like `test-exposed` and `clipboard`.
+### The Vision for `cleansh` 1.0.0 — Adaptive Intelligence & Future Growth
+
+While `cleansh` is rapidly evolving with powerful new features in versions like `0.1.5` and beyond, we're thrilled to share our **strategic vision for `cleansh` 1.0.0**. This upcoming major release is planned to transform `cleansh` into an **adaptive, intelligent, and user-trainable security sanitization tool**, designed to offer unprecedented control and precision. This will make `cleansh` an indispensable asset for developers and organizations who value accuracy and trust in their tools.
+
+---
+
+### Important Note on Future Licensing
+
+As part of `cleansh`'s commitment to sustainable development and continued innovation, we are planning a significant shift in our licensing model with `v1.0.0`.
+
+| Aspect | Current (`v0.1.x` and earlier) | Planned (`v1.0.0` and beyond) |
+| :---------------- | :----------------------------- | :---------------------------------------------------- |
+| **Primary License** | **MIT License** | **PolyForm Noncommercial License 1.0.0** |
+| **Noncommercial Use** | Free to use | **Free to use** (for personal, academic, research, etc.) |
+| **Commercial Use** | Free to use | **Requires a separate commercial license** |
+| **Previous Versions** | Remain permanently MIT licensed | N/A (new license applies from `v1.0.0` onwards) |
+
+More details on commercial licensing will be provided closer to the `v1.0.0` release.
+
+---
+
+### Planned Key Features in `cleansh` 1.0.0
+
+The `1.0.0` release is envisioned to include these groundbreaking enhancements:
+
+| Feature Category | Description |
+| :----------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Pro Feature: Programmed Memory / Adaptive Redaction** | `cleansh` is planned to gain the ability to intelligently **learn from explicit user feedback**. Over time, it will remember specific patterns marked as false positives or false negatives (typically within an interactive mode), aiming to drastically **reduce noise and increase redaction accuracy** tailored to specific environments and workflows. |
+| **Pro Feature: Simple Interactive Mode** | We aim to introduce an interactive capability that allows users to **engage directly with `cleansh` during its operation**. When a potential secret is detected, or for ambiguous matches, `cleansh` could pause and prompt for a decision (e.g., redact, ignore once, or "always ignore this pattern for this rule"). This feature is designed to empower fine-tuning `cleansh`'s behavior in real-time and training its programmed memory. |
+| **New CLI Flags for Adaptive Control** | Specific flags are being designed to enable and manage these new features, such as `--interactive` to activate the interactive mode, and commands to manage `cleansh`'s learned patterns (e.g., `--forget-learned-pattern`, `--list-learned-patterns`). |
+| **Dedicated User Feedback Data Storage** | A robust system is planned to securely and persistently store learned exceptions, ensuring user privacy. |
+
+---
+
+### Vision for Improved User Experience
+
+The integration of these features is envisioned to bring significant benefits to the `cleansh` experience:
+
+* **Dramatically Improve Accuracy & Trust:** By adapting to individual user needs, `cleansh` aims to become an even more **reliable and trusted tool**.
+* **Enhance User Empowerment:** Users will have greater **control over redaction decisions**, making `cleansh` feel like a collaborative, intelligent assistant.
+* **Lay Foundation for Sustainability:** This strategic evolution, coupled with the licensing change, is designed to ensure `cleansh`'s **long-term development and growth**.
+
+We are incredibly excited about this next phase of `cleansh` and its potential to set new standards for secure terminal output. Stay tuned for more updates as we work towards `v1.0.0`!
+
+---
 
 ## 2. Core Capabilities – Current Version (**v0.1.5**)
 
 This release represents a significant leap forward in `cleansh`'s accuracy, security, and testability. Based on our rigorously passing test suite, `cleansh` accurately masks:
 
 ### 2.1. Enhanced Redaction Categories:
+
+`cleansh` offers broad and precise detection across a wide range of sensitive data types, complemented by robust programmatic validation for key PII:
 
 * **Emails:** Common email formats (e.g., `user@example.com`).
 * **IP Addresses:** Both **IPv4** (e.g., `192.168.1.1`) and **IPv6 addresses** (full uncompressed form, e.g., `2001:0db8:85a3:0000:0000:8a2e:0370:7334`).
@@ -97,6 +137,7 @@ This release represents a significant leap forward in `cleansh`'s accuracy, secu
 ## 3. Usage Examples
 
 **Basic Sanitization (stdin):**
+
 ```powershell
 echo "My email is test@example.com and my IP is 192.168.1.1." | cleansh
 ````
@@ -166,39 +207,11 @@ echo "My Stripe key is sk_live_abc123. Email: user@example.com" | cleansh --enab
 
 -----
 
-## 5\. Project Structure
+## 5\. Configuration Strategy
 
-```text
-cleansh/
-|-- src/
-|   |-- main.rs
-|   |-- commands/
-|   |-- tools/
-|   |-- config/
-|   |-- ui/
-|   `-- tests/
-|-- config/
-|   `-- default_rules.yaml
-|-- .env
-|-- .gitignore
-|-- Cargo.toml
-|-- README.md
-`-- LICENSE (MIT)
-```
+### 5.1. Custom Rules (`--config`)
 
------
-
-## 6\. Configuration Strategy
-
-### 6.1. Runtime Settings (`.env`)
-
-```dotenv
-LOG_LEVEL=info
-CLIPBOARD_ENABLED=true
-DEFAULT_CONFIG=./config/default_rules.yaml
-```
-
-### 6.2. Custom Rules (`--config`)
+You can define your own custom redaction rules in a YAML file and merge them with Cleansh's built-in defaults:
 
 ```yaml
 rules:
@@ -209,7 +222,7 @@ rules:
     dot_matches_new_line: false
 ```
 
-### 6.3. Rule Enable/Disable (`--enable-rules`, `--disable-rules`)
+### 5.2. Rule Enable/Disable (`--enable-rules`, `--disable-rules`)
 
 You can activate `opt_in` rules or deactivate any rule by name using CLI flags:
 
@@ -220,132 +233,75 @@ cleansh --disable-rules "email,ipv4_address"
 
 -----
 
-## 7\. Clipboard Support
+## 6\. Clipboard Support
 
   * **macOS & Windows:** Built‑in.
   * **Linux:** Requires `xclip`, `xsel` or `wl-clipboard`.
 
 -----
 
-## 8\. Sanitizer Engine Design
-
-*(in `src/tools/sanitize_shell.rs`)*
-
-1.  **Strip ANSI escapes:** All input content is now **sanitized for ANSI escape codes** prior to applying redaction rules, eliminating evasion via terminal formatting.
-2.  **Apply built‑in regex rules:** Default rules are embedded at compile time.
-3.  **Merge & apply custom YAML rules:** User-defined rules are loaded and merged, with granular control via `--enable-rules` and `--disable-rules`.
-4.  **Output via stdout, clipboard, file, or diff:** Flexible output options, with enhanced redaction summary display (unique original/sanitized values) or suppression via `--no-redaction-summary`.
-
-Performance via `regex::RegexSet`, security via compile‑time defaults and runtime validation.
-
------
-
-## 9\. Logging & Error Handling
-
-  * **Logging:** `log` + `env_logger`, configurable via `.env` or `--debug`. Enhanced diagnostics now include detailed information about rule matches and programmatic validation results.
-  * **Errors:** `anyhow` + `thiserror`, non‑fatal by default.
-  * **Secure Logging:** Refined internal logging setup for tests using `test-log` crate to ensure debug messages are **conditionally logged only when explicitly enabled** via `CLEANSH_ALLOW_DEBUG_PII` environment variable, preventing accidental PII leakage.
-
------
-
-## 10\. Testing & Validation
-
-  * **Unit Tests:** Regex accuracy, path normalization, YAML parsing.
-  * **Integration Tests:** Extensive new tests validate:
-      * ANSI-stripping effectiveness (`test_sanitize_content_with_ansi_escapes`)
-      * Clipboard output (`test_run_cleansh_clipboard_copy`)
-      * Rule opt-in and opt-out behaviors
-      * Redaction summary toggling
-      * Edge cases like overlapping rules and invalid formats.
-  * **Programmatic Validation:** Rules like US SSN and UK NINO now include in-depth programmatic validation to reject invalid patterns.
-
------
-
-## 11\. Packaging & Distribution
-
-  * **Prebuilt Binaries:** GitHub Releases with `cargo-dist`.
-
-  * **Install Script:**
-
-    ```bash
-    curl -sSf [https://github.com/KarmaYama/cleansh/releases/download/v0.1.5/cleansh-installer.sh](https://github.com/KarmaYama/cleansh/releases/download/v0.1.5/cleansh-installer.sh) | sh
-    ```
-
-  * **crates.io:** `cargo install cleansh` (+ `--force` to update)
-
-  * **From Source:**
-
-    ```bash
-    git clone [https://github.com/KarmaYama/cleansh.git](https://github.com/KarmaYama/cleansh.git)
-    cd cleansh
-    cargo build --release
-    cargo test
-    ```
-
------
-
-## 12\. Metadata & License
-
-### 12.1. Cargo.toml metadata
-
-```toml
-[package]
-name = "cleansh"
-version = "0.1.5"
-edition = "2024"
-license = "MIT"
-repository = "[https://github.com/KarmaYama/cleansh](https://github.com/KarmaYama/cleansh)"
-readme = "README.md"
-```
-
-### 12.2. License
-
-This project is licensed under the [MIT License](https://www.google.com/search?q=./LICENSE).
-
------
-
-## 13\. Security by Default Principles
+## 7\. Security by Default Principles
 
 | Feature | Principle |
-| :----------------- | :------------------------------------------------ |
+| :------------------------- | :------------------------------------------------------ |
 | No runtime eval | All redaction via static regex, no code execution |
 | Local‑only | No network calls or telemetry |
 | Immutable defaults | Built‑in rules embedded at compile time |
 | Path redaction | Filesystem paths normalized to `~` or Windows equivalents |
-| YAML sandboxed | Declarative custom rules only, no execution |
-| Clipboard opt‑in | `-c` flag required for clipboard copy |
+| YAML sandboxed | Declarative custom rules only, no arbitrary code execution |
+| Clipboard opt‑in | `-c` flag explicitly required for clipboard copy |
 | **ANSI Stripping** | **Input content is pre-sanitized of escape codes to prevent evasion** |
 | **Programmatic Validation** | **Numerical PII rules have built-in validation for added accuracy and security** |
 
 -----
 
-## 14\. Future‑Proofing (Post v1.0 Aspirations)
+## 8\. Vision for `cleansh` 1.0.0 & Beyond
 
-  * Plugin architecture for external redactors
-  * VS Code extension / Web GUI
-  * WebAssembly build for browser sanitization
-  * Git hooks integration (pre‑commit, pre‑push)
-  * Enterprise tier: compliance‑focused redaction
+Beyond the powerful capabilities of `v0.1.5`, `cleansh` is charting a course towards **adaptive intelligence** with its `1.0.0` release. This involves moving from static redaction to a dynamic, user-trainable system that learns from your feedback to dramatically reduce false positives and enhance precision over time. Our long-term vision includes:
+
+  * **Adaptive Interactive Learning:** `cleansh` will learn from explicit user feedback to reduce false positives and increase redaction accuracy tailored to specific workflows.
+  * **Proactive Pattern Generalization:** Future versions will analyze repeated ignore patterns and suggest broader regexes to ignore similar strings, making `cleansh` even more efficient.
+  * **Expanded Ecosystem Integrations:** Exploring deeper integrations into development ecosystems (e.g., Git hook integrations for pre‑commit, pre‑push) to embed `cleansh` seamlessly into diverse developer environments.
+  * **Advanced Detection:** Continued research into advanced detection techniques will further enhance accuracy.
+  * **Enterprise-Ready Solutions:** Developing robust solutions for organizational security and compliance needs.
 
 -----
 
-## 15\. Summary of Technology Stack
+## 9\. Installation & Getting Started
 
-| Area | Stack/Choice |
-| :-------------- | :-------------------------------- |
-| Language | Rust |
-| Config Format | `.env` + YAML |
-| CLI Parser | `clap` |
-| Regex Engine | `regex` |
-| ANSI Stripping | `strip-ansi-escapes` |
-| Diff Generation | `diffy` |
-| Clipboard | `arboard` |
-| Logging | `log`, `env_logger`, `test-log` |
-| Error Handling | `anyhow`, `thiserror` |
-| Packaging | `cargo-dist`, curl install, cargo |
-| License | MIT |
+### Prebuilt Binaries (Recommended):
+
+Download the latest prebuilt binaries for your platform from [GitHub Releases](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh/releases).
+
+### Install Script:
+
+```bash
+curl -sSf [https://github.com/KarmaYama/cleansh/releases/download/v0.1.5/cleansh-installer.sh](https://github.com/KarmaYama/cleansh/releases/download/v0.1.5/cleansh-installer.sh) | sh
+```
+
+### From crates.io:
+
+```bash
+cargo install cleansh # Use `cargo install cleansh --force` to update
+```
+
+### From Source:
+
+```bash
+git clone [https://github.com/KarmaYama/cleansh.git](https://github.com/KarmaYama/cleansh.git)
+cd cleansh
+cargo build --release
+cargo test
+```
+
+-----
+
+## 10\. License
+
+This project is licensed under the [MIT License](https://www.google.com/search?q=LICENSE).
 
 -----
 
 **Precision redaction. Local‑only trust. Built for devs.**
 
+```

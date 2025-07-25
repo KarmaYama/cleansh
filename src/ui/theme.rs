@@ -1,4 +1,4 @@
-/// src/ui/theme.rs
+// src/ui/theme.rs
 
 
 use serde::{Deserialize, Serialize};
@@ -43,8 +43,8 @@ impl fmt::Display for ParseThemeColorError {
         write!(
             f,
             "Invalid theme color; expected one of: black, red, green, yellow, blue, \
-             magenta, cyan, white, brightblack, brightred, brightgreen, brightyellow, \
-             brightblue, brightmagenta, brightcyan, brightwhite."
+            magenta, cyan, white, brightblack, brightred, brightgreen, brightyellow, \
+            brightblue, brightmagenta, brightcyan, brightwhite."
         )
     }
 }
