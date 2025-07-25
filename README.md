@@ -281,7 +281,7 @@ Beyond the powerful capabilities of `v0.1.5`, `cleansh` is charting a course tow
 
 ### Prebuilt Binaries (Recommended):
 
-Download the latest prebuilt binaries for your platform from [GitHub Releases](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh/releases).
+Download the latest prebuilt binaries for your platform from [GitHub Releases](https://github.com/KarmaYama/cleansh/releases).
 
 ### Install Script:
 
@@ -308,7 +308,7 @@ cargo test
 
 ## 10\. License
 
-This project is licensed under the [MIT License](https://www.google.com/search?q=LICENSE).
+This project is licensed under the [MIT License](./LICENSE).
 
 -----
 **Precision redaction. Local‑only trust. Built for devs.**
