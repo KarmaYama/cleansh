@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml) [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml) [![crates.io](https://img.shields.io/crates/v/cleansh.svg)](https://crates.io/crates/cleansh) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml) [![Netlify Status](https://api.netlify.com/api/v1/badges/2586fe1f-e613-4516-9dd8-6e4f06e58935/deploy-status)](https://app.netlify.com/projects/cleansh/deploys)
 
-**[Contributing Guidelines](CONTRIBUTING.md)** | **[Code of Conduct](CODE_OF_CONDUCT.md)** | **[Changelog](CHANGELOG.md)** | **[Project Scope & Vision](CLEANSH_SCOPE.md)** | **[Security Policy](SECURITY.md)** | **[Trademark Policy](TRADEMARK.md)**
+**[Contributing Guidelines](CONTRIBUTING.md)** | **[Code of Conduct](CODE_OF_CONDUCT.md)** | **[Changelog](CHANGELOG.md)** | **[Project Scope & Vision](CLEANSH_SCOPE.md)** | **[Security Policy](SECURITY.md)** | **[Trademark Policy](TRADEMARK.md)** | **[Command Handbook](COMMANDS.md)**
+
 
 > Cleansh is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
 > It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed.
@@ -131,6 +132,15 @@ This release represents a significant leap forward in `cleansh`'s accuracy, secu
 * **Suppress Summary (`--no-redaction-summary`):** Suppress the display of the redaction summary at the end of the output.
 * **Enable Specific Rules (`--enable-rules <names>`):** Explicitly activate opt-in redaction rules by name (comma-separated).
 * **Disable Specific Rules (`--disable-rules <names>`):** Explicitly deactivate any redaction rules by name (comma-separated), overriding defaults or custom enabled rules.
+* **Select Rule Set (`--rules <name>`):** Apply a predefined rule configuration (e.g., `default` for standard non-opt-in rules, `strict` to enable all rules including opt-in ones).
+* **Statistics Mode (`--stats-only`):** Analyze input for sensitive data and provide a summary without performing redaction.
+* **Export Stats to JSON File (`--stats-json-file <path>`):** When in statistics mode, write the detailed redaction summary to a JSON file.
+* **Export Stats to Stdout (`--export-json-to-stdout`):** When in statistics mode, print the JSON summary directly to `stdout`, suppressing other output.
+* **Sample Matches in Stats (`--sample-matches <count>`):** Include a specified number of unique original match examples for each rule in JSON statistics.
+* **Fail on Threshold (`--fail-over-threshold <count>`):** In statistics mode, exit with an error code if the total number of detections exceeds this count.
+* **Debug Logging (`--debug`):** Enable verbose debug output for troubleshooting.
+* **Suppress Debugging (`--no-debug`):** Disable debug logging.
+* **Quiet Output (`--quiet`):** Suppress all warnings and informational messages, showing only errors.
 
 ---
 
@@ -138,7 +148,7 @@ This release represents a significant leap forward in `cleansh`'s accuracy, secu
 
 **Basic Sanitization (stdin):**
 
-```powershell
+```bash
 echo "My email is test@example.com and my IP is 192.168.1.1." | cleansh
 ````
 
@@ -301,7 +311,4 @@ cargo test
 This project is licensed under the [MIT License](https://www.google.com/search?q=LICENSE).
 
 -----
-
 **Precision redaction. Local‑only trust. Built for devs.**
-
-
