@@ -1,7 +1,7 @@
+// src/commands/cleansh.rs
 //! Cleansh command implementation for sanitizing terminal output.
 // This module handles the main functionality of Cleansh, including
-//! reading input, applying redaction rules, and outputting sanitized content. 
-// src/commands/cleansh.rs
+//! reading input, applying redaction rules, and outputting sanitized content.
 
 use anyhow::{Context, Result};
 use log::{debug, info, warn};
@@ -47,7 +47,7 @@ pub fn run_cleansh(
 
     let user_rules = if let Some(path) = config_path {
         info!("Loading custom rules from: {}", path.display());
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             &format!("Loading custom rules from: {}", path.display()),
             theme_map,
@@ -115,7 +115,7 @@ pub fn run_cleansh(
     // Determine the primary output writer (stdout or file) and if it supports colors
     let (mut primary_output_writer, output_supports_color): (Box<dyn Write>, bool) = if let Some(path) = output_path {
         info!("Writing sanitized content to file: {}", path.display());
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             &format!("Writing sanitized content to file: {}", path.display()),
             theme_map,
@@ -130,7 +130,7 @@ pub fn run_cleansh(
         )
     } else {
         info!("Writing sanitized content to stdout.");
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             "Writing sanitized content to stdout.",
             theme_map,
@@ -144,7 +144,7 @@ pub fn run_cleansh(
     // Output logic
     if diff_enabled {
         debug!("Generating and displaying diff.");
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             "Generating and displaying diff.",
             theme_map,
@@ -165,7 +165,7 @@ pub fn run_cleansh(
     // Redaction Summary handling (always to stderr, so always check stderr's TTY)
     if !no_redaction_summary {
         debug!("Displaying redaction summary.");
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             "Displaying redaction summary.",
             theme_map,
@@ -174,7 +174,7 @@ pub fn run_cleansh(
         redaction_summary::print_summary(&summary, &mut io::stderr(), theme_map)?;
     } else {
         debug!("Redaction summary display skipped per user request.");
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             "Redaction summary display skipped per user request.",
             theme_map,
@@ -189,7 +189,7 @@ pub fn run_cleansh(
         match copy_to_clipboard(&sanitized_content) {
             Ok(_) => {
                 info!("Sanitized content copied to clipboard successfully.");
-                output_format::print_info_message(
+                let _ = output_format::print_info_message( // Wrapped with `let _ =`
                     &mut io::stderr(),
                     "Sanitized content copied to clipboard successfully.",
                     theme_map,
@@ -197,7 +197,7 @@ pub fn run_cleansh(
             },
             Err(e) => {
                 warn!("Failed to copy to clipboard: {}", e);
-                output_format::print_warn_message(
+                let _ = output_format::print_warn_message( // Wrapped with `let _ =`
                     &mut io::stderr(),
                     &format!("Failed to copy to clipboard: {}", e),
                     theme_map,

@@ -1,6 +1,5 @@
 // src/ui/theme.rs
 
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -24,6 +23,7 @@ pub enum ThemeEntry {
     DiffHeader,
     SummaryRuleName,
     SummaryOccurrences,
+    Prompt, // NEW: Added for user prompts/confirmations
 }
 
 /// Only named ANSI colors (the 16‑color standard).
@@ -43,8 +43,8 @@ impl fmt::Display for ParseThemeColorError {
         write!(
             f,
             "Invalid theme color; expected one of: black, red, green, yellow, blue, \
-            magenta, cyan, white, brightblack, brightred, brightgreen, brightyellow, \
-            brightblue, brightmagenta, brightcyan, brightwhite."
+             magenta, cyan, white, brightblack, brightred, brightgreen, brightyellow, \
+             brightblue, brightmagenta, brightcyan, brightwhite."
         )
     }
 }
@@ -134,6 +134,7 @@ impl ThemeStyle {
             ThemeEntry::DiffHeader,
             ThemeEntry::SummaryRuleName,
             ThemeEntry::SummaryOccurrences,
+            ThemeEntry::Prompt, // NEW: Added to ensure default style
         ] {
             custom.entry(entry).or_insert_with(|| ThemeStyle { fg: Some(ThemeColor::Named("white".into())) });
         }
@@ -155,6 +156,7 @@ impl ThemeStyle {
             ThemeEntry::DiffHeader,
             ThemeEntry::SummaryRuleName,
             ThemeEntry::SummaryOccurrences,
+            ThemeEntry::Prompt, // NEW: Added to ensure default style
         ] {
             default_theme.insert(entry, ThemeStyle { fg: Some(ThemeColor::Named("white".into())) });
         }

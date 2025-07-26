@@ -13,18 +13,21 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 
 ### Added
 
+* **New Command: Uninstall (`cleansh uninstall`):**
+    Introduced a new command to **cleanly remove `cleansh`'s configuration files and associated application state** from the user's machine. This provides a straightforward and reliable way to uninstall the application, with a confirmation prompt for safety.
+
 * **Introducing Redaction Statistics Mode (`--stats-only`):**
     A brand-new mode specifically designed for **analyzing and summarizing redactions without modifying the input content or producing sanitized output**. This provides detailed counts of matched items per redaction rule, laying the groundwork for advanced analytics and deeper insights into your data.
 
-* **Pro Feature: JSON Statistics Export (`--stats-json-file <FILE>`, `--export-json-to-stdout`):**
+* **Pro NEW Feature: JSON Statistics Export (`--stats-json-file <FILE>`, `--export-json-to-stdout`):**
     Take your redaction analysis to the next level with programmatic access to statistics.
     * `--stats-json-file <FILE>`: **Export a comprehensive redaction summary**, including rule details and match occurrences, to a specified JSON file. Ideal for reporting and integration into other tools.
     * `--export-json-to-stdout`: **Output the full JSON redaction summary directly to standard output**, enabling seamless piping to other scripts or analysis tools.
 
-* **Pro Feature: Sample Matches in Statistics (`--sample-matches <N>`):**
+* **Pro NEW Feature: Sample Matches in Statistics (`--sample-matches <N>`):**
     **Enhance your redaction reports** by including up to `N` unique examples of both the original (unredacted) and sanitized (redacted) text for each matched rule. This provides **immediate context** for identified sensitive data, significantly improving the utility of your redaction reports.
 
-* **Pro Feature: Fail-over Threshold (`--fail-over <X>`):**
+* **Pro NEW Feature: Fail-over Threshold (`--fail-over <X>`):**
     Integrate `cleansh` more robustly into your CI/CD pipelines. This crucial flag allows you to **specify a maximum number of secrets (`X`)**. If the total secrets detected exceed this threshold, `cleansh` will exit with a non-zero status code, signaling a potential security or compliance issue and preventing unintended deployments.
 
 * **New redaction patterns** for emerging/expanded formats:
@@ -138,6 +141,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 
 | Flag | Purpose |
 |:---|:---|
+| `uninstall` | **NEW: Removes cleansh config and app state** |
 | `--stats-only` | Summary of matches without redaction |
 | `--stats-json-file <FILE>` | Write stats JSON to file |
 | `--export-json-to-stdout` | Dump stats JSON to stdout |

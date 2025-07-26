@@ -3,3 +3,4 @@
 
 pub mod cleansh;
 pub mod stats;
+pub mod uninstall;

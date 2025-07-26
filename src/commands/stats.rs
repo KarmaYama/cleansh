@@ -61,7 +61,7 @@ pub fn run_stats_command(
 
     let user_rules = if let Some(path) = config_path {
         info!("Loading custom rules from: {}", path.display());
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             &format!("Loading custom rules from: {}", path.display()),
             theme_map,
@@ -125,7 +125,7 @@ pub fn run_stats_command(
     }
 
     if !app_state.donation_prompts_disabled && app_state.should_display_donation_prompt() {
-        output_format::print_message(
+        let _ = output_format::print_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             "Hey! You've used Cleansh's stats feature a few times. If you find it valuable, please consider donating at least $1 to Cleansh on GitHub Sponsors to motivate us: https://github.com/sponsors/KarmaYama",
             theme_map,
@@ -206,14 +206,14 @@ fn display_statistics(
     // --fail-over logic
     if let Some(threshold) = fail_over_threshold {
         if total_matches > threshold {
-            output_format::print_error_message(
+            let _ = output_format::print_error_message( // Wrapped with `let _ =`
                 &mut io::stderr(),
                 &format!("Fail-over triggered: Total secrets ({}) exceeded threshold ({}).", total_matches, threshold),
                 theme_map,
             );
             std::process::exit(1); // Exit with non-zero code
         } else {
-            output_format::print_info_message(
+            let _ = output_format::print_info_message( // Wrapped with `let _ =`
                 &mut io::stderr(),
                 &format!("Total secrets ({}) are below the fail-over threshold ({}).", total_matches, threshold),
                 theme_map,
@@ -277,7 +277,7 @@ fn display_statistics(
     // --stats-json_file (file output)
     if let Some(json_path) = stats_json_file_path {
         info!("Exporting scan summary to JSON file: {}", json_path.display());
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             &format!("Exporting scan summary to JSON file: {}", json_path.display()),
             theme_map,
@@ -302,7 +302,7 @@ fn display_statistics(
     // Display human-readable summary to stderr (unless JSON to stdout is explicitly requested,
     // in which case, we assume machine readability is primary and human output is suppressed).
     if !export_json_to_stdout { // Only print human readable if not exporting JSON to stdout
-        output_format::print_info_message(
+        let _ = output_format::print_info_message( // Wrapped with `let _ =`
             &mut io::stderr(),
             "Redaction Statistics Summary:",
             theme_map,
