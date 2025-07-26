@@ -4,7 +4,6 @@
 
 **[Contributing Guidelines](CONTRIBUTING.md)** | **[Code of Conduct](CODE_OF_CONDUCT.md)** | **[Changelog](CHANGELOG.md)** | **[Project Scope & Vision](CLEANSH_SCOPE.md)** | **[Security Policy](SECURITY.md)** | **[Trademark Policy](TRADEMARK.md)** | **[Command Handbook](COMMANDS.md)**
 
-
 > Cleansh is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
 > It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed.
 > The project is in active development, with **`v0.1.5`** bringing significant enhancements to redaction accuracy, security, and user control.
@@ -48,18 +47,18 @@ While `cleansh` is rapidly evolving with powerful new features in versions like 
 
 ---
 
-### Important Note on Future Licensing
+### Important Note on Licensing
 
-As part of `cleansh`'s commitment to sustainable development and continued innovation, we are planning a significant shift in our licensing model with `v1.0.0`.
+As part of `cleansh`'s commitment to sustainable development and continued innovation, we are shifting our licensing model starting with `v0.1.5`.
 
-| Aspect | Current (`v0.1.x` and earlier) | Planned (`v1.0.0` and beyond) |
+| Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and beyond, pre-v1.0) |
 | :---------------- | :----------------------------- | :---------------------------------------------------- |
 | **Primary License** | **MIT License** | **PolyForm Noncommercial License 1.0.0** |
 | **Noncommercial Use** | Free to use | **Free to use** (for personal, academic, research, etc.) |
 | **Commercial Use** | Free to use | **Requires a separate commercial license** |
-| **Previous Versions** | Remain permanently MIT licensed | N/A (new license applies from `v1.0.0` onwards) |
+| **Previous Versions** | Remain permanently MIT licensed | N/A (new license applies from `v0.1.5` onwards) |
 
-More details on commercial licensing will be provided closer to the `v1.0.0` release.
+More details on commercial licensing will be provided as the project progresses towards `v1.0.0`.
 
 ---
 
@@ -308,7 +307,11 @@ cargo test
 
 ## 10\. License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
 
 -----
+
 **Precision redaction. Local‑only trust. Built for devs.**
+
+```
+```
