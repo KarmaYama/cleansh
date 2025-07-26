@@ -31,9 +31,12 @@ pub fn redact_sensitive(s: &str) -> String {
     }
 }
 
-/// Checks if the `CLEANSH_ALLOW_DEBUG_PII` environment variable is set.
+/// Checks if the `CLEANSH_ALLOW_DEBUG_PII` environment variable is set to "true".
 fn is_pii_debug_allowed() -> bool {
-    env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok()
+    // Corrected logic: check if the variable is present AND its value is "true" (case-insensitive)
+    env::var("CLEANSH_ALLOW_DEBUG_PII")
+        .map(|s| s.eq_ignore_ascii_case("true"))
+        .unwrap_or(false) // Default to false if var is not set or not "true"
 }
 
 /// Logs a debug message for a `RedactionMatch`, conditionally redacting
@@ -138,7 +141,8 @@ mod tests {
     #[test]
     #[test_log::test]
     fn test_log_redaction_match_debug_pii_allowed() {
-        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "1"); }
+        // Setting to "1" for historical reasons, but "true" is preferred
+        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "true"); }
         log_redaction_match_debug(
             "[test::redaction]", "email", "test@example.com", "[EMAIL_REDACTED]"
         );
@@ -159,7 +163,7 @@ mod tests {
     #[test]
     #[test_log::test]
     fn test_log_captured_match_debug_pii_allowed() {
-        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "1"); }
+        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "true"); }
         log_captured_match_debug("[test::redaction]", "ssn", "123-45-6789");
         unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
         // In a real test, you'd assert the captured log contains "123-45-6789"
@@ -176,7 +180,7 @@ mod tests {
     #[test]
     #[test_log::test]
     fn test_log_redaction_action_debug_pii_allowed() {
-        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "1"); }
+        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "true"); }
         log_redaction_action_debug("[test::redaction]", "original_token", "REDACTED_TOKEN", "generic_token");
         unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
         // Assert log contains "original_token"
