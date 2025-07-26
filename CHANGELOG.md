@@ -68,6 +68,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 
 ### Changed
 
+* **Licensing Model:** **This version (`v0.1.5`) and all subsequent versions are now licensed under the PolyForm Noncommercial License 1.0.0.** Previous versions (`< v0.1.5`) remain under the MIT License. This change allows for greater control over commercial use for the project's sustainability.
 * **Regex Patterns**
     * Added `\b` anchors or full start/end matches to all regex rules to reduce partial/substring false positives.
     * Restructured complex regexes for clarity, with new comments in YAML-based rule definitions.
@@ -125,7 +126,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
     * Now compiles cleanly under various build scenarios.
 
 * **Changelog Process**
-    * This release formalizes adherence to [Keep a Changelog](https://keepachagelogs.com) structure and detailed Markdown documentation for every behavioral change, feature, and security enhancement.
+    * This release formalizes adherence to [Keep a Changelog](https://keepachangelog.com) structure and detailed Markdown documentation for every behavioral change, feature, and security enhancement.
 
 ### Fixed
 
