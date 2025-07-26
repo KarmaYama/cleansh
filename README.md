@@ -4,9 +4,9 @@
 
 **[Contributing Guidelines](CONTRIBUTING.md)** | **[Code of Conduct](CODE_OF_CONDUCT.md)** | **[Changelog](CHANGELOG.md)** | **[Security Policy](SECURITY.md)** | **[Trademark Policy](TRADEMARK.md)** | **[Command Handbook](COMMANDS.md)**
 
-> Cleansh is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing. 
-> It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed. 
-> The project is in active development, with **`v0.1.5`** bringing significant enhancements to redaction accuracy, security, and user control. 
+> Cleansh is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
+> It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed.
+> The project is in active development, with **`v0.1.5`** bringing significant enhancements to redaction accuracy, security, and user control.
 > We value your feedback. Please report any issues you encounter.
 
 ---
@@ -17,6 +17,11 @@
 | :---------------------------------------------------------------------- |
 | [1. Overview](#1-overview) |
 | [2. Important Note on Licensing](#2-important-note-on-licensing) |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.1. Commercial Use Defined |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.2. Cleansh v0.1.5: Evaluation & Trial Period |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.3. Future Enforcement: Cleansh v0.1.7 and Beyond |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.4. How to Obtain a Commercial License |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.5. Violation of Commercial Use Policy |
 | [3. Core Capabilities – Current Version (v0.1.5)](#3-core-capabilities--current-version-v015) |
 | &nbsp;&nbsp;&nbsp;&nbsp;3.1. Enhanced Redaction Categories |
 | &nbsp;&nbsp;&nbsp;&nbsp;3.2. Advanced Features (with flags) |
@@ -33,7 +38,7 @@
 
 ## 1. Overview
 
-`cleansh` is a powerful and reliable command‑line utility designed to help you quickly and securely redact sensitive information from your terminal output. 
+`cleansh` is a powerful and reliable command‑line utility designed to help you quickly and securely redact sensitive information from your terminal output.
 Whether you're debugging, collaborating, or sharing logs, `cleansh` ensures that confidential data like IP addresses, email addresses, and access tokens never leave your local environment unmasked. Piped directly from `stdin` or loaded from files, `cleansh` provides a robust, pre‑configured solution for data sanitization, with flexible options for custom rules and output formats.
 
 **Sanitize your terminal output. One tool. One purpose.**
@@ -44,14 +49,48 @@ Whether you're debugging, collaborating, or sharing logs, `cleansh` ensures that
 
 As part of `cleansh`'s commitment to sustainable development and continued innovation, we are shifting our licensing model starting with `v0.1.5`.
 
-| Aspect            | Versions (`< v0.1.5`) | Versions (`v0.1.5` and beyond, pre-v1.0) |
+| Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and beyond, pre-v1.0) |
 | :---------------- | :----------------------------- | :---------------------------------------------------- |
 | **Primary License** | **MIT License** | **PolyForm Noncommercial License 1.0.0** |
-| **Noncommercial Use** | Free to use                    | **Free to use** (for personal, academic, research, etc.) |
-| **Commercial Use** | Free to use                    | **Requires a separate commercial license** |
-| **Previous Versions** | Remain permanently MIT licensed | N/A (new license applies from `v0.1.5` onwards)      |
+| **Noncommercial Use** | Free to use | **Free to use** (for personal, academic, research, etc.) |
+| **Commercial Use** | Free to use | **Requires a separate commercial license** |
+| **Previous Versions** | Remain permanently MIT licensed | N/A (new license applies from `v0.1.5` onwards) |
 
-More details on commercial licensing will be provided as the project progresses towards `v1.0.0`.
+---
+
+### 2.1. Commercial Use Defined
+
+"Commercial Use" includes, but is not limited to, any use of Cleansh:
+* By for-profit entities or organizations.
+* In a production environment for a commercial product or service.
+* Where the use of Cleansh directly or indirectly contributes to commercial advantage or monetary compensation.
+* By government agencies, unless explicitly covered by a separate agreement.
+
+### 2.2. Cleansh v0.1.5: Evaluation & Trial Period
+
+**Cleansh version 0.1.5 (current release) includes "Pro Features" that are typically intended for commercial applications.**
+* While the core distribution remains under the PolyForm Noncommercial License 1.0.0, we understand that commercial entities may wish to evaluate these features.
+* For version 0.1.5 only, commercial users may **use Cleansh for evaluation and trial purposes without immediate legal action** from Cleansh maintainers.
+* This evaluation period is intended to allow commercial users to assess Cleansh's suitability for their needs.
+
+### 2.3. Future Enforcement: Cleansh v0.1.7 and Beyond
+
+**Effective with the release of Cleansh version 0.1.7 (expected in Q4 2025), commercial use of Cleansh, including its "Pro Features," will strictly require a valid commercial license.**
+
+* From v0.1.7 onwards, the Cleansh application will incorporate an **in-app license key validation mechanism**.
+* Users wishing to continue commercial use of Cleansh beyond version 0.1.6 will need to acquire a commercial license key.
+* We will provide a dedicated section on our official website for license key acquisition.
+
+### 2.4. How to Obtain a Commercial License
+
+To obtain a commercial license for Cleansh, or for any commercial inquiries prior to the release of v0.1.7:
+
+* Please visit our official website (URL to be provided upon v0.1.7 release).
+* Alternatively, contact us directly via email: cleansshh@gmail.com
+
+### 2.5. Violation of Commercial Use Policy
+
+Any commercial use of Cleansh from version 0.1.7 onwards without a valid, active commercial license key will be considered a **violation of this Commercial Use Policy and the underlying PolyForm Noncommercial License 1.0.0.** Cleansh maintainers reserve the right to pursue appropriate legal action in such cases.
 
 ---
 
@@ -63,39 +102,50 @@ This release represents a significant leap forward in `cleansh`'s accuracy, secu
 
 `cleansh` offers broad and precise detection across a wide range of sensitive data types, complemented by robust programmatic validation for key PII:
 
-* **Emails:** Common email formats (e.g., `user@example.com`). 
-* **IP Addresses:** Both **IPv4** (e.g., `192.168.1.1`) and **IPv6** addresses (full uncompressed form, e.g., `2001:0db8:85a3:0000:0000:8a2e:0370:7334`). 
-* **Tokens & Secrets:**   * **JWTs**   * **GitHub PATs** (`ghp_…`) 
-  * **GitHub fine‑grained PATs** (`github_pat_…`, 72 characters) 
-  * **Stripe keys** (`sk_live_…`, `sk_test_…`, `rk_live_…`) 
-  * **AWS Access/Secret Keys**   * **GCP API Keys**   * **Google OAuth tokens** (`ya29.…`, 20–120 characters) 
-  * **SSH private keys**   * **Generic Hex Secrets** (32 and 64 characters) 
-  * **Generic Tokens** * **Personal Identifiable Information (PII):**   * **Credit Card Numbers**   * **US Social Security Numbers (SSN)** (with programmatic validation against invalid patterns like `000-XX-XXXX`, `666-XX-XXXX`, or `9XX-XX-XXXX`). 
-  * **UK National Insurance Numbers (NINO)** (with programmatic validation against invalid prefixes and structural rules). 
-  * **South African ID Numbers** * **Paths & URLs:**   * **Linux/macOS Absolute Paths** (`/home/user/...` → `~/home/user/...`). 
-  * **Windows Absolute Paths** (`C:\Users\…`, `\\Server\Share\…`). 
-  * **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`) 
-* **Authentication Headers:**   * **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
+* **Emails:** Common email formats (e.g., `user@example.com`).
+* **IP Addresses:** Both **IPv4** (e.g., `192.168.1.1`) and **IPv6** addresses (full uncompressed form, e.g., `2001:0db8:85a3:0000:0000:8a2e:0370:7334`).
+* **Tokens & Secrets:**
+    * **JWTs**
+    * **GitHub PATs** (`ghp_…`)
+    * **GitHub fine‑grained PATs** (`github_pat_…`, 72 characters)
+    * **Stripe keys** (`sk_live_…`, `sk_test_…`, `rk_live_…`)
+    * **AWS Access/Secret Keys**
+    * **GCP API Keys**
+    * **Google OAuth tokens** (`ya29.…`, 20–120 characters)
+    * **SSH private keys**
+    * **Generic Hex Secrets** (32 and 64 characters)
+    * **Generic Tokens**
+* **Personal Identifiable Information (PII):**
+    * **Credit Card Numbers**
+    * **US Social Security Numbers (SSN)** (with programmatic validation against invalid patterns like `000-XX-XXXX`, `666-XX-XXXX`, or `9XX-XX-XXXX`).
+    * **UK National Insurance Numbers (NINO)** (with programmatic validation against invalid prefixes and structural rules).
+    * **South African ID Numbers**
+* **Paths & URLs:**
+    * **Linux/macOS Absolute Paths** (`/home/user/...` → `~/home/user/...`).
+    * **Windows Absolute Paths** (`C:\Users\…`, `\\Server\Share\…`).
+    * **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`)
+* **Authentication Headers:**
+    * **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
 
 ### 3.2. Advanced Features (with flags):
 
 `cleansh` provides command‑line flags to customize its behavior, all thoroughly tested:
 
-* **Copy to Clipboard (`-c` / `--clipboard`):** Instantly copy sanitized output. 
-* **Diff View (`-d` / `--diff`):** Show a colored, line‑by‑line diff of redactions. 
-* **Custom Config (`--config <path>`):** Load and merge your YAML redaction rules with built-in defaults. 
-* **Output File (`-o <path>`):** Write sanitized content to a file. 
-* **Suppress Summary (`--no-redaction-summary`):** Suppress the display of the redaction summary at the end of the output. 
-* **Enable Specific Rules (`--enable-rules <names>`):** Explicitly activate opt-in redaction rules by name (comma-separated). 
-* **Disable Specific Rules (`--disable-rules <names>`):** Explicitly deactivate any redaction rules by name (comma-separated), overriding defaults or custom enabled rules. 
-* **Select Rule Set (`--rules <name>`):** Apply a predefined rule configuration (e.g., `default` for standard non-opt-in rules, `strict` to enable all rules including opt-in ones). 
-* **Statistics Mode (`--stats-only`):** Analyze input for sensitive data and provide a summary without performing redaction. 
-* **Export Stats to JSON File (`--stats-json-file <path>`):** When in statistics mode, write the detailed redaction summary to a JSON file. 
-* **Export Stats to Stdout (`--export-json-to-stdout`):** When in statistics mode, print the JSON summary directly to `stdout`, suppressing other output. 
-* **Sample Matches in Stats (`--sample-matches <count>`):** Include a specified number of unique original match examples for each rule in JSON statistics. 
-* **Fail on Threshold (`--fail-over-threshold <count>`):** In statistics mode, exit with an error code if the total number of detections exceeds this count. 
-* **Debug Logging (`--debug`):** Enable verbose debug output for troubleshooting. 
-* **Suppress Debugging (`--no-debug`):** Disable debug logging. 
+* **Copy to Clipboard (`-c` / `--clipboard`):** Instantly copy sanitized output.
+* **Diff View (`-d` / `--diff`):** Show a colored, line‑by‑line diff of redactions.
+* **Custom Config (`--config <path>`):** Load and merge your YAML redaction rules with built-in defaults.
+* **Output File (`-o <path>`):** Write sanitized content to a file.
+* **Suppress Summary (`--no-redaction-summary`):** Suppress the display of the redaction summary at the end of the output.
+* **Enable Specific Rules (`--enable-rules <names>`):** Explicitly activate opt-in redaction rules by name (comma-separated).
+* **Disable Specific Rules (`--disable-rules <names>`):** Explicitly deactivate any redaction rules by name (comma-separated), overriding defaults or custom enabled rules.
+* **Select Rule Set (`--rules <name>`):** Apply a predefined rule configuration (e.g., `default` for standard non-opt-in rules, `strict` to enable all rules including opt-in ones).
+* **Statistics Mode (`--stats-only`):** Analyze input for sensitive data and provide a summary without performing redaction.
+* **Export Stats to JSON File (`--stats-json-file <path>`):** When in statistics mode, write the detailed redaction summary to a JSON file.
+* **Export Stats to Stdout (`--export-json-to-stdout`):** When in statistics mode, print the JSON summary directly to `stdout`, suppressing other output.
+* **Sample Matches in Stats (`--sample-matches <count>`):** Include a specified number of unique original match examples for each rule in JSON statistics.
+* **Fail on Threshold (`--fail-over-threshold <count>`):** In statistics mode, exit with an error code if the total number of detections exceeds this count.
+* **Debug Logging (`--debug`):** Enable verbose debug output for troubleshooting.
+* **Suppress Debugging (`--no-debug`):** Disable debug logging.
 * **Quiet Output (`--quiet`):** Suppress all warnings and informational messages, showing only errors.
 
 ---
@@ -103,6 +153,7 @@ This release represents a significant leap forward in `cleansh`'s accuracy, secu
 ## 4. Usage Examples
 
 **Basic Sanitization (stdin):**
+
 ```bash
 echo "My email is test@example.com and my IP is 192.168.1.1." | cleansh
 ````
@@ -180,11 +231,11 @@ You can define your own custom redaction rules in a YAML file and merge them wit
 
 ```yaml
 rules:
-  - name: emp_id
-    pattern: 'EMP-\d{5}'
-    replace_with: '[EMPLOYEE_ID_REDACTED]'
-    multiline: false
-    dot_matches_new_line: false
+  - name: emp_id
+    pattern: 'EMP-\d{5}'
+    replace_with: '[EMPLOYEE_ID_REDACTED]'
+    multiline: false
+    dot_matches_new_line: false
 ```
 
 ### 6.2. Rule Enable/Disable (`--enable-rules`, `--disable-rules`)
@@ -207,14 +258,14 @@ cleansh --disable-rules "email,ipv4_address"
 
 ## 8\. Security by Default Principles
 
-| Feature                   | Principle                                                                        |
+| Feature | Principle |
 | :-------------------------- | :------------------------------------------------------------------------------- |
-| No runtime eval           | All redaction via static regex, no code execution                                |
-| Local‑only                | No network calls or telemetry                                                    |
-| Immutable defaults        | Built‑in rules embedded at compile time                                          |
-| Path redaction            | Filesystem paths normalized to `~` or Windows equivalents                        |
-| YAML sandboxed            | Declarative custom rules only, no arbitrary code execution                       |
-| Clipboard opt‑in          | `-c` flag explicitly required for clipboard copy                                 |
+| No runtime eval | All redaction via static regex, no code execution |
+| Local‑only | No network calls or telemetry |
+| Immutable defaults | Built‑in rules embedded at compile time |
+| Path redaction | Filesystem paths normalized to `~` or Windows equivalents |
+| YAML sandboxed | Declarative custom rules only, no arbitrary code execution |
+| Clipboard opt‑in | `-c` flag explicitly required for clipboard copy |
 | **ANSI Stripping** | **Input content is pre-sanitized of escape codes to prevent evasion** |
 | **Programmatic Validation** | **Numerical PII rules have built-in validation for added accuracy and security** |
 
@@ -270,3 +321,4 @@ This project is licensed under the [PolyForm Noncommercial License 1.0.0](https:
 
 -----
 **Precision redaction. Local‑only trust. Built for devs.**
+
