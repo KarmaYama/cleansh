@@ -24,7 +24,7 @@
 * **Windows Absolute Paths** (`C:\…`, `\\Server\Share\…`)
 * **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`)
 * **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
-
+---
 ### ✨ Key Features Implemented:
 * **Clipboard Integration (`--clipboard` / `-c`):** Automatically copies sanitized output to the system clipboard.
 * **Diff View (`--diff` / `-d`):** Displays a colored diff between original and redacted content, with improved accuracy.
