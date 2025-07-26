@@ -52,27 +52,9 @@ pub fn run_stats_command(
 
     let mut app_state = AppState::load(&app_state_file_path)?;
 
-    // Always increment usage count for --stats-only runs that result in redactions
-    // (The `increment_stats_only_usage` method should already handle checking for redactions internally)
-    // NOTE: This should only increment if there were actual redactions found by sanitize_content.
-    // However, for testing, we assume input_content will always have matches.
-    // You might want to pass `total_matches` into `increment_stats_only_usage` if it truly depends on matches.
-    app_state.increment_stats_only_usage();
-
     if cli_disable_donation_prompts {
         app_state.donation_prompts_disabled = true;
     }
-
-    if !app_state.donation_prompts_disabled && app_state.should_display_donation_prompt() {
-        output_format::print_message(
-            &mut io::stderr(),
-            "Hey! You've used Cleansh's stats feature a few times. If you find it valuable, please consider donating at least $1 to Cleansh on GitHub Sponsors to motivate us: https://github.com/sponsors/KarmaYama",
-            theme_map,
-            Some(theme::ThemeEntry::Info),
-        );
-    }
-    app_state.save(&app_state_file_path)?;
-    // --- End App State Management ---
 
     let default_rules = RedactionConfig::load_default_rules()?;
     debug!("[stats.rs] Loaded {} default rules.", default_rules.rules.len());
@@ -135,6 +117,23 @@ pub fn run_stats_command(
         }
     }
     // --- END NEW DEBUG LINE ---
+
+    // --- CONDITIONALLY INCREMENT STATS ONLY USAGE ---
+    // Increment usage count ONLY if actual matches were found during the analysis.
+    if !all_redaction_matches.is_empty() {
+        app_state.increment_stats_only_usage();
+    }
+
+    if !app_state.donation_prompts_disabled && app_state.should_display_donation_prompt() {
+        output_format::print_message(
+            &mut io::stderr(),
+            "Hey! You've used Cleansh's stats feature a few times. If you find it valuable, please consider donating at least $1 to Cleansh on GitHub Sponsors to motivate us: https://github.com/sponsors/KarmaYama",
+            theme_map,
+            Some(theme::ThemeEntry::Info),
+        );
+    }
+    app_state.save(&app_state_file_path)?;
+    // --- End App State Management ---
 
 
     // --- Process and display statistics ---
