@@ -30,7 +30,6 @@ pub fn redact_sensitive(s: &str) -> String {
     }
 }
 
-// THE CRITICAL CHANGE IS HERE: Remove the `if std::env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok()` guard.
 #[macro_export]
 macro_rules! pii_debug {
     ($($arg:tt)*) => {
@@ -41,7 +40,6 @@ macro_rules! pii_debug {
     };
 }
 
-// Re-export the macro for crate-wide use without needing `#[macro_export]` on every usage site.
 pub use pii_debug;
 
 #[cfg(test)]

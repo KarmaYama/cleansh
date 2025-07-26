@@ -1,4 +1,9 @@
 // src/tools/sanitize_shell.rs
+// This module provides functions for sanitizing shell commands and their outputs.
+// It compiles redaction rules, applies them to input content, and collects matches.
+// It also handles ANSI escape codes and programmatic validation of sensitive data.
+// This file is part of cleansh, a tool for sanitizing sensitive information in shell commands.
+
 
 use anyhow::{Result, anyhow};
 use regex::{Regex, RegexBuilder};

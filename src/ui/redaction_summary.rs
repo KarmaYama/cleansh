@@ -91,12 +91,8 @@ pub fn print_summary_for_stats_mode<W: Write>(
 
         has_any_matches = true;
 
-        // MODIFIED: Custom display name logic to force 'us_ssn' for that specific rule
-        let display_name = if rule_name == "us_ssn" {
-            "us_ssn".to_string() // Force lowercase us_ssn
-        } else {
-            format_rule_name_for_json(&rule_name) // Use the standard JSON formatter for others
-        };
+        // Use the centralized formatting function for both human-readable and JSON output names
+        let display_name = format_rule_name_for_json(&rule_name);
 
         let match_plural = if total_occurrences == 1 { "match" } else { "matches" };
 

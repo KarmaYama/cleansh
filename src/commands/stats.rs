@@ -10,12 +10,12 @@ use std::io::{self, Write};
 use std::path::PathBuf;
 use std::fs;
 use serde::Serialize;
-
 use crate::config::{self, RedactionConfig};
 use crate::tools::sanitize_shell::{self, CompiledRules}; // Import CompiledRules
 use crate::ui::{output_format, theme, redaction_summary};
 use crate::utils::app_state::AppState;
-use crate::utils::redaction::RedactionMatch;
+use crate::utils::redaction::{RedactionMatch, redact_sensitive}; // Import redact_sensitive
+use std::env; // Import std::env
 
 /// Runs the statistics-only mode logic.
 ///
@@ -108,15 +108,21 @@ pub fn run_stats_command(
     // regardless of whether they pass programmatic validation or are ultimately redacted.
     let (_, all_redaction_matches) = sanitize_shell::sanitize_content(input_content, &compiled_rules);
     debug!("[stats.rs] Analysis completed. Total individual matches (including those not programmatically validated for redaction): {}", all_redaction_matches.len());
-    // --- NEW DEBUG LINE FOR REDACTION MATCHES IN STATS COMMAND ---
-    // Only emit detailed match logs if PII debug is explicitly enabled
-    if std::env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
-        for m in &all_redaction_matches {
-            debug!("[stats.rs] Found RedactionMatch: Rule='{}', Original='{}', Sanitized='{}'",
-                m.rule_name, m.original_string, m.sanitized_string);
-        }
+
+    // --- MODIFIED DEBUG LOGGING FOR REDACTION MATCHES IN STATS COMMAND ---
+    // Always emit detailed match logs if RUST_LOG is debug, but redact PII if CLEANSH_ALLOW_DEBUG_PII is not set.
+    for m in &all_redaction_matches {
+        let original_content_for_debug = if env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
+            m.original_string.clone()
+        } else {
+            redact_sensitive(&m.original_string)
+        };
+        debug!(
+            "[stats.rs] Found RedactionMatch: Rule='{}', Original='{}', Sanitized='{}'",
+            m.rule_name, original_content_for_debug, m.sanitized_string
+        );
     }
-    // --- END NEW DEBUG LINE ---
+    // --- END MODIFIED DEBUG LOGGING ---
 
     // --- CONDITIONALLY INCREMENT STATS ONLY USAGE ---
     // Increment usage count ONLY if actual matches were found during the analysis.
@@ -160,7 +166,7 @@ pub(crate) fn format_rule_name_for_json(rule_name: &str) -> String {
         "aws_access_key" => "AWSAccessKey".to_string(),
         "aws_secret_key" => "AWSSecretKey".to_string(),
         "ipv4_address" => "IPv4Address".to_string(),
-        "ssn_us" => "SSN_US".to_string(),
+        "us_ssn" => "us_ssn".to_string(), // Ensure it's always lowercase "us_ssn"
         "email" => "EmailAddress".to_string(),
         "jwt_token" => "JWTToken".to_string(),
         "uk_nino" => "UKNINO".to_string(),
@@ -180,6 +186,11 @@ pub(crate) fn format_rule_name_for_json(rule_name: &str) -> String {
     }
 }
 
+/// New struct for the flat JSON output.
+#[derive(Debug, Serialize)]
+struct CountsOutput {
+    redaction_summary: HashMap<String, usize>,
+}
 
 /// Helper to display statistics based on the summary and CLI options.
 fn display_statistics(
@@ -221,47 +232,16 @@ fn display_statistics(
         }
     }
 
-    // Prepare serializable summary
-    let serializable_summary: HashMap<String, RuleStats> = aggregated_matches
-        .iter()
-        .map(|(rule_name, matches_for_rule)| {
-            let mut unique_samples: Vec<String> = matches_for_rule
-                .iter()
-                .map(|m| m.original_string.clone())
-                .collect::<std::collections::HashSet<_>>()
-                .into_iter()
-                .collect();
-            unique_samples.sort();
-
-            let samples_to_include: Vec<String> = if let Some(n) = sample_matches_count {
-                unique_samples.into_iter().take(n).collect()
-            } else {
-                Vec::new()
-            };
-
-            // Use the new helper function to format the rule name for JSON
-            let json_rule_name = format_rule_name_for_json(rule_name);
-
-            (
-                json_rule_name, // Use the specially formatted name as the key
-                RuleStats {
-                    count: matches_for_rule.len(), // This count includes all regex matches
-                    samples: if samples_to_include.is_empty() { None } else { Some(samples_to_include) },
-                },
-            )
-        })
-        .collect();
-
-    // Create a top-level JSON structure
-    #[derive(Debug, Serialize)]
-    struct FullStatsOutput {
-        redaction_summary: HashMap<String, RuleStats>,
-        // Add other top-level stats if needed, e.g., total_matches: usize,
+    // Prepare a flat map of rule -> count for JSON serialization
+    let mut counts_map: HashMap<String, usize> = HashMap::new();
+    for (rule_name, matches_for_rule) in aggregated_matches.iter() {
+        let json_rule_name = format_rule_name_for_json(rule_name);
+        counts_map.insert(json_rule_name, matches_for_rule.len());
     }
 
-    let full_output = FullStatsOutput {
-        redaction_summary: serializable_summary,
-        // total_matches: total_matches, // Example of adding more top-level data
+    // Create a top-level JSON structure
+    let full_output = CountsOutput {
+        redaction_summary: counts_map,
     };
 
     // Serialize to JSON string
@@ -318,12 +298,4 @@ fn display_statistics(
     }
 
     Ok(())
-}
-
-/// Helper struct for JSON serialization of rule statistics.
-#[derive(Debug, Serialize)]
-struct RuleStats {
-    count: usize,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    samples: Option<Vec<String>>,
 }

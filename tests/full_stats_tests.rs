@@ -67,7 +67,7 @@ fn get_test_paths(test_name: &str) -> anyhow::Result<TestPaths> {
 /// to ensure test isolation.
 fn run_cleansh_cmd(app_state_file: &PathBuf) -> Command {
     let mut cmd = Command::cargo_bin("cleansh").unwrap();
-    // Pass the test-specific app state file path via an environment variable.
+    // Pass the test-specific app state file path via an and environment variable.
     cmd.env("CLEANSH_STATE_FILE_OVERRIDE_FOR_TESTS", app_state_file.to_str().unwrap());
 
     // --- IMPORTANT: Clear potentially interfering environment variables for each command call ---
@@ -158,7 +158,7 @@ fn test_stats_only_programmatic_validation_regex_match_only() -> anyhow::Result<
     let stderr = String::from_utf8_lossy(&output.stderr);
     debug!("Stderr for programmatic_validation_regex_match_only: \n{}", stderr);
 
-    // Expect no redaction matches, as the programmatic validation for SSN_US fails for "000-12-3456".
+    // Expect no redaction matches, as the programmatic validation for UsSsn fails for "000-12-3456".
     // This clarifies the expected behavior when programmatic validation prevents a count.
     assert!(
         stderr.contains("No redaction matches found."),
@@ -191,8 +191,7 @@ fn test_stats_only_programmatic_validation_valid_match() -> anyhow::Result<()> {
     debug!("Stderr for programmatic_validation_valid_match: \n{}", stderr);
 
     // This valid SSN match should definitely be counted.
-    // Corrected assertion: Ensure 'us_ssn' is lowercase as per the actual output.
-    assert!(stderr.contains("us_ssn: 1 match"));
+    assert!(stderr.contains("us_ssn: 1 match")); // Now consistently "us_ssn"
     assert!(!stderr.contains("No redaction matches found."));
 
     Ok(())
@@ -238,7 +237,7 @@ fn test_stats_json_output_to_stdout() -> anyhow::Result<()> {
 
     // Fix for E0716: Store the Assert result in a binding
     let assert_result = run_cleansh_cmd(&test_paths.app_state_file_path)
-        .write_stdin("email: user@example.com, ip: 192.168.1.1")
+        .write_stdin("email: user@example.com, ip: 192.168.1.1, ssn: 123-45-6789")
         .arg("--rules").arg("default")
         .arg("--stats-only")
         .arg("--export-json-to-stdout")
@@ -254,10 +253,11 @@ fn test_stats_json_output_to_stdout() -> anyhow::Result<()> {
     let stats: Value = serde_json::from_str(&output_str)?;
 
     assert!(stats["redaction_summary"].is_object());
-    assert!(stats["redaction_summary"]["EmailAddress"].is_object());
-    assert_eq!(stats["redaction_summary"]["EmailAddress"]["count"], 1);
-    assert!(stats["redaction_summary"]["IPv4Address"].is_object());
-    assert_eq!(stats["redaction_summary"]["IPv4Address"]["count"], 1);
+    // Assert that the values are now directly counts (usize)
+    assert_eq!(stats["redaction_summary"]["EmailAddress"], 1);
+    assert_eq!(stats["redaction_summary"]["IPv4Address"], 1);
+    // Modified to expect "us_ssn" directly in JSON
+    assert_eq!(stats["redaction_summary"]["us_ssn"], 1);
 
     // Ensure AppState-related fields are NOT in the JSON output
     assert!(!stats.as_object().unwrap().contains_key("stats_only_usage_count"));
@@ -299,9 +299,8 @@ fn test_stats_json_output_to_file() -> anyhow::Result<()> {
 
     assert!(stats["redaction_summary"].is_object());
     // The `format_rule_name_for_json` function should convert "generic_token" to "GenericToken"
-    assert!(stats["redaction_summary"]["GenericToken"].is_object(),
-        "Expected 'GenericToken' in JSON output, but was not found. Full JSON: {}", serde_json::to_string_pretty(&stats)?);
-    assert_eq!(stats["redaction_summary"]["GenericToken"]["count"], 1);
+    // Assert that the value is now directly a count (usize)
+    assert_eq!(stats["redaction_summary"]["GenericToken"], 1);
 
     Ok(())
 }
@@ -324,7 +323,7 @@ fn test_stats_fail_over_triggered() -> anyhow::Result<()> {
     assert!(!output.status.success());
     assert_eq!(output.status.code().unwrap_or(0), 1); // Check for exit code 1
 
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stderr = String::from_utf8_lossy(&output.stderr); // ***CHANGED: Check stderr, not stdout***
     debug!("Stderr for fail_over_triggered: \n{}", stderr);
     assert!(stderr.contains("Fail-over triggered: Total secrets (3) exceeded threshold (2)."));
 
