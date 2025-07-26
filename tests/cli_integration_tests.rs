@@ -69,29 +69,31 @@ fn test_basic_sanitization() -> Result<()> {
         assert!(stderr.contains(&msg), "Stderr missing: '{}'\nFull stderr:\n{}", msg, stderr);
     }
 
-    // FIX: Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
+    // Updated assertions to match the new log prefixes from `log_captured_match_debug`
+    // and `log_redaction_action_debug` in `src/utils/redaction.rs`, and `log_redaction_match_debug` in `cleansh.rs`.
     assert!(
-        stderr.contains("Rule 'email' captured match (original): test@example.com"),
+        stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): 'test@example.com' for rule 'email'"),
         "Stderr missing expected original capture log for email.\nFull stderr:\n{}", stderr
     );
     assert!(
-        stderr.contains("Redacting '[REDACTED: 16 chars]' with '[REDACTED: 16 chars]' for rule 'email'"),
-        "Stderr missing expected redacted redaction log for email.\nFull stderr:\n{}", stderr
+        stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='test@example.com', Redacted='[EMAIL_REDACTED]' for rule 'email'"),
+        "Stderr missing expected redaction action log for email.\nFull stderr:\n{}", stderr
     );
     assert!(
-        stderr.contains("Rule 'ipv4_address' captured match (original): 192.168.1.1"),
+        stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): '192.168.1.1' for rule 'ipv4_address'"),
         "Stderr missing expected original capture log for IP.\nFull stderr:\n{}", stderr
     );
     assert!(
-        stderr.contains("Redacting '[REDACTED: 11 chars]' with '[REDACTED: 15 chars]' for rule 'ipv4_address'"),
-        "Stderr missing expected redacted redaction log for IP.\nFull stderr:\n{}", stderr
+        stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='192.168.1.1', Redacted='[IPV4_REDACTED]' for rule 'ipv4_address'"),
+        "Stderr missing expected redaction action log for IP.\nFull stderr:\n{}", stderr
     );
+    // These logs are now also coming from `log_redaction_match_debug` in `cleansh.rs`
     assert!(
-        stderr.contains("[DEBUG cleansh::tools::sanitize_shell] Added RedactionMatch for rule 'email'. Current total matches: 1"),
+        stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='email', Original='test@example.com', Sanitized='[EMAIL_REDACTED]'"),
         "Stderr missing expected RedactionMatch log for email.\nFull stderr:\n{}", stderr
     );
     assert!(
-        stderr.contains("[DEBUG cleansh::tools::sanitize_shell] Added RedactionMatch for rule 'ipv4_address'. Current total matches: 2"),
+        stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='ipv4_address', Original='192.168.1.1', Sanitized='[IPV4_REDACTED]'"),
         "Stderr missing expected RedactionMatch log for ipv4_address.\nFull stderr:\n{}", stderr
     );
 
@@ -115,10 +117,13 @@ fn test_run_cleansh_clipboard_copy_to_file() -> Result<()> {
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Starting cleansh operation.".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Received enable_rules: []".to_string(),
         "[DEBUG cleansh::tools::sanitize_shell] Rule 'email' compiled successfully.".to_string(),
-        // FIX: Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
-        "Rule 'email' captured match (original): test@example.com".to_string(),
-        "[DEBUG cleansh::tools::sanitize_shell] Added RedactionMatch for rule 'email'. Current total matches: 1".to_string(),
-        "Redacting '[REDACTED: 16 chars]' with '[REDACTED: 16 chars]' for rule 'email'".to_string(),
+        // Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
+        // Updated to match the new centralized logging format
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): 'test@example.com' for rule 'email'".to_string(),
+        // Updated to match the new centralized logging format for redaction action
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='test@example.com', Redacted='[EMAIL_REDACTED]' for rule 'email'".to_string(),
+        // This log is now from `cleansh.rs` using `log_redaction_match_debug`
+        "[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='email', Original='test@example.com', Sanitized='[EMAIL_REDACTED]'".to_string(),
         "[DEBUG cleansh::commands::cleansh] Content sanitized. Original length: 28, Sanitized length: 28".to_string(),
         "[DEBUG cleansh::commands::cleansh] DEBUG_CLEANSH: Redaction summary (num items): 1".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Outputting to file:".to_string(), // Updated this line
@@ -166,6 +171,8 @@ fn test_run_cleansh_clipboard_copy_to_file() -> Result<()> {
     for msg in expected_stderr_contains {
         assert!(stderr.contains(&msg), "Stderr missing: '{}'\nFull stderr:\n{}", msg, stderr);
     }
+    // Corrected line: Use `{}` for `&str` directly in format!
+    assert!(stderr.contains(&format!("Writing sanitized content to file: {}", output_path)));
 
     let file_contents = fs::read_to_string(output_path)?;
     assert_eq!(file_contents, expected_stdout);
@@ -190,10 +197,13 @@ fn test_clipboard_output_with_jwt() -> Result<()> {
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Starting cleansh operation.".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Received enable_rules: []".to_string(),
         "[DEBUG cleansh::tools::sanitize_shell] Rule 'jwt_token' compiled successfully.".to_string(),
-        // FIX: Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
-        "Rule 'jwt_token' captured match (original): eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c".to_string(),
-        "[DEBUG cleansh::tools::sanitize_shell] Added RedactionMatch for rule 'jwt_token'. Current total matches: 1".to_string(),
-        "Redacting '[REDACTED: 155 chars]' with '[REDACTED: 14 chars]' for rule 'jwt_token'".to_string(),
+        // Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
+        // Updated to match the new centralized logging format for captured match
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'".to_string(),
+        // Updated to match the new centralized logging format for redaction action
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c', Redacted='[JWT_REDACTED]' for rule 'jwt_token'".to_string(),
+        // This log is now from `cleansh.rs` using `log_redaction_match_debug`
+        "[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='jwt_token', Original='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c', Sanitized='[JWT_REDACTED]'".to_string(),
         "[DEBUG cleansh::commands::cleansh] Content sanitized. Original length: 167, Sanitized length: 26".to_string(),
         "[DEBUG cleansh::commands::cleansh] DEBUG_CLEANSH: Redaction summary (num items): 1".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Outputting to stdout.".to_string(),
@@ -238,14 +248,20 @@ fn test_diff_view() -> Result<()> {
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Received enable_rules: []".to_string(),
         "[DEBUG cleansh::tools::sanitize_shell] Rule 'ipv4_address' compiled successfully.".to_string(),
         // Adjusted to match actual log output for the first match, as it sometimes doesn't include char count
-        "[DEBUG cleansh::tools::sanitize_shell] Rule 'ipv4_address' captured match (original): 10.0.0.1".to_string(),
+        // Updated to match the new centralized logging format for captured match
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): '10.0.0.1' for rule 'ipv4_address'".to_string(),
         "Added RedactionMatch for rule 'ipv4_address'. Current total matches: 1".to_string(),
-        // FIX: Updated this assertion to expect "[REDACTED]" without char count for the original part
-        "Redacting '[REDACTED]' with '[REDACTED: 15 chars]' for rule 'ipv4_address'".to_string(),
+        // Updated to match the new centralized logging format for redaction action
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='10.0.0.1', Redacted='[IPV4_REDACTED]' for rule 'ipv4_address'".to_string(),
         // This log still has a character count, matching the provided stderr for the second match
-        "[DEBUG cleansh::tools::sanitize_shell] Rule 'ipv4_address' captured match (original): 192.168.1.1".to_string(),
+        // Updated to match the new centralized logging format for captured match
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): '192.168.1.1' for rule 'ipv4_address'".to_string(),
         "Added RedactionMatch for rule 'ipv4_address'. Current total matches: 2".to_string(),
-        "Redacting '[REDACTED: 11 chars]' with '[REDACTED: 15 chars]' for rule 'ipv4_address'".to_string(),
+        // Updated to match the new centralized logging format for redaction action
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='192.168.1.1', Redacted='[IPV4_REDACTED]' for rule 'ipv4_address'".to_string(),
+        // Added Found RedactionMatch logs from cleansh::commands::cleansh context
+        "[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='ipv4_address', Original='10.0.0.1', Sanitized='[IPV4_REDACTED]'".to_string(),
+        "[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='ipv4_address', Original='192.168.1.1', Sanitized='[IPV4_REDACTED]'".to_string(),
         "[DEBUG cleansh::commands::cleansh] Content sanitized. Original length: 38, Sanitized length: 49".to_string(),
         // Corrected to 1 as only one rule type (ipv4_address) is summarized
         "[DEBUG cleansh::commands::cleansh] DEBUG_CLEANSH: Redaction summary (num items): 1".to_string(),
@@ -287,10 +303,14 @@ fn test_output_to_file() -> Result<()> {
         "email (1 occurrences)".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Received enable_rules: []".to_string(),
         "[DEBUG cleansh::tools::sanitize_shell] Rule 'email' compiled successfully.".to_string(),
-        // FIX: Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
-        "Rule 'email' captured match (original): user@domain.com".to_string(),
+        // Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
+        // Updated to match the new centralized logging format for captured match
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): 'user@domain.com' for rule 'email'".to_string(),
         "Added RedactionMatch for rule 'email'. Current total matches: 1".to_string(),
-        "Redacting '[REDACTED: 15 chars]' with '[REDACTED: 16 chars]' for rule 'email'".to_string(),
+        // Updated to match the new centralized logging format for redaction action
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='user@domain.com', Redacted='[EMAIL_REDACTED]' for rule 'email'".to_string(),
+        // Added Found RedactionMatch log from cleansh::commands::cleansh context
+        "[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='email', Original='user@domain.com', Sanitized='[EMAIL_REDACTED]'".to_string(),
         "[DEBUG cleansh::commands::cleansh] Content sanitized. Original length: 51, Sanitized length: 52".to_string(),
         "[DEBUG cleansh::commands::cleansh] DEBUG_CLEANSH: Redaction summary (num items): 1".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Outputting to file:".to_string(),
@@ -316,6 +336,7 @@ fn test_output_to_file() -> Result<()> {
     for msg in expected_stderr_contains {
         assert!(stderr.contains(&msg), "Stderr missing: '{}'\nFull stderr:\n{}", msg, stderr);
     }
+    // Corrected line: Use `{}` for `&str` directly in format!
     assert!(stderr.contains(&format!("Writing sanitized content to file: {}", path)));
 
     let file_contents = fs::read_to_string(path)?;
@@ -373,11 +394,18 @@ fn test_custom_config_file() -> Result<()> {
         // Assert on successful compilation of the custom and overridden email rules
         "[DEBUG cleansh::tools::sanitize_shell] Rule 'custom_secret' compiled successfully.".to_string(),
         "[DEBUG cleansh::tools::sanitize_shell] Rule 'email' compiled successfully.".to_string(),
-        // FIX: Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
-        "Rule 'email' captured match (original): user@test.org".to_string(),
-        "Redacting '[REDACTED: 13 chars]' with '[REDACTED: 20 chars]' for rule 'email'".to_string(),
-        "Rule 'custom_secret' captured match (original): MYSECRET-1234".to_string(),
-        "Redacting '[REDACTED: 13 chars]' with '[REDACTED: 24 chars]' for rule 'custom_secret'".to_string(),
+        // Expect original PII in logs because CLEANSH_ALLOW_DEBUG_PII is true
+        // Updated to match the new centralized logging format for captured match
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): 'user@test.org' for rule 'email'".to_string(),
+        // Updated to match the new centralized logging format for redaction action
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='user@test.org', Redacted='[ORG_EMAIL_REDACTED]' for rule 'email'".to_string(),
+        // Updated to match the new centralized logging format for captured match
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): 'MYSECRET-1234' for rule 'custom_secret'".to_string(),
+        // Updated to match the new centralized logging format for redaction action
+        "[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='MYSECRET-1234', Redacted='[CUSTOM_SECRET_REDACTED]' for rule 'custom_secret'".to_string(),
+        // These logs are now from `cleansh.rs` using `log_redaction_match_debug`
+        "[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='email', Original='user@test.org', Sanitized='[ORG_EMAIL_REDACTED]'".to_string(),
+        "[DEBUG cleansh::utils::redaction] [cleansh::commands::cleansh] Found RedactionMatch: Rule='custom_secret', Original='MYSECRET-1234', Sanitized='[CUSTOM_SECRET_REDACTED]'".to_string(),
         // Assert on the final state
         "[DEBUG cleansh::commands::cleansh] Content sanitized. Original length: 86, Sanitized length: 104".to_string(),
         "[DEBUG cleansh::commands::cleansh] DEBUG_CLEANSH: Redaction summary (num items): 2".to_string(),

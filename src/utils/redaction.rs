@@ -1,6 +1,7 @@
 // src/utils/redaction.rs
-
 use serde::{Serialize, Deserialize};
+use log::debug; // Import log::debug
+use std::env; // Import std::env for environment variables
 
 /// Represents a single instance of a matched and potentially redacted string.
 /// This struct is used to collect granular information about each redaction,
@@ -30,23 +31,91 @@ pub fn redact_sensitive(s: &str) -> String {
     }
 }
 
-#[macro_export]
-macro_rules! pii_debug {
-    ($($arg:tt)*) => {
-        // This macro now unconditionally calls log::debug!.
-        // The decision to show PII or redacted content is handled
-        // at the call site (e.g., in sanitize_shell.rs) before calling pii_debug!.
-        log::debug!($($arg)*);
-    };
+/// Checks if the `CLEANSH_ALLOW_DEBUG_PII` environment variable is set.
+fn is_pii_debug_allowed() -> bool {
+    env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok()
 }
 
-pub use pii_debug;
+/// Logs a debug message for a `RedactionMatch`, conditionally redacting
+/// the original sensitive content based on the `CLEANSH_ALLOW_DEBUG_PII`
+/// environment variable.
+///
+/// This function is intended for logging the final `RedactionMatch` object's details.
+pub fn log_redaction_match_debug(
+    module_path: &str, // Renamed from log_prefix to module_path for clarity
+    rule_name: &str,
+    original_sensitive_content: &str,
+    sanitized_content: &str,
+) {
+    let content_to_log: &str = if is_pii_debug_allowed() {
+        original_sensitive_content
+    } else {
+        // Convert the String returned by redact_sensitive to a &str
+        &*redact_sensitive(original_sensitive_content)
+    };
+
+    debug!("{} Found RedactionMatch: Rule='{}', Original='{}', Sanitized='{}'",
+        module_path,
+        rule_name,
+        content_to_log,
+        sanitized_content // Sanitized content is always safe to log
+    );
+}
+
+/// Logs a debug message for a 'captured match', conditionally redacting
+/// the original sensitive content based on the `CLEANSH_ALLOW_DEBUG_PII`
+/// environment variable.
+///
+/// This function is intended for logging an intermediate 'match' found by a regex
+/// before full `RedactionMatch` objects are finalized.
+pub fn log_captured_match_debug(
+    module_path: &str, // Renamed from log_prefix to module_path for clarity
+    rule_name: &str,
+    original_sensitive_content: &str,
+) {
+    let content_to_log: &str = if is_pii_debug_allowed() {
+        original_sensitive_content
+    } else {
+        // Convert the String returned by redact_sensitive to a &str
+        &*redact_sensitive(original_sensitive_content)
+    };
+    // *** Adjusted format string and argument order to match test expectations ***
+    debug!("{} Captured match (original): '{}' for rule '{}'", module_path, content_to_log, rule_name);
+}
+
+/// Logs a debug message for a redaction action, conditionally redacting
+/// the original sensitive content based on the `CLEANSH_ALLOW_DEBUG_PII`
+/// environment variable.
+///
+/// This function is intended for logging when an actual string replacement occurs.
+pub fn log_redaction_action_debug(
+    module_path: &str, // Renamed from log_prefix to module_path for clarity
+    original_sensitive_content: &str,
+    sanitized_replacement: &str,
+    rule_name: &str,
+) {
+    let original_for_log: &str = if is_pii_debug_allowed() {
+        original_sensitive_content
+    } else {
+        // Convert the String returned by redact_sensitive to a &str
+        &*redact_sensitive(original_sensitive_content)
+    };
+
+    debug!(
+        "{} Redaction action: Original='{}', Redacted='{}' for rule '{}'", // Adjusted format string
+        module_path,
+        original_for_log,
+        sanitized_replacement,
+        rule_name
+    );
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env; // This import is now only needed within the test module
-    use test_log::test;
+    use std::env;
+    use test_log::test; // For `#[test_log::test]`
 
     #[test]
     fn test_redact_sensitive_short_string() {
@@ -60,50 +129,64 @@ mod tests {
         assert_eq!(redact_sensitive("long_sensitive_data"), "[REDACTED: 19 chars]".to_string());
     }
 
+    // These tests for logging functions are more conceptual, as `test_log` doesn't
+    // provide a direct way to capture and assert on log output in unit tests.
+    // For robust assertion on log content, integration tests (like the ones
+    // in `tests/full_stats_tests.rs`) are preferred, where you can capture stderr.
+    // Here, we just ensure the functions compile and run without panicking.
+
     #[test]
     #[test_log::test]
-    fn test_pii_debug_macro_always_logs_if_rust_log_debug() {
-        // Temporarily set environment variables for the test
-        // Use `unsafe` blocks for `set_var` and `remove_var`
-        unsafe {
-            // For testing log output, setting RUST_LOG here can be fragile if test_log
-            // or other tests already configure it.
-            // For this specific test, we're primarily focused on `CLEANSH_ALLOW_DEBUG_PII`'s
-            // effect on the content, assuming RUST_LOG is generally set by the test runner.
-            // If you need to ensure RUST_LOG is "debug", it's best set in the command line:
-            // `RUST_LOG=debug cargo test ...`
-            env::remove_var("RUST_LOG"); // Remove to ensure test_log can manage it or it defaults
-            env::set_var("CLEANSH_ALLOW_DEBUG_PII", "1");
-        }
-        
-        let test_message = "This should always be logged if RUST_LOG=debug, regardless of CLEANSH_ALLOW_DEBUG_PII.";
-        // In a real test where you assert log output, you'd capture stdout/stderr.
-        // For this test, we're relying on `test_log` to indicate if logging happened
-        // and that the macro call doesn't panic.
-        pii_debug!("{}", test_message);
-
-        // Clean up environment variables after the test
-        unsafe {
-            env::remove_var("CLEANSH_ALLOW_DEBUG_PII");
-            env::remove_var("RUST_LOG"); // Clean up RUST_LOG if set here
-        }
+    fn test_log_redaction_match_debug_pii_allowed() {
+        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "1"); }
+        log_redaction_match_debug(
+            "[test::redaction]", "email", "test@example.com", "[EMAIL_REDACTED]"
+        );
+        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
+        // In a real test, you'd assert the captured log contains "test@example.com"
     }
 
     #[test]
     #[test_log::test]
-    fn test_pii_debug_macro_always_logs_if_rust_log_debug_with_pii_disabled() {
-        // Ensure the environment variable CLEANSH_ALLOW_DEBUG_PII is not set for this test
-        unsafe {
-            env::remove_var("CLEANSH_ALLOW_DEBUG_PII");
-            env::remove_var("RUST_LOG"); // Remove to ensure test_log can manage it or it defaults
-        }
-        
-        let test_message = "This should still be logged, with content determined by call site.";
-        pii_debug!("{}", test_message);
+    fn test_log_redaction_match_debug_pii_not_allowed() {
+        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); } // Ensure not set
+        log_redaction_match_debug(
+            "[test::redaction]", "email", "test@example.com", "[EMAIL_REDACTED]"
+        );
+        // In a real test, you'd assert the captured log contains "[REDACTED: 16 chars]"
+    }
 
-        unsafe {
-            env::remove_var("CLEANSH_ALLOW_DEBUG_PII");
-            env::remove_var("RUST_LOG"); // Clean up RUST_LOG if set here
-        }
+    #[test]
+    #[test_log::test]
+    fn test_log_captured_match_debug_pii_allowed() {
+        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "1"); }
+        log_captured_match_debug("[test::redaction]", "ssn", "123-45-6789");
+        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
+        // In a real test, you'd assert the captured log contains "123-45-6789"
+    }
+
+    #[test]
+    #[test_log::test]
+    fn test_log_captured_match_debug_pii_not_allowed() {
+        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); } // Ensure not set
+        log_captured_match_debug("[test::redaction]", "ssn", "123-45-6789");
+        // In a real test, you'd assert the captured log contains "[REDACTED: 11 chars]"
+    }
+
+    #[test]
+    #[test_log::test]
+    fn test_log_redaction_action_debug_pii_allowed() {
+        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "1"); }
+        log_redaction_action_debug("[test::redaction]", "original_token", "REDACTED_TOKEN", "generic_token");
+        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
+        // Assert log contains "original_token"
+    }
+
+    #[test]
+    #[test_log::test]
+    fn test_log_redaction_action_debug_pii_not_allowed() {
+        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); } // Ensure not set
+        log_redaction_action_debug("[test::redaction]", "original_token", "REDACTED_TOKEN", "generic_token");
+        // Assert log contains "[REDACTED: 14 chars]"
     }
 }

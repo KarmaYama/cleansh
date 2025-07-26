@@ -11,8 +11,9 @@ use std::collections::HashSet;
 use log::{debug};
 use strip_ansi_escapes::strip;
 
-// Import the moved functions and macro from the new utility module
-use crate::utils::redaction::{pii_debug, redact_sensitive, RedactionMatch};
+// Import the new functions from the redaction utility module.
+// The `pii_debug` macro is removed as its logic is now within these functions.
+use crate::utils::redaction::{log_captured_match_debug, log_redaction_action_debug, RedactionMatch, redact_sensitive};
 
 use crate::config::{RedactionRule, MAX_PATTERN_LENGTH};
 use crate::tools::validators;
@@ -172,25 +173,17 @@ pub fn sanitize_content(
         debug!("Applying rule: '{}'", rule_name); // This is a general debug, not PII sensitive
         debug!("Rule '{}' compiled.", rule_name); // This is a general debug, not PII sensitive
 
-        // This pii_debug! is guarded by the outer if, as it's not strictly PII itself,
-        // but indicates a PII-related process.
-        if std::env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
-            pii_debug!("Rule '{}' does pattern match input? {}", rule_name, compiled_rule.regex.is_match(&sanitized_content));
-        }
+        // This debug! is not PII sensitive, so it doesn't need the redaction utility functions.
+        debug!("Rule '{}' does pattern match input? {}", rule_name, compiled_rule.regex.is_match(&sanitized_content));
 
         sanitized_content = compiled_rule.regex.replace_all(&sanitized_content, |caps: &regex::Captures| {
             let original_match = caps.get(0).unwrap().as_str().to_string();
 
-            // This is the key change: Always log "captured match", but redact content if CLEANSH_ALLOW_DEBUG_PII is not set.
-            let debug_match_content = if std::env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
-                original_match.clone() // PII allowed, show original
-            } else {
-                redact_sensitive(&original_match) // PII not allowed, show redacted
-            };
-            pii_debug!(
-                "Rule '{}' captured match (original): {}",
+            // Centralized PII logging for 'captured match'
+            log_captured_match_debug(
+                "[cleansh::tools::sanitize_shell]", // Correct module path
                 rule_name,
-                debug_match_content
+                &original_match
             );
 
             // Perform programmatic validation ONLY to decide on ACTUAL REDACTION
@@ -214,19 +207,22 @@ pub fn sanitize_content(
                     sanitized_string: replace_with_val.clone(),
                 });
 
-                // Guard for 'Added RedactionMatch' debug line (contains original, so guard it)
-                if std::env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
-                    debug!("Added RedactionMatch for rule '{}'. Current total matches: {}", rule_name, all_redaction_matches.len());
-                }
+                // This debug is still useful, but if it contained PII, it would also be centralized.
+                // For 'total matches', it's just a count, not PII.
+                debug!("Added RedactionMatch for rule '{}'. Current total matches: {}", rule_name, all_redaction_matches.len());
 
-                // This pii_debug! uses redact_sensitive, so it's already safe.
-                // It will be printed if PII debug is enabled, showing the redacted version.
-                pii_debug!("Redacting '{}' with '{}' for rule '{}'", redact_sensitive(&original_match), redact_sensitive(&replace_with_val), rule_name);
+                // Centralized PII logging for 'redaction action'
+                log_redaction_action_debug(
+                    "[cleansh::tools::sanitize_shell]", // Correct module path
+                    &original_match,
+                    &replace_with_val,
+                    rule_name
+                );
                 replace_with_val.clone() // Return the replacement for `replace_all`
             } else {
-                // This pii_debug! uses redact_sensitive, so it's already safe.
-                // It will be printed if PII debug is enabled, showing the redacted version.
-                pii_debug!("Rule '{}' matched '{}' but programmatic validation failed. Keeping original text.", rule_name, redact_sensitive(&original_match));
+                // Centralized PII logging for validation failure
+                // Use redact_sensitive here because this log *is* directly showing the failed validation.
+                debug!("Rule '{}' matched '{}' but programmatic validation failed. Keeping original text.", rule_name, redact_sensitive(&original_match));
                 original_match // Keep original text if programmatic validation fails
             }
         }).to_string();

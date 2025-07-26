@@ -1,7 +1,7 @@
 // tests/full_stats_tests.rs
 // Comprehensive integration tests for the `cleansh --stats-only` command.
 
-use cleansh::test_exposed::utils::AppState; // Access AppState for direct manipulation in tests
+use cleansh::test_exposed::utils::AppState;
 use std::fs;
 use std::path::PathBuf;
 use assert_cmd::Command;
@@ -9,9 +9,9 @@ use predicates::prelude::*;
 use serde_json::Value;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tempfile::TempDir;
-use std::env; // For setting/removing env vars in unsafe blocks
-use log::{debug, LevelFilter}; // Import debug and LevelFilter
-use cleansh::logger; // Import your logger initialization function
+use std::env; 
+use log::{debug, LevelFilter}; 
+use cleansh::logger;
 
 // --- Custom Predicate for JSON Validation ---
 // This function creates a custom predicate that checks if a string is valid JSON.
@@ -284,8 +284,8 @@ fn test_stats_json_output_to_file() -> anyhow::Result<()> {
         .env("RUST_LOG", "debug") // Ensure debug logs for this command
         .write_stdin("secret_token: ABCDEF1234567890")
         .arg("--rules").arg("default")
-        .arg("--stats-only")
         .arg("--enable-rules=generic_token") // Enable an opt-in rule for testing
+        .arg("--stats-only")
         .arg("--stats-json-file").arg(&output_json_path)
         .assert()
         .success();
@@ -538,22 +538,12 @@ fn test_stats_debug_flag_enables_debug_logs() -> anyhow::Result<()> {
         .arg("--debug") // Enable debug logging
         .output()?;
 
-    // --- TEMPORARY DEBUGGING START ---
-    eprintln!("--- STDOUT from test_stats_debug_flag_enables_debug_logs ---");
-    eprintln!("{}", String::from_utf8_lossy(&output.stdout));
-    eprintln!("--- STDERR from test_stats_debug_flag_enables_debug_logs ---");
-    eprintln!("{}", String::from_utf8_lossy(&output.stderr));
-    eprintln!("--- STATUS from test_stats_debug_flag_enables_debug_logs ---");
-    eprintln!("Success: {}", output.status.success());
-    eprintln!("Code: {:?}", output.status.code());
-    // --- TEMPORARY DEBUGGING END ---
-
     assert!(output.status.success(), "Command failed with status: {:?}", output.status);
     let stderr = String::from_utf8_lossy(&output.stderr);
     debug!("Stderr for debug_flag_enables_debug_logs: \n{}", stderr);
 
     // Should contain debug logs related to rule compilation and processing
-    assert!(stderr.contains("[DEBUG cleansh::commands::stats] [stats.rs] Starting stats-only operation."));
+    assert!(stderr.contains("[DEBUG cleansh::commands::stats] Starting stats-only operation.")); // Adjusted for simplified prefix
     assert!(stderr.contains("[DEBUG cleansh::tools::sanitize_shell] compile_rules called with"));
     assert!(stderr.contains("[DEBUG cleansh::tools::sanitize_shell] Rule 'email' compiled successfully."));
     // Specific debug from sanitize_content - Adjusted to reflect typical Rust log format
@@ -606,12 +596,20 @@ fn test_stats_pii_debug_env_var() -> anyhow::Result<()> {
     debug!("Stderr for pii_debug_env_var: \n{}", stderr);
 
     // When CLEANSH_ALLOW_DEBUG_PII is 1, these logs should show the ORIGINAL (unredacted) PII.
-    assert!(stderr.contains("[DEBUG cleansh::commands::stats] [stats.rs] Found RedactionMatch: Rule='us_ssn', Original='123-45-6789', Sanitized='[US_SSN_REDACTED]'"));
-    assert!(stderr.contains("[DEBUG cleansh::commands::stats] [stats.rs] Found RedactionMatch: Rule='email', Original='test@example.com', Sanitized='[EMAIL_REDACTED]'"));
+    // The `log_captured_match_debug` and `log_redaction_action_debug` functions
+    // from `redaction.rs` output logs with the `[DEBUG cleansh::utils::redaction]` prefix,
+    // and *then* the module path passed as an argument.
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Captured match (original): '123-45-6789' for rule 'us_ssn'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Redaction action: Original='123-45-6789', Redacted='[US_SSN_REDACTED]' for rule 'us_ssn'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Captured match (original): 'test@example.com' for rule 'email'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Redaction action: Original='test@example.com', Redacted='[EMAIL_REDACTED]' for rule 'email'"));
 
-    // Also verify the more general `sanitize_shell` debug logs show the original if PII debug is on.
-    assert!(stderr.contains("[DEBUG cleansh::tools::sanitize_shell] Rule 'email' captured match (original): test@example.com"));
-    assert!(stderr.contains("[DEBUG cleansh::tools::sanitize_shell] Rule 'us_ssn' captured match (original): 123-45-6789"));
+    // Also verify the `sanitize_shell` debug logs show the original if PII debug is on.
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): 'test@example.com' for rule 'email'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): '123-45-6789' for rule 'us_ssn'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='test@example.com', Redacted='[EMAIL_REDACTED]' for rule 'email'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='123-45-6789', Redacted='[US_SSN_REDACTED]' for rule 'us_ssn'"));
+
 
     // Verify summary is still present
     assert!(stderr.contains("us_ssn: 1 match"));
@@ -636,17 +634,20 @@ fn test_stats_pii_debug_env_var_not_set() -> anyhow::Result<()> {
     let stderr = String::from_utf8_lossy(&output.stderr);
     debug!("Stderr for pii_debug_env_var_not_set: \n{}", stderr);
 
-    // PII debug logs from `cleansh::commands::stats` (which explicitly show original PII) should NOT be present.
-    assert!(!stderr.contains("[DEBUG cleansh::commands::stats] [stats.rs] Found RedactionMatch: Rule='us_ssn'"));
-    assert!(!stderr.contains("[DEBUG cleansh::commands::stats] [stats.rs] Found RedactionMatch: Rule='email'"));
+    // Assertions to check for the *redacted* content when CLEANSH_ALLOW_DEBUG_PII is NOT set.
+    // The logs should still be present if RUST_LOG=debug is set, but with redacted PII.
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Captured match (original): '[REDACTED: 11 chars]' for rule 'us_ssn'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Redaction action: Original='[REDACTED: 11 chars]', Redacted='[US_SSN_REDACTED]' for rule 'us_ssn'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Captured match (original): '[REDACTED: 16 chars]' for rule 'email'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Redaction action: Original='[REDACTED: 16 chars]', Redacted='[EMAIL_REDACTED]' for rule 'email'"));
 
-    // However, the `sanitize_shell` module *will* still log "captured match (original):"
-    // but the actual PII content should be REDACTED when CLEANSH_ALLOW_DEBUG_PII is NOT set.
-    assert!(stderr.contains("[DEBUG cleansh::tools::sanitize_shell] Rule 'email' captured match (original): [REDACTED: 16 chars]"));
-    assert!(stderr.contains("[DEBUG cleansh::tools::sanitize_shell] Rule 'us_ssn' captured match (original): [REDACTED: 11 chars]"));
+    // The `sanitize_shell` module's "captured match (original):" log should also be REDACTED.
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): '[REDACTED: 16 chars]' for rule 'email'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): '[REDACTED: 11 chars]' for rule 'us_ssn'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='[REDACTED: 16 chars]', Redacted='[EMAIL_REDACTED]' for rule 'email'"));
+    assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='[REDACTED: 11 chars]', Redacted='[US_SSN_REDACTED]' for rule 'us_ssn'"));
 
-
-    assert!(stderr.contains("[DEBUG cleansh::commands::stats] [stats.rs] Starting stats-only operation."));
+    assert!(stderr.contains("[DEBUG cleansh::commands::stats] Starting stats-only operation.")); 
 
     // Summary should still be present
     assert!(stderr.contains("us_ssn: 1 match"));

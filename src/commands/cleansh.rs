@@ -16,7 +16,8 @@ use crate::ui::redaction_summary;
 use crate::config::{self, RedactionConfig, RedactionSummaryItem};
 use crate::tools::sanitize_shell;
 use crate::ui::{output_format, theme};
-use crate::utils::redaction::RedactionMatch;
+// Import the centralized logging function for RedactionMatch
+use crate::utils::redaction::{log_redaction_match_debug, RedactionMatch};
 
 /// Runs the core sanitization logic.
 ///
@@ -28,7 +29,7 @@ pub fn run_cleansh(
     clipboard_enabled: bool,
     diff_enabled: bool,
     config_path: Option<PathBuf>,
-    rules_config_name: Option<String>, // <--- THIS WAS THE MISSING ARGUMENT IN THE DEFINITION
+    rules_config_name: Option<String>,
     output_path: Option<PathBuf>,
     no_redaction_summary: bool,
     theme_map: &std::collections::HashMap<theme::ThemeEntry, theme::ThemeStyle>,
@@ -70,7 +71,7 @@ pub fn run_cleansh(
     debug!("[cleansh.rs] Merged config contains {} rules before compilation in cleansh.", merged_config.rules.len());
 
     // Apply rule configuration name if provided
-    if let Some(name) = rules_config_name { // This block now has the `rules_config_name`
+    if let Some(name) = rules_config_name {
         merged_config.set_active_rules_config(&name)?;
         debug!("[cleansh.rs] Active rules config set to: {}", name);
     }
@@ -105,6 +106,18 @@ pub fn run_cleansh(
         input_content.len(),
         sanitized_content.len()
     );
+
+    // MODIFIED DEBUG LOGGING FOR REDACTION MATCHES IN CLEASH COMMAND
+    // Now uses the centralized `log_redaction_match_debug` function
+    for m in &all_redaction_matches {
+        log_redaction_match_debug(
+            "[cleansh::commands::cleansh]",
+            &m.rule_name,
+            &m.original_string,
+            &m.sanitized_string
+        );
+    }
+    // END MODIFIED DEBUG LOGGING
 
 
     // Build the RedactionSummaryItem from the raw RedactionMatch vector

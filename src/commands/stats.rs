@@ -1,7 +1,7 @@
+// src/commands/stats.rs
 // Statistics command for Cleansh
 //! This module implements the `--stats-only` command for Cleansh,
 //! which analyzes input content for sensitive data without performing redaction.
-// src/commands/stats.rs
 
 use anyhow::{Context, Result};
 use log::{debug, info};
@@ -14,8 +14,8 @@ use crate::config::{self, RedactionConfig};
 use crate::tools::sanitize_shell::{self, CompiledRules}; // Import CompiledRules
 use crate::ui::{output_format, theme, redaction_summary};
 use crate::utils::app_state::AppState;
-use crate::utils::redaction::{RedactionMatch, redact_sensitive}; // Import redact_sensitive
-use std::env; // Import std::env
+use crate::utils::redaction::{log_redaction_match_debug, log_captured_match_debug, log_redaction_action_debug, RedactionMatch};
+
 
 /// Runs the statistics-only mode logic.
 ///
@@ -36,7 +36,8 @@ pub fn run_stats_command(
     cli_disable_donation_prompts: bool,
 ) -> Result<()> {
     info!("Starting cleansh --stats-only operation.");
-    debug!("[stats.rs] Starting stats-only operation.");
+    // Removed the redundant "[stats.rs]" prefix from this debug log
+    debug!("Starting stats-only operation.");
     debug!("[stats.rs] Received enable_rules: {:?}", enable_rules);
     debug!("[stats.rs] Received disable_rules: {:?}", disable_rules);
 
@@ -110,16 +111,28 @@ pub fn run_stats_command(
     debug!("[stats.rs] Analysis completed. Total individual matches (including those not programmatically validated for redaction): {}", all_redaction_matches.len());
 
     // --- MODIFIED DEBUG LOGGING FOR REDACTION MATCHES IN STATS COMMAND ---
-    // Always emit detailed match logs if RUST_LOG is debug, but redact PII if CLEANSH_ALLOW_DEBUG_PII is not set.
+    // Now uses the centralized `log_redaction_match_debug` function
     for m in &all_redaction_matches {
-        let original_content_for_debug = if env::var("CLEANSH_ALLOW_DEBUG_PII").is_ok() {
-            m.original_string.clone()
-        } else {
-            redact_sensitive(&m.original_string)
-        };
-        debug!(
-            "[stats.rs] Found RedactionMatch: Rule='{}', Original='{}', Sanitized='{}'",
-            m.rule_name, original_content_for_debug, m.sanitized_string
+        // 1) Captured match
+        log_captured_match_debug(
+            "[cleansh::commands::stats]",
+            &m.rule_name,
+            &m.original_string,
+        );
+        // 2) Finalized match object
+        log_redaction_match_debug(
+            "[cleansh::commands::stats]",
+            &m.rule_name,
+            &m.original_string,
+            &m.sanitized_string
+        );
+
+        // 3) Redaction action in stats context (needed by full_stats_tests)
+        log_redaction_action_debug(
+            "[cleansh::commands::stats]",
+            &m.original_string,
+            &m.sanitized_string,
+            &m.rule_name,
         );
     }
     // --- END MODIFIED DEBUG LOGGING ---
