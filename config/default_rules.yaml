@@ -16,7 +16,7 @@ rules:
     description: "Standard email address (supports TLDs up to 63 chars)."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: false
+    programmatic_validation: false 
 
   # ==== NETWORK IDENTIFIERS ====
   - name: "ipv4_address"
@@ -26,7 +26,7 @@ rules:
     description: "Strict IPv4 address with each octet in 0–255."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: false
+    programmatic_validation: false 
 
   - name: "ipv6_address"
     pattern: |-
@@ -35,7 +35,7 @@ rules:
     description: "Uncompressed IPv6 address (8 groups of 1–4 hex digits). Compressed (::) forms not covered by default."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: false
+    programmatic_validation: false 
 
   # ==== AUTH TOKENS & KEYS ====
   - name: "jwt_token"
@@ -45,7 +45,7 @@ rules:
     description: "JSON Web Token (three Base64URL-encoded segments)."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: false
+    programmatic_validation: false 
 
   - name: "github_pat"
     pattern: |-
@@ -54,7 +54,7 @@ rules:
     description: "Classic GitHub PAT (40 chars, prefix ghp_)."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: false
+    programmatic_validation: false 
 
   - name: "github_pat_fine_grained"
     pattern: |-
@@ -63,7 +63,7 @@ rules:
     description: "GitHub fine‑grained PAT (72 chars, prefix github_pat_)."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: false
+    programmatic_validation: false 
 
   - name: "stripe_secret"
     pattern: |-
@@ -72,7 +72,7 @@ rules:
     description: "Stripe keys (live/test/restricted), 24 alphanumeric chars."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: false
+    programmatic_validation: false 
 
   - name: "aws_access_key"
     pattern: |-
@@ -81,7 +81,7 @@ rules:
     description: "AWS Access Key ID (20 chars, prefixes AKIA/ASIA)."
     multiline: false
     dot_matches_new_line: false
-    programmatic_validation: false
+    programmatic_validation: false 
 
   - name: "aws_secret_key"
     pattern: |-
@@ -160,6 +160,7 @@ rules:
     dot_matches_new_line: false
     programmatic_validation: false
 
+
   - name: "us_ssn"
     pattern: |-
       \b(\d{3})-(\d{2})-(\d{4})\b
@@ -171,9 +172,9 @@ rules:
 
   - name: "uk_nino"
     pattern: |-
-      \b[A-CEGHJ-NPR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D]\b 
+      \b(?!BG|GB|NK|KN|TN|NT|ZZ)[A-CEGHJ-NPR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D]\b
     replace_with: "[UK_NINO_REDACTED]"
-    description: "UK National Insurance Number (two letters, six digits, one letter, with optional spaces). Disallowed prefixes handled programmatically." # UPDATED DESCRIPTION
+    description: "UK National Insurance Number (two letters, six digits, one letter, with optional spaces)."
     multiline: false
     dot_matches_new_line: false
     programmatic_validation: true

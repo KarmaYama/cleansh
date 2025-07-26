@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.5] - 2025-07-26 — Phase 1: Refined Redaction, Stats Foundation & Rule Expansion
+## [0.1.5] - 2025-07-27 — Phase 1: Refined Redaction, Stats Foundation & Rule Expansion
 
 This release marks a significant leap forward for `cleansh`, introducing a **powerful new statistics mode for in-depth redaction analysis**. Alongside this flagship feature, we've implemented substantial improvements to **CLI usability, logging, and overall stability**, making `cleansh` even more robust and user-friendly.
 
