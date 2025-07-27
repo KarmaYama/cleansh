@@ -1,4 +1,3 @@
-// tests/integration_line_buffered.rs
 //! Integration tests for the --line-buffered mode of Cleansh.
 //!
 //! These tests focus on verifying the real-time, line-buffered input/output
@@ -64,6 +63,22 @@ fn run_cleansh_with_stdin(
     drop(stdin); // Close stdin to signal EOF
 
     let output = child.wait_with_output()?;
+    Ok(output)
+}
+
+// NEW Helper: To run a command with only arguments, no stdin interaction expected
+fn run_cleansh_with_args_only(
+    args: &[&str],
+) -> Result<std::process::Output, Box<dyn std::error::Error>> {
+    let exe = assert_cmd::cargo::cargo_bin("cleansh");
+    let mut cmd = StdCmd::new(exe);
+
+    cmd.args(args)
+       .stdin(Stdio::null()) // Explicitly set stdin to null as we don't expect input
+       .stdout(Stdio::piped())
+       .stderr(Stdio::piped());
+
+    let output = cmd.output()?; // Use .output() for simpler execution of short-lived processes
     Ok(output)
 }
 
@@ -232,14 +247,14 @@ fn test_line_buffered_with_multiple_writes_to_stdin() -> Result<(), Box<dyn std:
 
 #[test]
 fn test_line_buffered_incompatible_with_diff() -> Result<(), Box<dyn std::error::Error>> {
-    let output = run_cleansh_with_stdin(
-        "test",
-        None,
-        &["--diff"],
+    // Use the new helper for arg-only tests
+    let output = run_cleansh_with_args_only(
+        &["--line-buffered", "--diff"],
     )?;
 
-    assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr).contains("Error: --line-buffered is incompatible with --diff."));
+    assert!(!output.status.success(), "Command was expected to fail, but succeeded. Stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("Error: --line-buffered is incompatible with --diff."), "Expected error message not found. Stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(String::from_utf8_lossy(&output.stdout).is_empty(), "Unexpected stdout output: {}", String::from_utf8_lossy(&output.stdout));
 
     Ok(())
 }
@@ -248,15 +263,16 @@ fn test_line_buffered_incompatible_with_diff() -> Result<(), Box<dyn std::error:
 fn test_line_buffered_incompatible_with_clipboard() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "clipboard")]
     {
-        let output = run_cleansh_with_stdin(
-            "test",
-            None,
-            &["--clipboard"],
+        let output = run_cleansh_with_args_only( // Use the new helper
+            &["--line-buffered", "--clipboard"],
         )?;
 
-        assert!(!output.status.success());
-        assert!(String::from_utf8_lossy(&output.stderr).contains("Error: --line-buffered is incompatible with --clipboard."));
+        assert!(!output.status.success(), "Command was expected to fail, but succeeded. Stderr: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(String::from_utf8_lossy(&output.stderr).contains("Error: --line-buffered is incompatible with --clipboard."), "Expected error message not found. Stderr: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(String::from_utf8_lossy(&output.stdout).is_empty(), "Unexpected stdout output: {}", String::from_utf8_lossy(&output.stdout));
     }
+    // This `Ok(())` is important even if clipboard feature is not enabled,
+    // so the test passes on systems without clipboard feature.
     Ok(())
 }
 
@@ -314,7 +330,7 @@ fn test_line_buffered_input_file_flag_not_supported() -> Result<(), Box<dyn std:
 
     // *** CHANGE IS HERE ***
     // We now expect the command to *fail* due to the incompatibility check.
-    assert!(!output.status.success()); 
+    assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("Error: --line-buffered is incompatible with --input-file. Use piping for streaming input."));
     // We should *not* see any stdout from the actual redaction process
     assert!(String::from_utf8_lossy(&output.stdout).is_empty());
