@@ -9,7 +9,7 @@ targets  = [
 ]
 profiles   = ["release"]
 signatures = false
-changelog  = false
+changelog  = true
 
 [archive]
 formats = ["tar.gz", "zip"]
