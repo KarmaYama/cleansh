@@ -62,7 +62,7 @@
         Id='*'
         Name='cleansh'
         UpgradeCode='F47C98E6-B908-4CB3-A38B-0EFD5F3DE62D'
-        Manufacturer='Cleansh Technologies LLC'
+        Manufacturer='Cleansh Technologies'
         Language='1033'
         Codepage='1252'
         Version='$(var.Version)'>
@@ -70,7 +70,7 @@
         <Package Id='*'
             Keywords='Installer'
             Description='Sanitize your terminal output. One tool. One purpose.'
-            Manufacturer='Cleansh Technologies LLC'
+            Manufacturer='Cleansh Technologies'
             InstallerVersion='450'
             Languages='1033'
             Compressed='yes'
@@ -173,7 +173,7 @@
         <!--<Icon Id='ProductICO' SourceFile='wix\Product.ico'/>-->
         <!--<Property Id='ARPPRODUCTICON' Value='ProductICO' />-->
 
-        <Property Id='ARPHELPLINK' Value='https://github.com/KarmaYama/cleansh'/>
+        <Property Id='ARPHELPLINK' Value='https://cleansh.netlify.app/'/>
         
         <UI>
             <UIRef Id='WixUI_FeatureTree'/>
