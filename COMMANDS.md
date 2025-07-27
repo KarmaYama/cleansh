@@ -8,9 +8,9 @@ We'll go beyond just listing commands, exploring scenarios, use cases, and how t
 
 ## 1\. What is Cleansh?
 
-At its core, `cleansh` (pronounced "clean shell") is a high-trust, single-purpose CLI tool designed to redact sensitive data from text streams. Think of it as your digital bouncer, ensuring confidential information like IP addresses, email addresses, API keys, and even personal identifiers never accidentally leak when you're sharing logs, debugging output, or collaborating with others.
+At its core, `cleansh` (pronounced "clean shell") is a **high-trust, single-purpose CLI tool** designed to redact sensitive data from text streams. Think of it as your digital bouncer, ensuring confidential information like **IP addresses, email addresses, API keys, and even personal identifiers** never accidentally leak when you're sharing logs, debugging output, or collaborating with others.
 
-It operates locally, requires zero configuration to get started with its robust default rules, and offers extensive flexibility for custom needs. Whether you pipe output directly from other commands or feed it files, `cleansh` is built for secure, efficient, and precise data sanitization.
+It operates **locally**, requires zero configuration to get started with its robust default rules, and offers extensive flexibility for custom needs. Whether you pipe output directly from other commands or feed it files, `cleansh` is built for secure, efficient, and precise data sanitization.
 
 -----
 
@@ -57,8 +57,8 @@ The most common way to use `cleansh` is by piping the output of another command 
 
 **Scenario:** You're debugging an application, and its logs contain an email address and an internal IP. You want to share these logs with a colleague but without revealing the sensitive information.
 
-```bash
-echo "User login attempt from test@example.com at 192.168.1.1." | cleansh
+```powershell
+"User login attempt from test@example.com at 192.168.1.1." | cleansh
 ```
 
 **Output:**
@@ -75,7 +75,7 @@ Instead of piping, you can also provide `cleansh` with a file path.
 
 **Scenario:** You have an existing log file, `application.log`, that might contain sensitive data, and you want to create a sanitized version.
 
-```bash
+```powershell
 cleansh ./application.log -o sanitized_application.log
 ```
 
@@ -86,14 +86,14 @@ cleansh ./application.log -o sanitized_application.log
 
 **Why this is useful:** Ideal for batch processing or when you need a clean version of a persistent file without modifying the original.
 
-### Revealing Changes with `  --diff `
+### Revealing Changes with `--diff`
 
 Sometimes you want to see exactly what `cleansh` redacted. The `--diff` (or `-d`) flag provides a colored, line-by-line comparison of the original and sanitized output.
 
 **Scenario:** You've run `cleansh` on some output, and you want to visually confirm which parts were identified and changed.
 
-```bash
-echo "My Stripe key is sk_test_xyz123abc456 and my email is user@domain.com." | cleansh -d
+```powershell
+"My Stripe key is sk_test_xyz123abc456 and my email is user@domain.com." | cleansh -d
 ```
 
 **Output (example with color):**
@@ -114,11 +114,13 @@ For quick sharing, `cleansh` can directly copy the sanitized output to your syst
 
 **Scenario:** You've just run a command that spits out some sensitive configuration, and you want to paste a clean version directly into a chat or document.
 
-```bash
-git config --list | cleansh -c
+```powershell
+"Sensitive log entry: user_id=12345, token=ya29.abcdefgHIJKLMnOp_qrstUVWXyZ-1234567890" | cleansh --clipboard
 ```
 
-**Explanation:** The sanitized output of `git config --list` will be copied to your clipboard, ready for pasting.
+**Expected Clipboard Content:**
+
+`Sensitive log entry: user_id=12345, token=[GOOGLE_OAUTH_TOKEN_REDACTED]`
 
 **Why this is useful:** Streamlines your workflow by eliminating the need to redirect to a temporary file or manually copy from the terminal.
 
@@ -133,11 +135,15 @@ By default, `cleansh` provides a summary of all redacted items. In some automate
 
 **Scenario:** You're integrating `cleansh` into a script where only the sanitized text is needed, and any extra output to `stderr` would interfere.
 
-```bash
-myscript_with_secrets.sh 2>&1 | cleansh --no-redaction-summary | grep "IMPORTANT"
+```powershell
+"My email is user@example.org" | cleansh --no-redaction-summary
 ```
 
-**Explanation:** The `grep` command will only receive the sanitized output, free from the redaction summary.
+**Output (to stdout):**
+
+```
+My email is [EMAIL_REDACTED]
+```
 
 **Why this is useful:** Ensures clean, predictable output for further processing by other tools or scripts.
 
@@ -182,8 +188,8 @@ You can define your own redaction rules in a YAML file and tell `cleansh` to use
 
 2.  **Use it with `cleansh`:**
 
-    ```bash
-    echo "Employee ID is EMP-12345, email is test@company.com." | cleansh --config ./my_custom_rules.yaml
+    ```powershell
+    "Employee ID is EMP-12345, email is test@company.com." | cleansh --config ./my_custom_rules.yaml
     ```
 
     **Output:**
@@ -204,21 +210,23 @@ You have granular control over which rules are active using `--enable-rules` and
 **Scenario 1: Activating an `opt_in` rule.**
 Some rules, like `aws_secret_key` or generic hex secrets, are `opt_in` by default because they have a higher false positive risk. You know your data structure, and you want to specifically look for AWS Secret Keys.
 
-```bash
-echo "My AWS secret key is aB1c2D3e4F5g6H7i8J9k0L1m2N3o4P5q6R7s8T9u." | cleansh --enable-rules aws_secret_key
+```powershell
+"My AWS Secret Key is f8N/pD+gA5T7j2K1L0mXq9Y4c3b6a8s0d2f1e5i7h9j0k4l3m2n1o6p5q4r3s2t1u9v8w7x6y5z4a3b2c1d0e9f8g7h6i5j4k3l2m1n0o. Also a regular email@example.com." | cleansh --enable-rules aws_secret_key
 ```
+
+**Output:** Both the AWS key (`[AWS_SECRET_KEY_REDACTED]`) and email (`[EMAIL_REDACTED]`) are redacted. (Email is a default rule).
 
 **Scenario 2: Disabling a rule that causes false positives.**
 If the `ipv4_address` rule is causing false positives by redacting values that *look* like IPs but aren't (e.g., version numbers or identifiers), you might want to disable it entirely for certain operations.
 
-```bash
-echo "Firmware version 1.2.3.4, system IP 192.168.1.100." | cleansh --disable-rules ipv4_address
+```powershell
+"My email is test@example.com but I don't want to redact it." | cleansh --disable-rules email
 ```
 
 **Output:**
 
 ```
-Firmware version 1.2.3.4, system IP 192.168.1.100.
+My email is test@example.com but I don't want to redact it.
 ```
 
 **Why this is useful:** This precise control helps `cleansh` adapt to your specific data environment, minimizing unintended redactions while ensuring sensitive data is still caught by other active rules.
@@ -232,9 +240,11 @@ The `--rules <name>` flag allows you to select a predefined set of rules.
 
 **Scenario:** You're performing a deep security audit and want `cleansh` to be as aggressive as possible in finding potential secrets, including generic hex strings that might be secret keys.
 
-```bash
-echo "My SHA256 hash: 01ba4719c80b6fe911b091a7051e4881ad0cfb939f3d906109968a867776263a" | cleansh --rules strict --enable-rules generic_hex_secret_64
+```powershell
+"My secret token is ABCDEF1234567890abcdef1234567890 and my email is test@example.com." | cleansh --enable-rules generic_token --disable-rules email
 ```
+
+**Output:** The generic token is redacted, but the email is not.
 
 **Why this is useful:** Provides a quick way to switch between a balanced, low-false-positive rule set (`default`) and a highly aggressive, comprehensive rule set (`strict`).
 
@@ -283,8 +293,8 @@ rules:
 
 Then use it:
 
-```bash
-echo "My internal system uses APIKEY_aBcDeFgHiJkLmNoPqRsT. Access granted." | cleansh --config my_api_keys.yaml
+```powershell
+"My internal system uses APIKEY_aBcDeFgHiJkLmNoPqRsT. Access granted." | cleansh --config my_api_keys.yaml
 ```
 
 -----
@@ -297,7 +307,7 @@ echo "My internal system uses APIKEY_aBcDeFgHiJkLmNoPqRsT. Access granted." | cl
 
 **Scenario:** You need to sanitize Docker logs, save the cleaned version to a file, and also see a diff of what changed, while only looking for specific `github_pat` tokens.
 
-```bash
+```powershell
 docker logs my-app-container | cleansh -o sanitized_docker.log -d --enable-rules github_pat
 ```
 
@@ -316,14 +326,16 @@ docker logs my-app-container | cleansh -o sanitized_docker.log -d --enable-rules
   * **`--debug`:** Sets the log level to `debug` for `cleansh`'s internal operations. This is highly verbose and will print detailed information about rule compilation, matching, and decisions to `stderr`.
   * **`--no-debug`:** Explicitly disables debug logging (equivalent to `RUST_LOG=warn`).
   * **`--quiet`:** Sets the log level to `error`, suppressing warnings and info messages.
-  * **`CLEANSH_ALLOW_DEBUG_PII=1`:** (Environment Variable) **Use with extreme caution\!** If set, `cleansh` will log the *original content* of matched sensitive strings during debug mode. This is strictly for development and testing in isolated, secure environments and should **never** be used in production or on real sensitive data.
+  * **`CLEANSH_ALLOW_DEBUG_PII=1`:** (Environment Variable) **Use with extreme caution\!** If set, `cleansh` will log the *original content* of matched sensitive strings in debug mode. This is strictly for development and testing in isolated, secure environments and should **never** be used in production or on real sensitive data.
 
 **Scenario:** Your new custom rule isn't matching as expected. You want to see `cleansh`'s internal processing.
 
-```bash
-RUST_LOG=debug cleansh --config my_custom_rules.yaml < your_input.txt
-# OR
-cleansh --debug --config my_custom_rules.yaml < your_input.txt
+```powershell
+$env:CLEANSH_ALLOW_DEBUG_PII="true"
+$env:RUST_LOG="debug"
+"My email is test@example.com." | cleansh > $null
+Remove-Item Env:\CLEANSH_ALLOW_DEBUG_PII -ErrorAction SilentlyContinue
+Remove-Item Env:\RUST_LOG -ErrorAction SilentlyContinue
 ```
 
 **Why this is useful:** Provides deep insight into how `cleansh` is interpreting your rules and processing content, helping you pinpoint issues with regex patterns or rule configurations.
@@ -340,17 +352,17 @@ The most straightforward use of `--stats-only` is to get a human-readable summar
 
 **Scenario:** You want to see what sensitive data `cleansh` would find in a log file without actually changing the file.
 
-```bash
-cleansh --stats-only ./audit_log.txt
+```powershell
+"Found email: test@example.com, IP: 192.168.1.1, and an SSN: 987-65-4321." | cleansh --stats-only
 ```
 
 **Output (example to `stderr`):**
 
 ```
 Redaction Statistics Summary:
-  EmailAddress: 2 matches
-  IPv4Address: 5 matches
-  JWTToken: 1 match
+  EmailAddress: 1 match
+  IPv4Address: 1 match
+  UsSsn: 1 match
 ```
 
 **Why this is useful:** Provides a quick overview of sensitive data types present, helping you prioritize remediation efforts.
@@ -364,20 +376,23 @@ For machine-readable output, especially for integration with other tools or dash
 
 **Scenario 1: Saving statistics to a report file.**
 
-```bash
-my_pipeline_output | cleansh --stats-only --stats-json-file pipeline_report.json
+```powershell
+"Email: a@b.com, IP: 1.2.3.4, SSN: 111-22-3333, Key: ghp_test_pat_123" | cleansh --stats-only --stats-json-file "stats.json" --enable-rules github_pat
+Get-Content "stats.json"
 ```
 
 **Scenario 2: Piping statistics to another tool (e.g., `jq`).**
 
-```bash
-docker logs my-app-with-secrets | cleansh --stats-only --export-json-to-stdout | jq .redaction_summary.EmailAddress.count
+```powershell
+"Email: x@y.com, IP: 5.6.7.8, SSN: 222-33-4444" | cleansh --stats-only --export-json-to-stdout | ConvertFrom-Json
 ```
 
-**Output (example to `stdout` from `jq`):**
+**Output (example to `stdout` from `ConvertFrom-Json`):**
 
 ```json
-2
+# A PowerShell object representation, showing something like:
+#
+# Redaction_summary : @{EmailAddress=@{count=1}; IPv4Address=@{count=1}; UsSsn=@{count=1}}
 ```
 
 **Why this is useful:** Enables programmatic analysis and integration of `cleansh`'s detection capabilities into larger security or data governance workflows.
@@ -388,31 +403,18 @@ When generating JSON statistics, you might want to include samples of the actual
 
 **Scenario:** You need to see a few examples of detected emails and IP addresses in your JSON report.
 
-```bash
-echo "a@b.com, c@d.com, e@f.com, 1.1.1.1, 2.2.2.2, 3.3.3.3" | cleansh --stats-only --export-json-to-stdout --sample-matches 2
+```powershell
+"Email: a@b.com, b@c.com. IP: 1.1.1.1, 2.2.2.2, 3.3.3.3. SSN: 123-45-6789, 987-65-4321." | cleansh --stats-only --export-json-to-stdout --sample-matches 2
 ```
 
 **Output (example simplified):**
 
 ```json
-{
-  "redaction_summary": {
-    "EmailAddress": {
-      "count": 3,
-      "samples": [
-        "a@b.com",
-        "c@d.com"
-      ]
-    },
-    "IPv4Address": {
-      "count": 3,
-      "samples": [
-        "1.1.1.1",
-        "2.2.2.2"
-      ]
-    }
-  }
-}
+# A PowerShell object representation, showing something like:
+#
+# Redaction_summary : @{EmailAddress=@{count=3; samples=System.Object[]};
+#                     IPv4Address=@{count=3; samples=System.Object[]};
+#                     UsSsn=@{count=2; samples=System.Object[]}}
 ```
 
 **Why this is useful:** Provides concrete examples for validation or further investigation without overwhelming the report with excessive data.
@@ -421,16 +423,28 @@ echo "a@b.com, c@d.com, e@f.com, 1.1.1.1, 2.2.2.2, 3.3.3.3" | cleansh --stats-on
 
 This is a critical feature for CI/CD pipelines or automated security gates. If the total number of detected secrets exceeds a specified threshold, `cleansh` will exit with a non-zero status code, signaling a failure.
 
-**Scenario:** Your build pipeline should fail if more than 5 secrets are detected in the build logs.
+**Scenario:** Your build pipeline should fail if more than 2 secrets are detected in the build logs.
 
-```bash
-./build_and_test.sh 2>&1 | cleansh --stats-only --fail-over-threshold 5
+```powershell
+Set-Content -Path "test_code.txt" -Value @'
+// app_config.js
+const API_KEY = "AIza_Qk9xZtYp8sFvCr3uHbM2nG4aXwL1jD7eK_"; # google_api_key
+const ADMIN_EMAIL = "admin@internal.corp"; # email
+const SECRET_HEX = "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"; # generic_hex_secret_64
+'@
+try {
+    Get-Content "test_code.txt" | cleansh --stats-only --fail-over-threshold 2 --enable-rules generic_hex_secret_64
+} catch {
+    Write-Host "Command failed as expected. Error: $($_.Exception.Message)"
+}
+$LASTEXITCODE
+Remove-Item "test_code.txt" -ErrorAction SilentlyContinue
 ```
 
 **Explanation:**
 
-  * If total secrets found are 5 or less, `cleansh` exits with code 0 (success).
-  * If total secrets found are 6 or more, `cleansh` prints an error message to `stderr` and exits with code 1 (failure), causing the pipeline to fail.
+  * If total secrets found are 2 or less, `cleansh` exits with code 0 (success).
+  * If total secrets found are 3 or more, `cleansh` prints an error message to `stderr` and exits with code 1 (failure), causing the pipeline to fail.
 
 **Why this is useful:** Enforces a "security by design" principle by automatically flagging builds or deployments that might introduce too much sensitive data.
 
@@ -440,8 +454,8 @@ This is a critical feature for CI/CD pipelines or automated security gates. If t
 
 **Scenario:** Running `cleansh` in a CI/CD pipeline where interactive prompts are not desired.
 
-```bash
-cleansh --stats-only --cli-disable-donation-prompts < input_file
+```powershell
+"Sensitive data here." | cleansh --stats-only --cli-disable-donation-prompts
 ```
 
 **Why this is useful:** Ensures uninterrupted execution in non-interactive environments.
@@ -459,7 +473,7 @@ cleansh --stats-only --cli-disable-donation-prompts < input_file
 
 **Example:** Seeing verbose debug output.
 
-```bash
+```powershell
 echo "Hello World" | cleansh --debug
 ```
 
@@ -483,18 +497,107 @@ There is an environment variable, `CLEANSH_ALLOW_DEBUG_PII`, which, if set to an
 
 -----
 
-## 10\. The Road Ahead: Cleansh 1.0.0
+## 10\. Docker & Log Sanitization Scenarios
 
-While `cleansh` `v0.1.5` offers powerful capabilities, we're actively working towards a transformative `1.0.0` release. This major version aims to introduce **adaptive intelligence** and **user-trainable features**, making `cleansh` even more precise and empowering.
+This is where `cleansh` shines for operational security. We'll simulate a scenario where a container generates sensitive logs, and `cleansh` intercepts and sanitizes them.
 
-Planned key features include:
+### Prerequisites:
 
-  * **Pro Feature: Programmed Memory / Adaptive Redaction:** `cleansh` will learn from explicit user feedback (e.g., marking false positives or negatives) to reduce noise and increase accuracy tailored to your specific environment.
-  * **Pro Feature: Simple Interactive Mode:** An interactive capability to pause `cleansh` when a potential secret is detected, prompting you for a decision (redact, ignore once, always ignore this pattern). This will be crucial for training `cleansh`'s memory.
-  * **New CLI Flags for Adaptive Control:** Flags like `--interactive` and commands to manage learned patterns (`--forget-learned-pattern`, `--list-learned-patterns`).
-  * **Dedicated User Feedback Data Storage:** A secure system to persistently store learned exceptions.
+  * Docker Desktop installed and running on Windows.
 
-This evolution, coupled with a planned shift to the **PolyForm Noncommercial License 1.0.0** for `v1.0.0` and beyond (previous versions remain MIT licensed), is designed to ensure `cleansh`'s sustainable development and continued innovation.
+### Steps:
+
+#### Prepare a Docker Container for Logging:
+
+1.  **Create a simple `Dockerfile` and a script to generate logs.**
+
+      * `Dockerfile` (e.g., `.\docker-log-app\Dockerfile`):
+
+        ```dockerfile
+        FROM alpine/git
+        RUN apk add --no-cache bash
+        COPY generate_logs.sh /generate_logs.sh
+        RUN chmod +x /generate_logs.sh
+        CMD ["/generate_logs.sh"]
+        ```
+
+      * `generate_logs.sh` (e.g., `.\docker-log-app\generate_logs.sh`):
+
+        ```bash
+        #!/bin/bash
+        echo "Starting log generation..."
+        i=0
+        while true; do
+            echo "LOG ENTRY $i: User login from 192.168.1.10. Session token: ya29.abcdefgHIJKLMnOp_qrstUVWXyZ-1234567890. Customer email: customer$i@example.com."
+            echo "LOG ENTRY $i: Attempted SSH with key: -----BEGIN OPENSSH PRIVATE KEY-----
+            b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAAZHNzaC1yc2EAAAADAQABAAABAQCBf...
+            -----END OPENSSH PRIVATE KEY-----"
+            echo "LOG ENTRY $i: Credit Card data: 4111-2222-3333-4444. SSN: 123-45-6789. Also a hex secret: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6."
+            sleep 1
+            i=$((i+1))
+        done
+        ```
+
+2.  **Build the Docker image:**
+
+    ```powershell
+    mkdir .\docker-log-app # Create directory if it doesn't exist
+    # (Copy Dockerfile and generate_logs.sh into .\docker-log-app manually or via script)
+    cd ".\docker-log-app\"
+    docker build -t cleansh-log-generator .
+    cd .. # Go back to your cleansh directory
+    ```
+
+3.  **Run the Docker Container (Detached):**
+
+    ```powershell
+    docker run -d --name cleansh-test-logger cleansh-log-generator
+    Start-Sleep -Seconds 5 # Give it some time to generate initial logs
+    ```
+
+### 10.1. Sanitizing Past Docker Logs to a File (Batch):
+
+  * **Description:** Dumps all historical logs from a container, sanitizes them, and saves to a file. This is generally the **recommended and most stable approach** for persistent logging. When satisfied with the output, you can stop the Docker container, and `cleansh` will have already redacted the output to the specified file or the terminal if no output file was given.
+
+  * **Command:**
+
+    ```powershell
+    docker logs cleansh-test-logger | cleansh --enable-rules ssh_private_key --enable-rules generic_hex_secret_32 --output "sanitized_docker_logs.log"
+    Get-Content "sanitized_docker_logs.log" | Select-String "REDACTED"
+    ```
+
+  * **Expected Output:** `sanitized_docker_logs.log` containing only redacted versions of sensitive data. `Select-String` will show lines with redactions.
+
+  * **Verification:** Confirm the log file contains redacted entries as expected.
+
+### 10.2. Real-time Sanitization of Docker Logs (Experimental on Windows PowerShell):
+
+  * **Description:** Pipes the live logs from the Docker container through `cleansh`, redacting sensitive information as it appears. This is the "real-time" aspect.
+
+  * **Important Note:** This feature can be **unstable on Windows PowerShell** due to how PowerShell handles live pipe termination. It may work more reliably on Linux/WSL environments.
+
+  * **Command:**
+
+    ```powershell
+    docker logs -f cleansh-test-logger | cleansh --enable-rules ssh_private_key --enable-rules generic_hex_secret_32
+    # On Windows PowerShell, press Ctrl+Z, then Enter, to stop the process and return to the prompt.
+    # On Linux/WSL, you would typically use Ctrl+C.
+    ```
+
+  * **Expected Output:** Logs streaming with `[IPV4_REDACTED]`, `[GOOGLE_OAUTH_TOKEN_REDACTED]`, `[EMAIL_REDACTED]`, `[SSH_PRIVATE_KEY_REDACTED]`, `[CREDIT_CARD_NUMBER_REDACTED]`, `[US_SSN_REDACTED]`, and `[HEX_SECRET_32_REDACTED]` in place of the original sensitive data.
+
+  * **Verification:** Observe the streaming output. Confirm sensitive data is redacted live.
+
+### Clean Up Docker Resources:
+
+  * **Command:**
+
+    ```powershell
+    docker stop cleansh-test-logger
+    docker rm cleansh-test-logger
+    docker rmi cleansh-log-generator
+    Remove-Item ".\docker-log-app" -Recurse -Force -ErrorAction SilentlyContinue # Clean up docker app directory
+    ```
 
 -----
 
