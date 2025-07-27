@@ -53,10 +53,18 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
     A new command-line flag to **suppress all informational messages**, displaying only warnings and errors. This is ideal for scripting, automated workflows, and producing cleaner, focused output.
 
 * **Disable Donation Prompts (`--disable-donation-prompts`):**
-    Added an option for users to **disable prompts for donations**, providing a more streamlined and uninterrupted experience for those who prefer not to see them.
+    Added an option for users to **disable prompts for donations**, providing a more streamlined and uninterrupted experience for those who prefer not to see them. They are only shown once and disabled for 30 days after 5 uses of the stats feature
 
 * **Configurable Rule Sets (`--rules <NAME>`):**
     Introduced the ability to **specify different predefined rule configurations** (e.g., `'default'`, `'strict'`) if such sets are defined within the configuration system. This provides greater flexibility in applying specific redaction policies tailored to different needs.
+
+* **Real-time Monitoring Mode (`--line-buffered`)** – **Experimental / Platform‑Dependent**  
+  Introduced a new operating mode for **real-time, line‑by‑line processing of `stdin` input**, immediately outputting sanitized lines as they are received.  
+  **Note:**  
+  - Best‑effort behavior; actual “live” flushing depends on the upstream stream’s buffering (e.g., `docker logs -f` on Windows/PowerShell may buffer until EOF).  
+  - Expected to work reliably on Unix shells (`bash`, `zsh`, WSL) and when tailing files (`tail -F`).  
+  - Incompatible with `--diff`, `--clipboard`, and `--input-file`.  
+  - Use `--no-redaction-summary` to suppress the end‑of‑stream summary when streaming indefinitely.  
 
 * **ANSI Escape Stripping Layer:**
     * All input content is now **sanitized for ANSI escape codes** prior to applying redaction rules, to eliminate evasion via terminal formatting.
@@ -68,6 +76,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 
 * **Extensive Integration Tests**:
     * New integration tests validate ANSI-stripping effectiveness, clipboard output, rule opt-in and opt-out behaviors, redaction summary toggling, and edge cases like overlapping rules and invalid formats.
+    * **Dedicated integration tests for `--line-buffered` mode**, verifying line-by-line I/O, immediate flushing, and correct behavior with various input patterns and incompatible flags.
 
 ### Changed
 
@@ -80,7 +89,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
     * Now respects `opt_in: true` and filters rules at runtime using `--enable-rules` and `--disable-rules`.
     * Unknown `--enable-rule` names are ignored with a debug warning, ensuring robust fail-safe behavior.
 
-* **Unified Input Handling:** We've **streamlined the input mechanism** for clearer argument parsing. Content is now read exclusively from a specified file (`--input-file`) or standard input (stdin), removing ambiguity and making `cleansh`'s behavior more predictable.
+* **Unified Input Handling:** We've **streamlined the input mechanism** for clearer argument parsing. Content is now read exclusively from a specified file (`--input-file`) or standard input (stdin), removing ambiguity and making `cleansh`'s behavior more predictable. The `--line-buffered` mode is specifically for `stdin` streaming.
 
 * **Filesystem Path Rules**
     * **Windows** path redaction now uses clear anchors and broader detection of drive letters.
@@ -147,6 +156,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 | `--export-json-to-stdout` | Dump stats JSON to stdout |
 | `--sample-matches <N>` | Show N example matches per rule |
 | `--fail-over <X>` | Exit non-zero if matches > X |
+| `--line-buffered` | **NEW: Enable real-time, line-by-line processing from stdin** |
 | `--enable-rules`, `--disable-rules` | Selectively enable or disable rules |
 | `--quiet` / `-q` | Suppress informational logs |
 | `--no-redaction-summary` | Suppress summary footer |

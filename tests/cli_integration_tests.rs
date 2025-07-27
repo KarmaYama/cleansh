@@ -37,9 +37,11 @@ fn strip_ansi(s: &str) -> String {
 #[test]
 fn test_basic_sanitization() -> Result<()> {
     let input = "My email is test@example.com and my IP is 192.168.1.1.";
+    // FIX APPLIED HERE: Added '\n' to the end of the expected_stdout string.
     let expected_stdout = "My email is [EMAIL_REDACTED] and my IP is [IPV4_REDACTED].\n";
     let expected_stderr_contains_substrings = vec![
-        "Reading input from stdin...".to_string(),
+        // MODIFIED: Updated expected stderr message to match actual log output
+        "Reading input from stdin (batch mode).".to_string(),
         "Writing sanitized content to stdout.".to_string(),
         "--- Redaction Summary ---".to_string(),
         "email (1 occurrences)".to_string(),
@@ -111,7 +113,8 @@ fn test_run_cleansh_clipboard_copy_to_file() -> Result<()> {
     let input = "My email is test@example.com";
     let expected_stdout = "My email is [EMAIL_REDACTED]\n";
     let expected_stderr_contains = vec![
-        "Reading input from stdin...".to_string(),
+        // MODIFIED: Updated expected stderr message to match actual log output
+        "Reading input from stdin (batch mode).".to_string(),
         "Writing sanitized content to file:".to_string(), // This is an INFO level log, matching the actual
         "Sanitized content copied to clipboard successfully.".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Starting cleansh operation.".to_string(),
@@ -191,7 +194,8 @@ fn test_clipboard_output_with_jwt() -> Result<()> {
     let input = "Secret JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
     let expected_stdout = "Secret JWT: [JWT_REDACTED]\n";
     let expected_stderr_contains = vec![
-        "Reading input from stdin...".to_string(),
+        // MODIFIED: Updated expected stderr message to match actual log output
+        "Reading input from stdin (batch mode).".to_string(),
         "Writing sanitized content to stdout.".to_string(),
         "Sanitized content copied to clipboard successfully.".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Starting cleansh operation.".to_string(),
@@ -240,7 +244,8 @@ fn test_diff_view() -> Result<()> {
         "+Old IP: [IPV4_REDACTED]. New IP: [IPV4_REDACTED].".to_string(),
     ];
     let expected_stderr_contains = vec![
-        "Reading input from stdin...".to_string(),
+        // MODIFIED: Updated expected stderr message to match actual log output
+        "Reading input from stdin (batch mode).".to_string(),
         "Writing sanitized content to stdout.".to_string(),
         "Generating and displaying diff.".to_string(),
         "--- Diff View ---".to_string(),
@@ -298,7 +303,8 @@ fn test_output_to_file() -> Result<()> {
     let input = "This is a test with sensitive info: user@domain.com";
     let expected_file_content = "This is a test with sensitive info: [EMAIL_REDACTED]\n";
     let expected_stderr_contains = vec![
-        "Reading input from stdin...".to_string(),
+        // MODIFIED: Updated expected stderr message to match actual log output
+        "Reading input from stdin (batch mode).".to_string(),
         "--- Redaction Summary ---".to_string(),
         "email (1 occurrences)".to_string(),
         "[DEBUG cleansh::commands::cleansh] [cleansh.rs] Received enable_rules: []".to_string(),
@@ -372,16 +378,19 @@ fn test_custom_config_file() -> Result<()> {
     let expected_stdout = "My email is user@example.com and another is [ORG_EMAIL_REDACTED]. My secret is [CUSTOM_SECRET_REDACTED].\n";
 
     let expected_stderr_contains: Vec<String> = vec![
-        "Reading input from stdin...".to_string(),
+        // MODIFIED: Updated expected stderr message to match actual log output
+        "Reading input from stdin (batch mode).".to_string(),
         "Writing sanitized content to stdout.".to_string(),
         // Assert the presence of the Redaction Summary and its specific contents
         "--- Redaction Summary ---".to_string(),
         "custom_secret (1 occurrences)".to_string(),
-        "Original Values:\n        - MYSECRET-1234".to_string(),
-        "Sanitized Values:\n        - [CUSTOM_SECRET_REDACTED]".to_string(),
+        // FIX APPLIED HERE: Corrected the indentation to match the actual output.
+        "    Original Values:\n        - MYSECRET-1234".to_string(),
+        "    Sanitized Values:\n        - [CUSTOM_SECRET_REDACTED]".to_string(),
         "email (1 occurrences)".to_string(),
-        "Original Values:\n        - user@test.org".to_string(),
-        "Sanitized Values:\n        - [ORG_EMAIL_REDACTED]".to_string(),
+        // FIX APPLIED HERE: Corrected the indentation to match the actual output.
+        "    Original Values:\n        - user@test.org".to_string(),
+        "    Sanitized Values:\n        - [ORG_EMAIL_REDACTED]".to_string(),
         // Assert on specific log messages for custom config loading and rule merging
         format!("[INFO cleansh::commands::cleansh] Loading custom rules from: {}", path),
         format!("[DEBUG cleansh::commands::cleansh] [cleansh.rs] Attempting to load custom rules from: {}", path),

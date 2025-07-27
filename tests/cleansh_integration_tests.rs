@@ -86,6 +86,7 @@ fn test_run_cleansh_basic_sanitization() -> Result<()> {
         &get_default_theme_map(),
         vec![], // enable_rules
         vec![], // disable_rules
+        None, // ADDED: input_file_path - no specific input file path for this test
     )?;
 
     let output_from_file = std::fs::read_to_string(&output_file_path)?;
@@ -148,6 +149,7 @@ fn test_run_cleansh_no_redaction_summary() -> Result<()> {
         &get_default_theme_map(),
         vec![],
         vec![],
+        None, // ADDED: input_file_path
     )?;
 
     let output = std::fs::read_to_string(&output_file_path)?;
@@ -203,6 +205,7 @@ fn test_run_cleansh_clipboard_copy() -> Result<()> {
         &get_default_theme_map(),
         vec![],
         vec![],
+        None, // ADDED: input_file_path
     )?;
 
     let mut clipboard = arboard::Clipboard::new().context("Failed to get clipboard")?;
@@ -253,6 +256,7 @@ fn test_run_cleansh_diff_output() -> Result<()> {
         &get_default_theme_map(),
         vec![],
         vec![],
+        None, // ADDED: input_file_path
     )?;
 
     let output = std::fs::read_to_string(&output_file_path)?;

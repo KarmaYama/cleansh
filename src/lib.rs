@@ -1,22 +1,21 @@
+// src/lib.rs
 // Main library entry point for the cleansh application.
 // This module coordinates the various components and commands.
 // It handles CLI parsing, logging setup, and dispatches to the appropriate command based on user input.
 // It also manages the application state, including usage statistics and donation prompts.
-// src/lib.rs
 // license: Polyform Noncommercial License 1.0.0
 
 
 #![doc = include_str!("../README.md")]
 
 use anyhow::Context;
-use std::io::Read;
+use std::io::{self, Read, Write, BufRead}; // Added Write and BufRead for flushing and read_line
 use std::path::PathBuf;
 use std::collections::HashMap;
-use clap::{Parser, ArgAction, Subcommand}; // Import Subcommand
+use clap::{Parser, ArgAction, Subcommand};
 use anyhow::Result;
 use std::env;
 use std::fs;
-use std::io;
 use log::{info, LevelFilter};
 use dotenvy;
 
@@ -94,6 +93,11 @@ pub struct Cli {
     // ADDED: General rules flag for specifying rule config (e.g., 'default')
     #[arg(long, value_name = "RULES_CONFIG", help = "Specify which rules configuration to use (e.g., 'default', 'strict').")]
     pub rules: Option<String>,
+
+    // --- NEW: Add --line-buffered flag ---
+    #[arg(long, action = ArgAction::SetTrue, help = "Enable real-time, line-buffered output. Incompatible with --diff and --clipboard.")]
+    pub line_buffered: bool,
+    // --- END NEW FLAG ---
 }
 
 // Define subcommands
@@ -170,6 +174,36 @@ pub fn run(cli: Cli) -> Result<()> {
     let effective_clipboard = cli.clipboard && !cli.disable_clipboard;
     let effective_diff = cli.diff && !cli.disable_diff;
 
+    // --- NEW: Check for incompatible flags with --line-buffered ---
+    if cli.line_buffered {
+        if effective_diff {
+            let _ = ui::output_format::print_error_message(
+                &mut io::stderr(),
+                "Error: --line-buffered is incompatible with --diff.",
+                &ui::theme::ThemeStyle::default_theme_map(),
+            );
+            std::process::exit(1);
+        }
+        if effective_clipboard {
+            let _ = ui::output_format::print_error_message(
+                &mut io::stderr(),
+                "Error: --line-buffered is incompatible with --clipboard.",
+                &ui::theme::ThemeStyle::default_theme_map(),
+            );
+            std::process::exit(1);
+        }
+        // ADDED: Check for --line-buffered and --input-file incompatibility
+        if cli.input_file_flag.is_some() {
+            let _ = ui::output_format::print_error_message(
+                &mut io::stderr(),
+                "Error: --line-buffered is incompatible with --input-file. Use piping for streaming input.",
+                &ui::theme::ThemeStyle::default_theme_map(),
+            );
+            std::process::exit(1);
+        }
+    }
+    // --- END NEW CHECK ---
+
     // Theme map loading and error handling
     let theme_map: HashMap<ui::theme::ThemeEntry, ui::theme::ThemeStyle> =
         if let Some(theme_path_arg) = cli.theme.as_ref() {
@@ -189,34 +223,33 @@ pub fn run(cli: Cli) -> Result<()> {
             ui::theme::ThemeStyle::default_theme_map()
         };
 
-    // Read input
-    let mut input_content = String::new();
-    let input_path = cli.input_file_flag;
-    if let Some(path) = input_path.as_ref() {
-        if !cli.quiet {
-            let _ = ui::output_format::print_info_message( // Wrapped with `let _ =`
-                &mut io::stderr(),
-                &format!("Reading input from file: {}", path.display()),
-                &theme_map,
-            );
-        }
-        input_content = fs::read_to_string(path)
-            .with_context(|| format!("Failed to read input from {}", path.display()))?;
-    } else {
-        if !cli.quiet {
-            let _ = ui::output_format::print_info_message( // Wrapped with `let _ =`
-                &mut io::stderr(),
-                "Reading input from stdin...",
-                &theme_map,
-            );
-        }
-        io::stdin().read_to_string(&mut input_content)
-            .context("Failed to read from stdin")?;
-    }
-
-    // NEW: Central dispatch based on CLI flags for the default command
+    // --- NEW: Conditional input reading logic ---
     if cli.stats_only {
-        // Delegate to the new `stats` command
+        // Stats-only mode still needs to read full input for analysis
+        let mut input_content = String::new();
+        let input_path = cli.input_file_flag; // Use cli.input_file_flag for consistency
+        if let Some(path) = input_path.as_ref() {
+            if !cli.quiet {
+                let _ = ui::output_format::print_info_message(
+                    &mut io::stderr(),
+                    &format!("Reading input from file: {}", path.display()),
+                    &theme_map,
+                );
+            }
+            input_content = fs::read_to_string(path)
+                .with_context(|| format!("Failed to read input from {}", path.display()))?;
+        } else {
+            if !cli.quiet {
+                let _ = ui::output_format::print_info_message(
+                    &mut io::stderr(),
+                    "Reading input from stdin for stats analysis...",
+                    &theme_map,
+                );
+            }
+            io::stdin().read_to_string(&mut input_content)
+                .context("Failed to read from stdin")?;
+        }
+
         commands::stats::run_stats_command(
             &input_content,
             cli.config.clone(),
@@ -230,7 +263,117 @@ pub fn run(cli: Cli) -> Result<()> {
             cli.fail_over,
             cli.disable_donation_prompts,
         )?;
+    } else if cli.line_buffered && cli.input_file_flag.is_none() { // This branch is now only for stdin line-buffered
+        // If --out was given, open that file for writing; otherwise write to stdout.
+        let mut writer: Box<dyn Write> = if let Some(path) = &cli.out {
+            // Warn even in quiet mode
+            let _ = ui::output_format::print_warn_message(
+                &mut io::stderr(),
+                "Warning: --line-buffered is intended for real-time console output. \
+                 Outputting to a file (--out) will still buffer by line, \
+                 but real-time benefits might be less apparent.",
+                &ui::theme::ThemeStyle::default_theme_map(),
+            );
+            Box::new(std::fs::File::create(path)?)
+        } else {
+            if !cli.quiet {
+                let _ = ui::output_format::print_info_message(
+                    &mut io::stderr(),
+                    "Reading input from stdin in real-time, line-buffered mode...",
+                    &theme_map,
+                );
+            }
+            Box::new(io::stdout().lock())
+        };
+
+        let default_rules = config::RedactionConfig::load_default_rules()?;
+        let user_rules = if let Some(path) = cli.config.as_ref() {
+            Some(config::RedactionConfig::load_from_file(path)
+                .with_context(|| format!("Failed to load custom configuration from '{}'", path.display()))?)
+        } else {
+            None
+        };
+        let mut merged_config = config::merge_rules(default_rules, user_rules);
+
+        if let Some(name) = cli.rules.clone() {
+            merged_config.set_active_rules_config(&name)?;
+        }
+
+        let compiled_rules = crate::tools::sanitize_shell::compile_rules(
+            merged_config.rules,
+            &cli.enable_rules,
+            &cli.disable_rules,
+        )?;
+
+        let mut all_redaction_matches = Vec::new();
+        let stdin = io::stdin();
+        let mut reader = io::BufReader::new(stdin.lock());
+        let mut line = String::new();
+        
+        // Read and sanitize line by line, writing each immediately to `writer`.
+        while reader.read_line(&mut line).context("Failed to read line from stdin")? > 0 {
+            let (sanitized_line, line_matches) =
+                commands::cleansh::sanitize_single_line(&line, &compiled_rules);
+
+            writeln!(writer, "{}", sanitized_line)?;
+            writer.flush()?; // Force flush after each line
+
+            all_redaction_matches.extend(line_matches);
+            line.clear();
+        }
+
+        // --- NEW LOGIC FOR SUMMARY/NO-REDACTIONS MESSAGE IN LINE-BUFFERED MODE ---
+        if all_redaction_matches.is_empty() {
+            // If no redactions were applied, print this message unless --no-redaction-summary is active
+            if !cli.no_redaction_summary {
+                 let _ = ui::output_format::print_info_message(
+                    &mut io::stderr(),
+                    "No redactions applied.",
+                    &theme_map,
+                );
+            }
+        } else {
+            // If redactions *were* applied, print the summary unless --no-redaction-summary or --quiet is active
+            if !cli.no_redaction_summary && !cli.quiet {
+                let summary = commands::cleansh::build_redaction_summary_from_matches(&all_redaction_matches);
+                let _ = ui::output_format::print_info_message(
+                    &mut io::stderr(),
+                    "Displaying redaction summary for streaming input.",
+                    &theme_map,
+                );
+                ui::redaction_summary::print_summary(&summary, &mut io::stderr(), &theme_map)?;
+            }
+        }
+        // --- END NEW LOGIC ---
+
     } else {
+        // --- Default batch processing mode (full input read) ---
+        let mut input_content = String::new();
+        let input_path = cli.input_file_flag.clone(); // Clone input_file_flag for passing
+        if let Some(path) = input_path.as_ref() { // Use as_ref() because input_path is now Option<PathBuf>
+            if !cli.quiet {
+                // This message is handled by run_cleansh now.
+                // let _ = ui::output_format::print_info_message(
+                //     &mut io::stderr(),
+                //     &format!("Reading input from file: {}", path.display()),
+                //     &theme_map,
+                // );
+            }
+            input_content = fs::read_to_string(path)
+                .with_context(|| format!("Failed to read input from {}", path.display()))?;
+        } else {
+            if !cli.quiet {
+                // This message is handled by run_cleansh now.
+                // let _ = ui::output_format::print_info_message(
+                //     &mut io::stderr(),
+                //     "Reading input from stdin...",
+                //     &theme_map,
+                // );
+            }
+            io::stdin().read_to_string(&mut input_content)
+                .context("Failed to read from stdin")?;
+        }
+
         // Delegate to the existing `cleansh` command for sanitization
         if let Err(e) = commands::cleansh::run_cleansh(
             &input_content,
@@ -243,6 +386,7 @@ pub fn run(cli: Cli) -> Result<()> {
             &theme_map,
             cli.enable_rules.clone(),
             cli.disable_rules.clone(),
+            input_path, // Pass the cloned input_path here
         ) {
             let _ = ui::output_format::print_error_message( // Wrapped with `let _ =`
                 &mut io::stderr(),
@@ -252,6 +396,7 @@ pub fn run(cli: Cli) -> Result<()> {
             std::process::exit(1);
         }
     }
+    
 
     info!("cleansh finished successfully.");
     Ok(())

@@ -5,7 +5,7 @@
 
 use anyhow::{Context, Result};
 use log::{debug, info, warn};
-use std::io::{self, Write, IsTerminal};
+use std::io::{self, Write, IsTerminal}; // Removed BufRead as it's not directly used here
 use std::path::PathBuf;
 use std::fs;
 use std::collections::HashMap;
@@ -35,12 +35,32 @@ pub fn run_cleansh(
     theme_map: &std::collections::HashMap<theme::ThemeEntry, theme::ThemeStyle>,
     enable_rules: Vec<String>,
     disable_rules: Vec<String>,
+    // NEW PARAMETER: This tells cleansh where the input content originated
+    input_file_path: Option<PathBuf>,
 ) -> Result<()> {
     info!("Starting cleansh operation.");
     debug!("[cleansh.rs] Starting cleansh operation.");
     debug!("[cleansh.rs] Received enable_rules: {:?}", enable_rules);
     debug!("[cleansh.rs] Received disable_rules: {:?}", disable_rules);
 
+    // --- ADDED: Informational message about input source ---
+    if let Some(path) = input_file_path {
+        let _ = output_format::print_info_message(
+            &mut io::stderr(),
+            &format!("Reading input from file: {}", path.display()),
+            theme_map,
+        );
+        debug!("[cleansh.rs] Reading input from file: {}", path.display());
+    } else {
+        // This case covers stdin input in batch mode
+        let _ = output_format::print_info_message(
+            &mut io::stderr(),
+            "Reading input from stdin (batch mode).",
+            theme_map,
+        );
+        debug!("[cleansh.rs] Reading input from stdin (batch mode).");
+    }
+    // --- END ADDED ---
 
     let default_rules = RedactionConfig::load_default_rules()?;
     debug!("[cleansh.rs] Loaded {} default rules in cleansh.", default_rules.rules.len());
@@ -168,9 +188,7 @@ pub fn run_cleansh(
     } else {
         debug!("Printing sanitized content.");
         debug!("[cleansh.rs] Diff disabled, printing sanitized content.");
-        // When not in diff mode, just write the sanitized_content.
-        // `sanitize_shell::sanitize_content` ensures the `sanitized_content` itself is plain text
-        // (by stripping input ANSI), so no further stripping is needed here.
+        // Reverted to `writeln!` to include the trailing newline for consistency with tests.
         writeln!(primary_output_writer, "{}", sanitized_content)
             .context("Failed to write sanitized content")?;
     }
@@ -224,6 +242,18 @@ pub fn run_cleansh(
     Ok(())
 }
 
+// --- NEW: Function to sanitize a single line for streaming mode ---
+/// Sanitizes a single line of input using the provided compiled rules.
+/// Returns the sanitized line and a vector of RedactionMatch found in this line.
+pub fn sanitize_single_line(
+    line: &str,
+    compiled_rules: &sanitize_shell::CompiledRules, // Changed from CompiledRedactionRules
+) -> (String, Vec<RedactionMatch>) {
+    // This calls the same core sanitization logic, but for a single line.
+    sanitize_shell::sanitize_content(line, compiled_rules)
+}
+// --- END NEW FUNCTION ---
+
 /// Helper function to copy content to the system clipboard.
 /// This function is conditionally compiled based on the "clipboard" feature.
 #[cfg(feature = "clipboard")]
@@ -248,7 +278,7 @@ fn copy_to_clipboard(content: &str) -> Result<()> {
 
 /// Builds a `Vec<RedactionSummaryItem>` from a `Vec<RedactionMatch>`.
 /// This aggregates individual matches into a summary grouped by rule.
-fn build_redaction_summary_from_matches(
+pub fn build_redaction_summary_from_matches( // Made public for use in lib.rs
     matches: &[RedactionMatch],
 ) -> Vec<RedactionSummaryItem> {
     let mut summary_map: HashMap<String, RedactionSummaryItem> = HashMap::new();

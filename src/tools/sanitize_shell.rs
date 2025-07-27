@@ -12,7 +12,6 @@ use log::{debug};
 use strip_ansi_escapes::strip;
 
 // Import the new functions from the redaction utility module.
-// The `pii_debug` macro is removed as its logic is now within these functions.
 use crate::utils::redaction::{log_captured_match_debug, log_redaction_action_debug, RedactionMatch, redact_sensitive};
 
 use crate::config::{RedactionRule, MAX_PATTERN_LENGTH};
