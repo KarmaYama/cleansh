@@ -67,7 +67,7 @@ fn get_test_paths(test_name: &str) -> anyhow::Result<TestPaths> {
 /// to ensure test isolation.
 fn run_cleansh_cmd(app_state_file: &PathBuf) -> Command {
     let mut cmd = Command::cargo_bin("cleansh").unwrap();
-    // Pass the test-specific app state file path via an and environment variable.
+    // Pass the test-specific app state file path via an environment variable.
     cmd.env("CLEANSH_STATE_FILE_OVERRIDE_FOR_TESTS", app_state_file.to_str().unwrap());
 
     // --- IMPORTANT: Clear potentially interfering environment variables for each command call ---
@@ -584,7 +584,7 @@ fn test_stats_pii_debug_env_var() -> anyhow::Result<()> {
     debug!("Running test_stats_pii_debug_env_var");
 
     let output = run_cleansh_cmd(&test_paths.app_state_file_path)
-        .env("CLEANSH_ALLOW_DEBUG_PII", "1") // Set PII debug flag for this command
+        .env("CLEANSH_ALLOW_DEBUG_PII", "true") // Set PII debug flag for this command (using "true" for clarity as per implementation)
         .env("RUST_LOG", "debug") // Ensure RUST_LOG is debug for this command
         .write_stdin("My SSN is 123-45-6789. My email is test@example.com.")
         .arg("--stats-only")
@@ -595,10 +595,7 @@ fn test_stats_pii_debug_env_var() -> anyhow::Result<()> {
     let stderr = String::from_utf8_lossy(&output.stderr);
     debug!("Stderr for pii_debug_env_var: \n{}", stderr);
 
-    // When CLEANSH_ALLOW_DEBUG_PII is 1, these logs should show the ORIGINAL (unredacted) PII.
-    // The `log_captured_match_debug` and `log_redaction_action_debug` functions
-    // from `redaction.rs` output logs with the `[DEBUG cleansh::utils::redaction]` prefix,
-    // and *then* the module path passed as an argument.
+    // When CLEANSH_ALLOW_DEBUG_PII is "true", these logs should show the ORIGINAL (unredacted) PII.
     assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Captured match (original): '123-45-6789' for rule 'us_ssn'"));
     assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Redaction action: Original='123-45-6789', Redacted='[US_SSN_REDACTED]' for rule 'us_ssn'"));
     assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::commands::stats] Captured match (original): 'test@example.com' for rule 'email'"));
@@ -609,7 +606,6 @@ fn test_stats_pii_debug_env_var() -> anyhow::Result<()> {
     assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Captured match (original): '123-45-6789' for rule 'us_ssn'"));
     assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='test@example.com', Redacted='[EMAIL_REDACTED]' for rule 'email'"));
     assert!(stderr.contains("[DEBUG cleansh::utils::redaction] [cleansh::tools::sanitize_shell] Redaction action: Original='123-45-6789', Redacted='[US_SSN_REDACTED]' for rule 'us_ssn'"));
-
 
     // Verify summary is still present
     assert!(stderr.contains("us_ssn: 1 match"));
@@ -624,6 +620,7 @@ fn test_stats_pii_debug_env_var_not_set() -> anyhow::Result<()> {
     debug!("Running test_stats_pii_debug_env_var_not_set");
 
     let output = run_cleansh_cmd(&test_paths.app_state_file_path)
+        // No CLEANSH_ALLOW_DEBUG_PII env var set here, or it was cleared by run_cleansh_cmd
         .env("RUST_LOG", "debug") // Set RUST_LOG to debug for this command
         .write_stdin("My SSN is 123-45-6789. My email is test@example.com.")
         .arg("--stats-only")
