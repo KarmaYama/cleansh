@@ -1,0 +1,7 @@
+[build]
+# The 'publish' directory is now relative to the new root of the repository.
+# Your website's root HTML/CSS/JS files are inside 'cleansh', then inside 'website'.
+publish = "cleansh/website"
+
+# As before, no build command is needed for static HTML/CSS/JS
+command = "# No build command needed for static HTML/CSS/JS"
