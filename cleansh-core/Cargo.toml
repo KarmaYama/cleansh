@@ -1,0 +1,25 @@
+#cleansh-workspace/cleansh-core/#Cargo.toml
+[package]
+name = "cleansh-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Cleansh Technologies"]
+license = "BUSL-1.1" 
+description = "Core library for Cleansh, providing essential data sanitization rules, compilation, and application logic independent of the CLI."
+repository = "https://github.com/KarmaYama/cleansh"
+homepage = "https://cleansh.netlify.app/"
+keywords = ["sanitization", "redaction", "data-security", "privacy", "core-logic"]
+categories = ["data-structures", "parsing", "text-processing"]
+
+[dependencies]
+anyhow = "1.0"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+regex = "1.10"
+lazy_static = "1.4"
+strip-ansi-escapes = "0.2.1"
+
+[dev-dependencies]
+test-log = "0.2.14" 
+tempfile = "3.10" 

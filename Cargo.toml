@@ -1,85 +1,21 @@
-# Cargo.toml
-[package]
-name = "cleansh"
-version = "0.1.5"
-edition = "2024"
-license-file = "LICENSE"
-repository = "https://github.com/KarmaYama/cleansh"
-homepage = "https://cleansh.netlify.app/"
-authors = ["Cleansh Technologies"]
-readme = "README.md"
-rust-version = "1.88.0"
-categories = ["command-line-utilities"]
-keywords = ["cli", "security", "redact", "sanitize", "clipboard"]
-description = "Sanitize your terminal output. One tool. One purpose."
+# cleansh-workspace/Cargo.toml
+[workspace]
+members = [
+    "cleansh-core",
+    "cleansh",
+    # Future crates to be added later:
+    # "cleansh-memory",
+    # "cleansh-interactive-ui",
+    # "cleansh-v1-app",
+]
+resolver = "2" # Use the new Cargo feature resolver for consistency
 
-[package.metadata.wix]
-upgrade-guid = "F47C98E6-B908-4CB3-A38B-0EFD5F3DE62D"
-path-guid = "DB8DAC94-9423-4D0E-A466-24166013B8BB"
-license = false
-eula = false
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
 
-[dependencies]
-# CLI Argument Parsing
-clap = { version = "4.5", features = ["derive", "env"] }
-
-# Configuration Management
-dotenvy = "0.15"
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
-serde_json = "1.0" #
-
-# Core Sanitization Logic
-regex = "1.10"
-strip-ansi-escapes = "0.2.1"
-
-# Clipboard Interaction (Conditional Feature)
-arboard = { version = "3.4.0", optional = true }
-
-# Logging
-log = "0.4"
-env_logger = "0.11"
-
-# Error Handling
-anyhow = "1.0"
-thiserror = "2.0.12"
-
-# UI / Output Layer (for beautiful, structured, color-coded output)
-owo-colors = "4.2.2"
-comfy-table = "7.0"
-diffy = "0.4.2"
-dissimilar = "1.0.8"
-
-dirs = "6.0.0"
-once_cell = "1.19"
-cargo-audit = "0.21.2"
-chrono = "0.4.41"
-
-[dev-dependencies]
-assert_cmd = "2.0"
-predicates = "3.0"
-tempfile = "3.10"
-#test-env-log = "0.2.8"
-test-log = "0.2.18"
-gag = "1.0" # Added for stdin/stdout redirection in tests
-
-[target.'cfg(windows)'.dependencies]
-winapi = "0.3"
-
-[features]
-default = []
-test-exposed = []
-clipboard = ["arboard"]
-
-# The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
-
-[lib]
-name = "cleansh"
-path = "src/lib.rs"
-
-[[bin]]
-name = "cleansh"
-path = "src/main.rs"
