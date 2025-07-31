@@ -15,7 +15,7 @@ categories = ["data-structures", "parsing", "text-processing"]
 anyhow = "1.0"
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
+serde_yaml = { package = "serde_yaml_ok", version = "0.9.36" }
 regex = "1.10"
 lazy_static = "1.4"
 strip-ansi-escapes = "0.2.1"

@@ -264,7 +264,7 @@ dependencies = [
  "predicates",
  "serde",
  "serde_json",
- "serde_yaml",
+ "serde_yaml_ok",
  "strip-ansi-escapes",
  "tempfile",
  "test-log",
@@ -281,7 +281,7 @@ dependencies = [
  "log",
  "regex",
  "serde",
- "serde_yaml",
+ "serde_yaml_ok",
  "strip-ansi-escapes",
  "tempfile",
  "test-log",
@@ -1145,10 +1145,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_yaml"
-version = "0.9.34+deprecated"
+name = "serde_yaml_ok"
+version = "0.9.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47"
+checksum = "d600e1760786f63ca29592f8056a121603984e41dd6ccc85848996567d692458"
 dependencies = [
  "indexmap",
  "itoa",
