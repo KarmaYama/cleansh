@@ -16,11 +16,16 @@
 # 'cargo:cleansh' refers to the crate named 'cleansh' in my Cargo.toml.
 members = ["cargo:cleansh"]
 
+<<<<<<< HEAD
 # --- Global Distribution Settings for the Workspace ---
+=======
+# Config for 'dist'
+>>>>>>> 0188d3d17b42ab737cd070e8f9bde2c24e361911
 [dist]
 # I'm specifying the `dist` version I want to use in my CI/CD workflows.
 # This helps ensure consistent behavior across releases.
 dist-version = "0.28.0"
+<<<<<<< HEAD
 
 # I'm using GitHub Actions for my CI/CD, so I'm telling `dist` to generate
 # workflow files compatible with GitHub.
@@ -49,6 +54,20 @@ install-path = "CARGO_HOME"
 
 # I'm not planning to include an auto-updater program with the installations for now.
 install-updater = false
+=======
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "powershell", "npm", "homebrew", "msi"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
+# Whether to install an updater program
+install-updater = false
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.28.0"
+>>>>>>> 0188d3d17b42ab737cd070e8f9bde2c24e361911
 
 # --- Build Configuration for all Applications in the Workspace ---
 # These settings dictate how `dist` will build my applications
