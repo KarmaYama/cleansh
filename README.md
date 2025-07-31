@@ -61,6 +61,7 @@ We welcome contributions to the `cleansh` workspace! Please see our:
 
 * **[Contributing Guidelines](/cleansh/CONTRIBUTING.md)**
 * **[Code of Conduct](/cleansh/CODE_OF_CONDUCT.md)**
+* **[Changelog](/cleansh/CHANGELOG.md)**
 
 ---
 

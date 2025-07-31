@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.6] - 2025-07-31 — Architectural Refinement for Stability & Future Growth
+
+This release primarily focuses on a significant **architectural refinement** within `cleansh`, laying a more robust and modular foundation for its continued evolution. This strategic internal restructuring enhances `cleansh`'s stability, maintainability, and readiness for advanced features, solidifying its role as an indispensable tool in developer workflows. This ensures `cleansh` can adapt more flexibly to future demands while maintaining its high-trust security posture.
+
+### Changed
+
+* **Underlying Architectural Reorganization:** `cleansh` has undergone a substantial internal architectural shift. This change introduces a clearer separation of concerns, decoupling the core data processing and redaction logic from the CLI's user interface and command handling. This makes the `cleansh` CLI more resilient, easier to maintain, and significantly more scalable for future enhancements.
+* **Foundation for Future Modularity:** The new architecture prepares `cleansh` for upcoming capabilities by establishing a highly modular design. This foundational work will enable more efficient integration of complex features and specialized redaction functionalities in subsequent releases.
+
+### Improved
+
+* **Enhanced Maintainability and Clarity:** The refactored codebase improves overall code clarity and adheres more rigorously to best practices in modular design. This facilitates easier contributions and faster development cycles for the `cleansh` CLI.
+* **Robustness for Complex Operations:** By abstracting core logic, `cleansh` is now better equipped to handle increasingly complex data streams and redaction requirements with improved stability and performance predictability.
+
+---
+
 ## [0.1.5] - 2025-07-27 — Phase 1: Refined Redaction, Stats Foundation & Rule Expansion
 
 This release marks a significant leap forward for `cleansh`, introducing a **powerful new statistics mode for in-depth redaction analysis**. Alongside this flagship feature, we've implemented substantial improvements to **CLI usability, logging, and overall stability**, making `cleansh` even more robust and user-friendly.
@@ -58,13 +74,13 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 * **Configurable Rule Sets (`--rules <NAME>`):**
     Introduced the ability to **specify different predefined rule configurations** (e.g., `'default'`, `'strict'`) if such sets are defined within the configuration system. This provides greater flexibility in applying specific redaction policies tailored to different needs.
 
-* **Real-time Monitoring Mode (`--line-buffered`)** – **Experimental / Platform‑Dependent**  
-  Introduced a new operating mode for **real-time, line‑by‑line processing of `stdin` input**, immediately outputting sanitized lines as they are received.  
-  **Note:**  
-  - Best‑effort behavior; actual “live” flushing depends on the upstream stream’s buffering (e.g., `docker logs -f` on Windows/PowerShell may buffer until EOF).  
-  - Expected to work reliably on Unix shells (`bash`, `zsh`, WSL) and when tailing files (`tail -F`).  
-  - Incompatible with `--diff`, `--clipboard`, and `--input-file`.  
-  - Use `--no-redaction-summary` to suppress the end‑of‑stream summary when streaming indefinitely.  
+* **Real-time Monitoring Mode (`--line-buffered`)** – **Experimental / Platform‑Dependent**
+    Introduced a new operating mode for **real-time, line‑by‑line processing of `stdin` input**, immediately outputting sanitized lines as they are received.
+    **Note:**
+    * Best‑effort behavior; actual “live” flushing depends on the upstream stream’s buffering (e.g., `docker logs -f` on Windows/PowerShell may buffer until EOF).
+    * Expected to work reliably on Unix shells (`bash`, `zsh`, WSL) and when tailing files (`tail -F`).
+    * Incompatible with `--diff`, `--clipboard`, and `--input-file`.
+    * Use `--no-redaction-summary` to suppress the end‑of‑stream summary when streaming indefinitely.
 
 * **ANSI Escape Stripping Layer:**
     * All input content is now **sanitized for ANSI escape codes** prior to applying redaction rules, to eliminate evasion via terminal formatting.
