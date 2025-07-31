@@ -1,0 +1,123 @@
+# cleansh-workspace/dist-workspace.toml
+#
+# This file serves as the central configuration for `dist` within my `cleansh` Rust workspace.
+# It defines how all the binary applications (like my 'cleansh' CLI tool) within this monorepo
+# should be built, packaged, and released by dist. By keeping this at the workspace root, `dist`
+# can manage the entire project's distribution process from a single, unified configuration.
+#
+# I've consolidated all settings from my previous individual `Dist.toml` (from the `cleansh` crate)
+# and my earlier `dist-workspace.toml` into this one file for simplicity and consistency.
+
+[workspace]
+# I need to explicitly tell dist which workspace members are actually applications
+# that I want to distribute. I only want to release the `cleansh` CLI binary.
+# The 'cleansh-core' library should NOT be considered a distributable application by dist.
+# I'm listing 'cleansh' as the only member for dist purposes.
+# 'cargo:cleansh' refers to the crate named 'cleansh' in my Cargo.toml.
+members = ["cargo:cleansh"]
+
+# --- Global Distribution Settings for the Workspace ---
+[dist]
+# I'm specifying the `dist` version I want to use in my CI/CD workflows.
+# This helps ensure consistent behavior across releases.
+dist-version = "0.28.0"
+
+# I'm using GitHub Actions for my CI/CD, so I'm telling `dist` to generate
+# workflow files compatible with GitHub.
+ci = "github"
+
+# These are the various installer formats I want `dist` to generate for each
+# distributable application (like the `cleansh` CLI).
+installers = ["shell", "powershell", "npm", "homebrew", "msi"]
+
+# These are the target platforms (Rust target-triples) that `dist` should
+# build my applications for. This ensures I cover all the operating systems and
+# architectures I want to support with my releases. These apply to all apps
+# in the workspace unless a specific app overrides them (which I'm not doing here).
+targets = [
+    "aarch64-apple-darwin",       # Apple Silicon macOS
+    "aarch64-unknown-linux-gnu",  # ARM Linux (e.g., Raspberry Pi 64-bit)
+    "x86_64-apple-darwin",        # Intel macOS
+    "x86_64-unknown-linux-gnu",   # x86_64 GNU Linux
+    "x86_64-unknown-linux-musl",  # x86_64 Musl Linux (for static binaries)
+    "x86_64-pc-windows-msvc"      # Windows (MSVC toolchain)
+]
+
+# This defines where the installers should place the binaries on a user's system.
+# `CARGO_HOME` is a common and safe default that respects standard Rust environments.
+install-path = "CARGO_HOME"
+
+# I'm not planning to include an auto-updater program with the installations for now.
+install-updater = false
+
+# --- Build Configuration for all Applications in the Workspace ---
+# These settings dictate how `dist` will build my applications
+# before packaging them for release. These apply to all binary crates in the workspace.
+[dist.build]
+# I always want to build in the `release` profile for production deployments.
+profiles = ["release"]
+# I'm disabling code signatures for now. This can be enabled later if needed for
+# specific platform requirements or trust models.
+signatures = false
+# I want `dist` to automatically generate a changelog for my releases
+# based on my Git history.
+changelog = true
+
+# --- Archive Configuration for all Applications ---
+# These settings define the compression formats for my release artifacts.
+[dist.archive]
+# I want both compressed tarballs (for Unix-like systems) and ZIP archives (for Windows).
+formats = ["tar.gz", "zip"]
+
+# --- Asset Inclusion in Release Artifacts ---
+# These are additional files that I want to include in my release archives.
+# Since individual crates have their own licenses, I should only include
+# the overall workspace README if I want a top-level README in the release.
+# The specific crate's license should be handled by the crate's own metadata
+# if `dist` pulls it, or if it has its own `Dist.toml` (which I've removed).
+# For now, I'll just include the main workspace README.
+[dist.assets]
+# I definitely want the compiled binaries to be part of the release!
+include-binaries = true
+files = [
+    "README.md", # This refers to cleansh-workspace/README.md
+]
+
+# --- Release Publishing Configuration ---
+# These settings control how `dist` interacts with GitHub to create releases.
+[dist.release]
+# I want `dist` to automatically publish my releases to GitHub.
+publish = true
+# I don't want releases to start as drafts; they should be published directly.
+draft = false
+# These are full releases, not pre-releases (e.g., beta, alpha versions).
+prerelease = false
+
+# --- Custom GitHub Actions Runner Configuration ---
+# This helps optimize build times by assigning specific target builds to appropriate
+# GitHub Actions runners, leveraging their native architectures for faster compilation.
+[dist.github-custom-runners]
+# For ARM Linux builds, I'll use `ubuntu-22.04` runners.
+aarch64-unknown-linux-gnu = "ubuntu-22.04"
+# For x86_64 GNU Linux builds, also `ubuntu-22.04`.
+x86_64-unknown-linux-gnu = "ubuntu-22.04"
+# Windows builds require a `windows-latest` runner for the MSVC toolchain.
+x86_64-pc-windows-msvc = "windows-latest"
+# Apple Silicon macOS builds will run on `macos-latest`.
+aarch64-apple-darwin = "macos-latest"
+# Intel macOS builds will also run on `macos-latest`.
+x86_64-apple-darwin = "macos-latest"
+# For x86_64 Musl Linux (static binaries), I'll stick with `ubuntu-22.04`.
+x86_64-unknown-linux-musl = "ubuntu-22.04"
+# Any other targets or general steps will default to `ubuntu-latest`.
+global = "ubuntu-latest"
+
+# Important Note on `build-command`:
+# In my previous `Dist.toml`, I had `build-command = "cargo build --release"`.
+# With this consolidated `dist-workspace.toml` at the root, and with `profiles = ["release"]`
+# defined globally under `[dist.build]`, `dist` is smart enough. It will
+# implicitly handle the correct `cargo build --workspace --release` (or equivalent)
+# command to build all my designated apps for release. I typically don't need to
+# explicitly set `build-command` unless I have a truly unique and non-standard
+# build process. Relying on `dist`'s defaults here makes it more robust for
+# workspace builds.

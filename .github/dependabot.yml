@@ -5,7 +5,33 @@
 
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # Dependabot for the main Rust workspace (root Cargo.toml)
+  - package-ecosystem: "cargo"
+    directory: "/" # Location of the workspace Cargo.toml
     schedule:
       interval: "weekly"
+    # Optional: Group updates for a cleaner PR history
+    groups:
+      rust-deps:
+        patterns:
+          - "*"
+
+  # Dependabot for the website dependencies (if applicable)
+  - package-ecosystem: "npm" # Or "yarn" if you use yarn
+    directory: "cleansh/website" # Location of the website's package.json
+    schedule:
+      interval: "weekly"
+    groups:
+      js-deps:
+        patterns:
+          - "*"
+
+  # Add more entries for other package ecosystems if you have them
+  # - package-ecosystem: "github-actions"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   groups:
+  #     gh-actions:
+  #       patterns:
+  #         - "*"

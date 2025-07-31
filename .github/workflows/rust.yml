@@ -22,20 +22,33 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-rdme
+        # Install cargo-rdme globally on the runner
         run: cargo install cargo-rdme
 
-      - name: Generate README.md if missing
+      # --- START OF README.md Handling for cleansh/README.md ---
+      # This block now explicitly targets the 'cleansh' crate within the workspace
+      - name: Generate cleansh/README.md if missing
         run: |
+          # Navigate into the cleansh crate directory
+          pushd cleansh
           if [ ! -f README.md ]; then
-            echo "README.md not found. Generating from crate docs..."
+            echo "cleansh/README.md not found. Generating from crate docs..."
+            # Generate README for the 'cleansh' crate
             cargo rdme > README.md
           fi
+          popd # Return to the repository root
+        working-directory: . 
 
-      - name: Check README.md consistency
-        run: git diff --exit-code README.md
+      - name: Check cleansh/README.md consistency
+        # Check consistency specifically for the cleansh crate's README
+        run: git diff --exit-code cleansh/README.md
+        working-directory: . 
+      # --- END OF README.md Handling for cleansh/README.md ---
 
-      - name: Build
-        run: cargo build --verbose
+      - name: Build all workspace crates
+        run: cargo build --workspace --verbose
+        working-directory: . # Execute from repository root
 
-      - name: Run tests (with test-exposed and clipboard features)
-        run: cargo test --features "test-exposed clipboard" --verbose 
+      - name: Run all workspace tests (with test-exposed and clipboard features)
+        run: cargo test --workspace --features "test-exposed clipboard" --verbose
+        working-directory: . # Execute from repository root
