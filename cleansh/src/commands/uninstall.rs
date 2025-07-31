@@ -205,7 +205,7 @@ pub fn run_uninstall_command(
                     echo "Warning: App state directory '$app_state_dir' might not be empty or could not be removed." >&2
                 else
                     echo "App state directory deleted successfully."
-                fi # Corrected: Removed the stray '}'
+                fi
             else
                 echo "App state directory not found, skipping deletion."
             fi
