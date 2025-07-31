@@ -88,7 +88,15 @@ fn main() -> Result<()> {
                 fs::read_to_string(path)
                     .with_context(|| format!("Failed to read input from {}", path.display()))?
             } else if io::stdin().is_terminal() {
-                String::new() // No input from stdin if not piped (i.e., stdin is a TTY)
+                // NEW: This branch now correctly handles the interactive TTY case
+                commands::cleansh::info_msg(
+                    "Reading input from stdin. Press Ctrl+Z then Enter to finish input.",
+                    &theme_map,
+                );
+                let mut buffer = String::new();
+                io::stdin().read_to_string(&mut buffer)
+                    .context("Failed to read from stdin")?;
+                buffer
             } else {
                 commands::cleansh::info_msg("Reading input from stdin for stats analysis...", &theme_map);
                 let mut buffer = String::new();
@@ -214,7 +222,11 @@ fn main() -> Result<()> {
                     fs::read_to_string(path)
                         .with_context(|| format!("Failed to read input from {}", path.display()))?
                 } else if io::stdin().is_terminal() {
-                    String::new() // No input from stdin if not piped
+                    commands::cleansh::info_msg("Reading input from stdin. Press Ctrl+Z then Enter to finish input.", &theme_map);
+                    let mut buffer = String::new();
+                    io::stdin().read_to_string(&mut buffer)
+                        .context("Failed to read from stdin")?;
+                    buffer
                 } else {
                     commands::cleansh::info_msg("Reading input from stdin...", &theme_map);
                     let mut buffer = String::new();
