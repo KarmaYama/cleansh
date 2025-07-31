@@ -16,16 +16,6 @@ updates:
         patterns:
           - "*"
 
-  # Dependabot for the website dependencies (if applicable)
-  - package-ecosystem: "npm" # Or "yarn" if you use yarn
-    directory: "cleansh/website" # Location of the website's package.json
-    schedule:
-      interval: "weekly"
-    groups:
-      js-deps:
-        patterns:
-          - "*"
-
   # Add more entries for other package ecosystems if you have them
   # - package-ecosystem: "github-actions"
   #   directory: "/"

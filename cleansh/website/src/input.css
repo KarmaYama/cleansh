@@ -1,8 +1,0 @@
-/* website/src/input.css */
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Import your custom styles */
-@import "../custom.css";
