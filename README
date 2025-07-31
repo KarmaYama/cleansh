@@ -1,6 +1,5 @@
 # Cleansh Workspace – A Monorepo for Secure Terminal Output Sanitization
 
-
 ## Overview
 
 This repository (`cleansh-workspace`) is a **Rust monorepo** designed for the secure sanitization of terminal output. It houses a growing ecosystem of tools and libraries under a unified development environment, promoting modularity, reusability, and maintainability.
@@ -8,11 +7,11 @@ This repository (`cleansh-workspace`) is a **Rust monorepo** designed for the se
 The primary components currently include:
 
 1.  **`cleansh` (CLI Application):** A high-trust, single-purpose command-line interface tool for redacting sensitive information from terminal output. This is the main user-facing application.
-    * **Location:** [`/cleansh`](./cleansh/README.md)
+    * **Location:** [`./cleansh`](./cleansh/README.md)
     * **Purpose:** Provides a robust, pre-configured solution for data sanitization with flexible options for custom rules and output formats via the CLI.
 
 2.  **`cleansh-core` (Core Library):** A standalone, reusable Rust library that encapsulates all the fundamental logic for data redaction, configuration management, and sensitive data validation.
-    * **Location:** [`/cleansh-core`](./cleansh-core/README.md)
+    * **Location:** [`./cleansh-core`](./cleansh-core/README.md)
     * **Purpose:** Designed to be highly reliable and independent, enabling its potential future integration into other Rust projects and separate distribution on `crates.io`. The `cleansh` CLI seamlessly integrates with and utilizes this core library.
 
 ---
@@ -44,10 +43,10 @@ To explore or contribute to the `cleansh` project:
 ## Navigating the Workspace
 
 * **For `cleansh` CLI details, usage, and installation:**
-    Please refer to the dedicated README: **[`cleansh/README.md`](./cleansh/README.md)**
+    Please refer to the dedicated README: **[`./cleansh/README.md`](./cleansh/README.md)**
 
 * **For `cleansh-core` library details and API documentation:**
-    Please refer to its dedicated README (to be created): **[`cleansh-core/README.md`](./cleansh-core/README.md)**
+    Please refer to its dedicated README (to be created): **[`./cleansh-core/README.md`](./cleansh-core/README.md)**
     *(Note: This README will be developed further when `cleansh-core` is prepared for public consumption/crates.io release.)*
 
 ---
@@ -56,8 +55,8 @@ To explore or contribute to the `cleansh` project:
 
 We welcome contributions to the `cleansh` workspace! Please see our:
 
-* **[Contributing Guidelines](CONTRIBUTING.md)**
-* **[Code of Conduct](CODE_OF_CONDUCT.md)**
+* **[Contributing Guidelines](./CONTRIBUTING.md)**
+* **[Code of Conduct](./CODE_OF_CONDUCT.md)**
 
 ---
 
