@@ -1,3 +1,4 @@
+// cleansh-workspace/cleansh/src/utils/app_state.rs
 //! Module for managing application state, including usage counts and donation prompts.
 //! This module provides functionality to load, save, and manage the application state
 //! in a JSON file. It tracks the number of times the `--stats-only` mode
@@ -7,7 +8,7 @@
 
 use std::fs;
 use std::io;
-use std::path::Path;
+use std::path::Path; // Use std::path::Path directly for arguments
 use serde::{Deserialize, Serialize};
 use log::{warn, debug};
 use chrono::{Utc, TimeZone};
@@ -74,6 +75,10 @@ impl AppState {
 
     /// Saves the current `AppState` to a specified file path.
     pub fn save(&self, path: &Path) -> io::Result<()> {
+        // Ensure the parent directory exists before writing the file
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
         let json = serde_json::to_string_pretty(self)?;
         fs::write(path, json)?;
         Ok(())
@@ -83,6 +88,10 @@ impl AppState {
     /// This function returns a `Result` indicating success or failure.
     #[cfg_attr(not(feature = "test-exposed"), allow(dead_code))]
     pub fn save_to_path(&self, path: &Path) -> anyhow::Result<()> {
+        // Ensure the parent directory exists before writing the file
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
         let json = serde_json::to_string_pretty(self)?;
         fs::write(path, json)?;
         Ok(())
