@@ -1,0 +1,37 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Dependabot for the main Rust workspace (root Cargo.toml)
+  - package-ecosystem: "cargo"
+    directory: "/" # Location of the workspace Cargo.toml
+    schedule:
+      interval: "weekly"
+    # Optional: Group updates for a cleaner PR history
+    groups:
+      rust-deps:
+        patterns:
+          - "*"
+
+  # Dependabot for the website dependencies (if applicable)
+  - package-ecosystem: "npm" # Or "yarn" if you use yarn
+    directory: "cleansh/website" # Location of the website's package.json
+    schedule:
+      interval: "weekly"
+    groups:
+      js-deps:
+        patterns:
+          - "*"
+
+  # Add more entries for other package ecosystems if you have them
+  # - package-ecosystem: "github-actions"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   groups:
+  #     gh-actions:
+  #       patterns:
+  #         - "*"

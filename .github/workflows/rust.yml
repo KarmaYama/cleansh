@@ -1,0 +1,54 @@
+name: Rust CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-rdme
+        # Install cargo-rdme globally on the runner
+        run: cargo install cargo-rdme
+
+      # --- START OF README.md Handling for cleansh/README.md ---
+      # This block now explicitly targets the 'cleansh' crate within the workspace
+      - name: Generate cleansh/README.md if missing
+        run: |
+          # Navigate into the cleansh crate directory
+          pushd cleansh
+          if [ ! -f README.md ]; then
+            echo "cleansh/README.md not found. Generating from crate docs..."
+            # Generate README for the 'cleansh' crate
+            cargo rdme > README.md
+          fi
+          popd # Return to the repository root
+        working-directory: . 
+
+      - name: Check cleansh/README.md consistency
+        # Check consistency specifically for the cleansh crate's README
+        run: git diff --exit-code cleansh/README.md
+        working-directory: . 
+      # --- END OF README.md Handling for cleansh/README.md ---
+
+      - name: Build all workspace crates
+        run: cargo build --workspace --verbose
+        working-directory: . # Execute from repository root
+
+      - name: Run all workspace tests (with test-exposed and clipboard features)
+        run: cargo test --workspace --features "test-exposed clipboard" --verbose
+        working-directory: . # Execute from repository root

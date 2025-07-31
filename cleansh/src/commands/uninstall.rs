@@ -33,7 +33,7 @@ use crate::ui::theme::ThemeMap; // Import ThemeMap only
 /// # Arguments
 ///
 /// * `yes_flag` - A boolean; if `true`, the uninstallation proceeds without a
-///                confirmation prompt from the user.
+///                 confirmation prompt from the user.
 /// * `theme_map` - A reference to a `HashMap` containing the application's
 ///                 theme styles for colored output messages.
 ///
@@ -205,7 +205,7 @@ pub fn run_uninstall_command(
                     echo "Warning: App state directory '$app_state_dir' might not be empty or could not be removed." >&2
                 else
                     echo "App state directory deleted successfully."
-                }
+                fi
             else
                 echo "App state directory not found, skipping deletion."
             fi
