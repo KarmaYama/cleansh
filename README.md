@@ -59,8 +59,8 @@ To explore or contribute to the `cleansh` project:
 
 We welcome contributions to the `cleansh` workspace! Please see our:
 
-* **[Contributing Guidelines](CONTRIBUTING.md)**
-* **[Code of Conduct](CODE_OF_CONDUCT.md)**
+* **[Contributing Guidelines](./cleansh/CONTRIBUTING.md)**
+* **[Code of Conduct](./cleansh/CODE_OF_CONDUCT.md)**
 
 ---
 
