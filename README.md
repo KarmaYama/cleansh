@@ -24,7 +24,7 @@ To explore or contribute to the `cleansh` project:
 1.  **Clone the Repository:**
     ```bash
     git clone [https://github.com/KarmaYama/cleansh.git](https://github.com/KarmaYama/cleansh.git)
-    cd cleansh # This is now your workspace root
+    cd cleansh 
     ```
 
 2.  **Build the Workspace:**
@@ -36,7 +36,10 @@ To explore or contribute to the `cleansh` project:
 3.  **Run Tests:**
     Ensure everything is functioning correctly by running the full test suite:
     ```bash
-    cargo test --workspace
+    cargo test --package cleansh --features "test-exposed clipboard"
+    ```
+    ```bash
+    cargo test --package cleansh 
     ```
 
 ---
