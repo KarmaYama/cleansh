@@ -67,6 +67,9 @@ files = [
     "README.md", # This refers to cleansh-workspace/README.md
 ]
 
+[dist.apps.cleansh.assets]
+files = ["cleansh/LICENSE.md"]
+
 # --- Release Publishing Configuration ---
 # These settings control how `dist` interacts with GitHub to create releases.
 [dist.release]
