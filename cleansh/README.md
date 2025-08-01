@@ -68,7 +68,7 @@ Effective with `v0.1.5` (current release), `cleansh` adopts the **PolyForm Nonco
 **📢 For Commercial Licenses:**
 Please email us at [licenses@cleansh.tech](mailto:cleansshh@gmail.com) for pricing and terms.
 
-For detailed definitions of "Commercial Use," information on the v0.1.5 evaluation period, and future licensing enforcement (including in-app license key validation from `v0.1.7`), please refer to our dedicated **[License Notes](LICENSE_NOTES.md)**.
+For detailed definitions of "Commercial Use," information on the v0.1.5 evaluation period, and future licensing enforcement (including in-app license key validation from `v1.0.0`), please refer to our dedicated **[License Notes](LICENSE_NOTES.md)**.
 
 ---
 

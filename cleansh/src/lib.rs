@@ -90,6 +90,7 @@ pub mod test_exposed {
     /// CLI utility modules for testing
     pub mod utils {
         pub use crate::utils::app_state::*;
+        pub use crate::utils::platform;
     }
 
     /// CLI logger for testing

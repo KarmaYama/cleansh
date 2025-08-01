@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.7] - 2025-08-01 — Fix: Improved Redaction Accuracy & CLI Stability Enhancements
+
+This release focuses on addressing a critical issue in path redaction and a configuration parsing error, enhancing the overall precision and reliability of `cleansh`. This ensures that sensitive file paths are redacted correctly without corrupting the rest of the path.
+
+### Fixed
+
+* **Corrected Linux and macOS Path Redaction:** Resolved a bug where backreferences (`$1`) in the `replace_with` string were not being expanded correctly by the core sanitization engine. Paths like `/home/supersecret/path` now correctly redact to `~/path` instead of the literal `~${0}`. (Fixes issue #7)
+* **Corrected Interactive Stdin Instructions:** Fixed an issue where the CLI incorrectly prompted users on Linux/macOS to use `Ctrl+Z` to end standard input. The correct instruction, **`Ctrl+D`**, is now displayed for these platforms, while `Ctrl+Z` is correctly shown for Windows. (Fixes issue #6)
+
+---
+
 ## [0.1.6] - 2025-07-31 — Architectural Refinement for Stability & Future Growth
 
 This release primarily focuses on a significant **architectural refinement** within `cleansh`, laying a more robust and modular foundation for its continued evolution. This strategic internal restructuring enhances `cleansh`'s stability, maintainability, and readiness for advanced features, solidifying its role as an indispensable tool in developer workflows. This ensures `cleansh` can adapt more flexibly to future demands while maintaining its high-trust security posture.

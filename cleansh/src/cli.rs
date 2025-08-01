@@ -22,7 +22,7 @@ use std::path::PathBuf;
     author = "Cleansh Technologies (Clean Shell)", // Added author as per best practice
     version = env!("CARGO_PKG_VERSION"), // Use env! for version
     about = "Securely redact sensitive data from text",
-    long_about = "Cleansh is a command-line utility designed to help you sanitize sensitive information from your text-based data, such as logs, documents, or terminal output.",
+    long_about = "Cleansh is a command-line utility for securely redacting sensitive information from text-based data. It helps you sanitize logs, code, documents, or terminal output to ensure that Personally Identifiable Information (PII) and other sensitive patterns are removed or obfuscated according to a configurable rule set.",
     // Crucial for cli_integration_tests:
     // Allow options to be placed anywhere on the command line, not just before subcommands
     arg_required_else_help = false, // Display help if no arguments, but don't require args if a subcommand is chosen
@@ -39,7 +39,7 @@ pub struct Cli {
     pub no_clipboard: bool, // NEW: Added for explicit disabling
 
     /// Show a unified diff between original and sanitized
-    #[arg(short = 'D', long = "diff", conflicts_with = "no_diff", help = "Show a unified diff between original and sanitized content.")] // CHANGED: short = 'D'
+    #[arg(short = 'D', long = "diff", conflicts_with = "no_diff", help = "Show a unified diff to highlight the changes made during the sanitization process.")] // CHANGED: short = 'D', refined help text
     pub diff: bool,
 
     /// Do not show diff
@@ -63,11 +63,11 @@ pub struct Cli {
     pub no_summary: bool,
 
     /// Explicitly enable only these rule names (comma-separated)
-    #[arg(long = "enable", value_delimiter = ',', help = "Explicitly enable only these rule names (comma-separated).")] // Added long name
+    #[arg(short = 'e', long = "enable", value_delimiter = ',', help = "Explicitly enable only these rule names (comma-separated).")] // ADDED: short 'e'
     pub enable: Vec<String>,
 
     /// Explicitly disable these rule names (comma-separated)
-    #[arg(long = "disable", value_delimiter = ',', help = "Explicitly disable these rule names (comma-separated).")] // Added long name
+    #[arg(short = 'x', long = "disable", value_delimiter = ',', help = "Explicitly disable these rule names (comma-separated).")] // ADDED: short 'x'
     pub disable: Vec<String>,
 
     // --- Global flags used across commands, or for the main command ---

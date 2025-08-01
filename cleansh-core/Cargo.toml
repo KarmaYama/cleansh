@@ -1,7 +1,7 @@
 #cleansh-workspace/cleansh-core/#Cargo.toml
 [package]
 name = "cleansh-core"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Cleansh Technologies"]
 license-file = "LICENSE.md"

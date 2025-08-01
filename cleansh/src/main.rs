@@ -41,6 +41,7 @@ use cleansh::commands;
 use cleansh::logger;
 use cleansh::ui;
 use cleansh::utils::app_state::AppState;
+use cleansh::utils::platform;
 use cleansh::cli::{Cli, Commands};
 
 fn main() -> Result<()> {
@@ -90,7 +91,7 @@ fn main() -> Result<()> {
             } else if io::stdin().is_terminal() {
                 // NEW: This branch now correctly handles the interactive TTY case
                 commands::cleansh::info_msg(
-                    "Reading input from stdin. Press Ctrl+Z then Enter to finish input.",
+                    &format!("Reading input from stdin. Press {} then Enter to finish input.", platform::eof_key_combo()),
                     &theme_map,
                 );
                 let mut buffer = String::new();
@@ -148,8 +149,8 @@ fn main() -> Result<()> {
                 let mut output_writer: Box<dyn Write> = if let Some(path) = &cli.output {
                     commands::cleansh::warn_msg(
                         "Warning: --line-buffered is intended for real-time console output. \
-                         Outputting to a file (--output) will still buffer by line, \
-                         but real-time benefits might be less apparent.",
+                          Outputting to a file (--output) will still buffer by line, \
+                          but real-time benefits might be less apparent.",
                         &theme_map,
                     );
                     Box::new(std::fs::File::create(path)?)
@@ -222,7 +223,10 @@ fn main() -> Result<()> {
                     fs::read_to_string(path)
                         .with_context(|| format!("Failed to read input from {}", path.display()))?
                 } else if io::stdin().is_terminal() {
-                    commands::cleansh::info_msg("Reading input from stdin. Press Ctrl+Z then Enter to finish input.", &theme_map);
+                    commands::cleansh::info_msg(
+                        &format!("Reading input from stdin. Press {} then Enter to finish input.", platform::eof_key_combo()),
+                        &theme_map,
+                    );
                     let mut buffer = String::new();
                     io::stdin().read_to_string(&mut buffer)
                         .context("Failed to read from stdin")?;

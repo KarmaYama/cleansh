@@ -246,10 +246,22 @@ pub fn sanitize_content(
             };
 
             if should_redact {
+                
+                // --- START OF MODIFIED SECTION ---
+                // Manually expand backreferences from the replacement string.
+                // The `replace_all` method with a closure doesn't do this automatically.
+                let mut final_replacement = replace_with_val.clone();
+                for i in 1..caps.len() {
+                    if let Some(group) = caps.get(i) {
+                        let placeholder = format!("${}", i);
+                        final_replacement = final_replacement.replace(&placeholder, group.as_str());
+                    }
+                }
+                
                 all_redaction_matches.push(RedactionMatch {
                     rule_name: rule_name.clone(),
                     original_string: original_match.clone(),
-                    sanitized_string: replace_with_val.clone(),
+                    sanitized_string: final_replacement.clone(),
                 });
 
                 debug!("Added RedactionMatch for rule '{}'. Current total matches: {}", rule_name, all_redaction_matches.len());
@@ -258,10 +270,13 @@ pub fn sanitize_content(
                 log_redaction_action_debug(
                     "cleansh_core::sanitizer", // Updated module path
                     &original_match,
-                    &replace_with_val,
+                    &final_replacement, // Use the expanded replacement string
                     rule_name
                 );
-                replace_with_val.clone()
+                
+                final_replacement // Return the expanded replacement string
+                // --- END OF MODIFIED SECTION ---
+
             } else {
                 debug!("Rule '{}' matched '{}' but programmatic validation failed. Keeping original text.", rule_name, redact_sensitive(&original_match));
                 original_match

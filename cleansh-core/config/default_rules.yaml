@@ -192,8 +192,8 @@ rules:
   # ==== DEVICE & FILE PATHS ====
   - name: "absolute_linux_path"
     pattern: |-
-      /home/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*
-    replace_with: "~${0}"
+      /home/[A-Za-z0-9_.-]+((?:/[A-Za-z0-9_.-]+)*)
+    replace_with: "~$1"
     description: "Linux absolute path under /home/username."
     multiline: false
     dot_matches_new_line: false
@@ -201,8 +201,8 @@ rules:
 
   - name: "absolute_macos_path"
     pattern: |-
-      /Users/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*
-    replace_with: "~${0}"
+      /Users/[A-Za-z0-9_.-]+((?:/[A-Za-z0-9_.-]+)*)
+    replace_with: "~$1"
     description: "macOS absolute path under /Users/username."
     multiline: false
     dot_matches_new_line: false
