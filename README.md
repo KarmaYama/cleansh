@@ -6,6 +6,10 @@
 
 This repository (`cleansh-workspace`) is a **Rust monorepo** designed for the secure sanitization of terminal output. It houses a growing ecosystem of tools and libraries under a unified development environment, promoting modularity, reusability, and maintainability.
 
+* **license Notes Changes And Updates:** 
+
+Please check our  [`License Notes`](./cleansh/LICENSE_NOTES.md) for more information.
+
 The primary components currently include:
 
 1.  **`cleansh` (CLI Application):** A high-trust, single-purpose command-line interface tool for redacting sensitive information from terminal output. This is the main user-facing application.
