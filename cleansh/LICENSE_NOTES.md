@@ -1,40 +1,29 @@
 # Cleansh License Notes
 
-This provides detailed information regarding the licensing of Cleansh, particularly concerning the PolyForm Noncommercial License 1.0.0, effective from `v0.1.5` onwards.
+This document provides detailed information regarding the licensing of Cleansh, particularly concerning the transition to the PolyForm Noncommercial License 1.0.0, which became effective with `v0.1.5`.
 
 ## License Summary
-
-* **Versions `< v0.1.5`**: Remain under the **MIT License**.
-* **Versions `>= v0.1.5`**: Are licensed under the **PolyForm Noncommercial License 1.0.0**.
+* **Versions < v0.1.5:** Remain under the permissive **MIT License**. These versions are not actively maintained and do not receive security patches or new features.
+* **Versions >= v0.1.5:** Are licensed under the **PolyForm Noncommercial License 1.0.0**. This license permits noncommercial use and an evaluation period for commercial entities, as detailed below.
 
 ## Commercial Use Defined
+"Commercial Use" includes, but is not limited to:
+* Any use by for-profit entities or organizations.
+* Use in a production environment for a commercial product or service.
+* Use that directly or indirectly contributes to commercial advantage or monetary compensation.
+* Use by government agencies, unless covered by a separate agreement.
 
-"Commercial Use" includes, but is not limited to, any use of Cleansh:
-* By for-profit entities or organizations.
-* In a production environment for a commercial product or service.
-* Where the use of Cleansh directly or indirectly contributes to commercial advantage or monetary compensation.
-* By government agencies, unless explicitly covered by a separate agreement.
+## Cleansh v0.1.5 and Later: Evaluation Period for Commercial Use
+We understand that commercial entities need to test and evaluate software. Therefore, all versions of Cleansh from `v0.1.5` up to `v0.1.x` may be used by commercial entities for evaluation and trial purposes. This period is intended to allow for a comprehensive assessment of Cleansh's capabilities and suitability for commercial needs. No immediate license is required for this evaluation phase.
 
-## Cleansh v0.1.5 - v0.1.x: Evaluation & Trial Period for Commercial Use
-
-**All versions of Cleansh from `v0.1.5` up to `v0.1.x` include "Pro Features" that are typically intended for commercial applications.**
-* While the core distribution remains under the PolyForm Noncommercial License 1.0.0, we understand that commercial entities may wish to evaluate these features.
-* For these versions, commercial users may **use Cleansh for evaluation and trial purposes without immediate legal action** from Cleansh maintainers.
-* This evaluation period is intended to allow commercial users to assess Cleansh's suitability for their needs.
-
-## Future Enforcement: Cleansh v1.0.0 and Beyond
-
-**Effective with the release of Cleansh version 1.0.0 (expected in Q4 2025 or later next year Q1), commercial use of Cleansh, including its "Pro Features," will strictly require a valid commercial license.**
-* From v1.0.0 onwards, the Cleansh application will incorporate an **in-app license key validation mechanism**.
-* Users wishing to continue commercial use of Cleansh beyond version 1.0.0 will need to acquire a commercial license key.
-* We will provide a dedicated section on our official website for license key acquisition.
+## Long-Term Plan: Cleansh v1.0.0 and Beyond
+With the release of Cleansh version 1.0.0 (expected Q4 2025 or Q1 2026), all commercial use will strictly require a valid commercial license key.
+* **Noncommercial Use:** The core Cleansh CLI will remain available for noncommercial use under the PolyForm Noncommercial License 1.0.0.
+* **Commercial Use:** Version `1.0.0` and all subsequent versions will incorporate an in-app license key validation mechanism. Commercial entities will be required to purchase a license key to continue using these versions.
+* **All features released in versions < v1.0.0 (e.g., 0.1.x)** remain available for use under their respective licenses without an in-app validation key.
 
 ## How to Obtain a Commercial License
+To obtain a commercial license for Cleansh, please visit our official website (URL to be provided upon v1.0.0 release) or contact us directly at [licenses@cleansh.tech](mailto:cleansshh@gmail.com).
 
-To obtain a commercial license for Cleansh, or for any commercial inquiries prior to the release of v1.0.0:
-* Please visit our official website (URL to be provided upon v1.0.0 release).
-* Alternatively, contact us directly via email: [licenses@cleansh.tech](mailto:cleansshh@gmail.com)
-
-## Violation of Commercial Use Policy
-
-Any commercial use of Cleansh from version 1.0.0 onwards without a valid, active commercial license key will be considered a **violation of this Commercial Use Policy and the underlying PolyForm Noncommercial License 1.0.0.** Cleansh maintainers reserve the right to pursue appropriate legal action in such cases.
+## Policy Enforcement
+Any commercial use of Cleansh from version 1.0.0 onwards without a valid license key is a violation of the Commercial Use Policy. This policy is in place to ensure the project's sustainability and continued development for all users.
