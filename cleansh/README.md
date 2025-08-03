@@ -8,7 +8,7 @@
 > Cleansh is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
 > It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed.
 > The project is in active development, with **`v0.1.7`** bringing significant enhancements to redaction accuracy, security, and user control.
-> We value your feedback. Please report any issues you encounter.
+> We value your feedback. Please report any issues you encounter. Star this repo if you like it!
 
 ---
 
