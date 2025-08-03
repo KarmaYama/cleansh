@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.7] - 2025-08-01 — Fix: Improved Redaction Accuracy & CLI Stability Enhancements
+## [0.1.7] - 2025-08-03 — Fix: Improved Redaction Accuracy & CLI Stability Enhancements
 
 This release focuses on addressing a critical issue in path redaction and a configuration parsing error, enhancing the overall precision and reliability of `cleansh`. This ensures that sensitive file paths are redacted correctly without corrupting the rest of the path.
 

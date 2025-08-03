@@ -1,8 +1,3 @@
-Based on our updated strategic plan and the new licensing policy you've defined in `LICENSE_NOTES.md`, here is the updated `README.md` to reflect these critical changes.
-
-I have combined the two redundant "Important Note on Licensing" sections, clarified the commercial policy to align with your `LICENSE_NOTES.md` (which states `v1.0.0` as the enforcement version), and added a new, prominent entry in your future roadmap to showcase the powerful plugin architecture we've designed.
-
-````markdown
 # Cleansh – Sanitize Your Terminal Output, Securely.
 
 [![Downloads from crates.io](https://img.shields.io/crates/d/cleansh.svg?style=for-the-badge&labelColor=334155&color=4FC3F7)](https://crates.io/crates/cleansh) [![CodeQL](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql) [![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml) [![Dependabot Updates](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates) [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml) [![Rust CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml)

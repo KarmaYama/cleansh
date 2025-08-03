@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.1] - 2025-08-01 — Fix: Backreference Handling & Enhanced Config Validation
+## [0.1.1] - 2025-08-03 — Fix: Backreference Handling & Enhanced Config Validation
 
 This release addresses two key issues found during integration testing, ensuring the core sanitization engine correctly handles backreferences in replacement strings and gracefully recovers from malformed rule configurations.
 
