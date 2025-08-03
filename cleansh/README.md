@@ -1,3 +1,8 @@
+Based on our updated strategic plan and the new licensing policy you've defined in `LICENSE_NOTES.md`, here is the updated `README.md` to reflect these critical changes.
+
+I have combined the two redundant "Important Note on Licensing" sections, clarified the commercial policy to align with your `LICENSE_NOTES.md` (which states `v1.0.0` as the enforcement version), and added a new, prominent entry in your future roadmap to showcase the powerful plugin architecture we've designed.
+
+````markdown
 # Cleansh – Sanitize Your Terminal Output, Securely.
 
 [![Downloads from crates.io](https://img.shields.io/crates/d/cleansh.svg?style=for-the-badge&labelColor=334155&color=4FC3F7)](https://crates.io/crates/cleansh) [![CodeQL](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql) [![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml) [![Dependabot Updates](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates) [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml) [![Rust CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml)
@@ -6,7 +11,7 @@
 
 > Cleansh is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
 > It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed.
-> The project is in active development, with **`v0.1.5`** bringing significant enhancements to redaction accuracy, security, and user control.
+> The project is in active development, with **`v0.1.7`** bringing significant enhancements to redaction accuracy, security, and user control.
 > We value your feedback. Please report any issues you encounter.
 
 ---
@@ -18,8 +23,8 @@
 | [1. Overview](#1-overview) |
 | [2. Important Note on Licensing](#2-important-note-on-licensing) |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.1. Commercial Use Defined |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.2. Cleansh v0.1.5: Evaluation & Trial Period |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.3. Future Enforcement: Cleansh v0.1.7 and Beyond |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.2. Cleansh v0.1.5 - v0.9.x: Evaluation & Trial Period |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.3. Future Enforcement: Cleansh v1.0.0 and Beyond |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.4. How to Obtain a Commercial License |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.5. Violation of Commercial Use Policy |
 | [3. Core Capabilities – Current Version (v0.1.5)](#3-core-capabilities--current-version-v015) |
@@ -47,28 +52,24 @@ Whether you're debugging, collaborating, or sharing logs, `cleansh` ensures that
 
 ## 2. Important Note on Licensing
 
-As part of `cleansh`'s commitment to sustainable development and continued innovation, we are shifting our licensing model starting with `v0.1.5`.
+As part of `cleansh`'s commitment to sustainable development and continued innovation, we have shifted our licensing model.
 
-| Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and beyond, pre-v1.0) |
+| Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and up to v0.9.x) |
 | :---------------- | :----------------------------- | :---------------------------------------------------- |
 | **Primary License** | **MIT License** | **PolyForm Noncommercial License 1.0.0** |
 | **Noncommercial Use** | Free to use | **Free to use** (for personal, academic, research, etc.) |
-| **Commercial Use** | Free to use | **Requires a separate commercial license** |
-| **Previous Versions** | Remain permanently MIT licensed | N/A (new license applies from `v0.1.5` onwards) |
+| **Commercial Use** | Free to use | **Trial & Evaluation Period (see below)** |
+| **Enforcement** | N/A | **Enforcement starts with `v1.0.0`** |
 
----
-
-## 2. Important Note on Licensing
-
-Effective with `v0.1.5` (current release), `cleansh` adopts the **PolyForm Noncommercial License 1.0.0**.
+Effective with `v0.1.5`, `cleansh` adopts the **PolyForm Noncommercial License 1.0.0**. For versions `v0.1.5` up to `v0.9.x`, commercial use is permitted for evaluation and trial purposes.
 
 * **Free Use:** `cleansh` remains **free for personal, academic, research, hobby, and charitable use.**
-* **Commercial Use:** Any use by for-profit entities, government agencies, or in a commercial product/service **requires a separate commercial license.**
+* **Commercial Use:** Any use by for-profit entities, government agencies, or in a commercial product/service will strictly require a separate commercial license **from `v1.0.0` onwards**.
 
 **📢 For Commercial Licenses:**
 Please email us at [licenses@cleansh.tech](mailto:cleansshh@gmail.com) for pricing and terms.
 
-For detailed definitions of "Commercial Use," information on the v0.1.5 evaluation period, and future licensing enforcement (including in-app license key validation from `v1.0.0`), please refer to our dedicated **[License Notes](LICENSE_NOTES.md)**.
+For detailed definitions of "Commercial Use," information on the evaluation period, and future licensing enforcement (including in-app license key validation from `v1.0.0`), please refer to our dedicated **[License Notes](LICENSE_NOTES.md)**.
 
 ---
 
@@ -253,6 +254,7 @@ cleansh --disable-rules "email,ipv4_address"
 
 Cleansh is charting a course toward adaptive, user-driven enhancements, transforming it into an intelligent, trainable security assistant. Planned areas of exploration include:
 
+  * **Pluggable Detection Architecture:** Introduce a modular architecture that allows for multiple, independent detection engines to run simultaneously, including an **entropy-based engine** for finding high-randomness secrets and a future **Adaptive Interactive Learning (AIL)** engine. This will significantly reduce false negatives without adding complexity to the user's workflow.
   * **Interactive Feedback Loop:** Enable users to provide feedback on specific matches (e.g., redact, ignore once, always ignore), allowing the tool to refine future detections.
   * **Heuristic Tuning:** Adjustable detection thresholds (entropy levels, pattern sensitivity) for fine-grained control over candidate selection.
   * **Enhanced CI/CD Modes:** Non-interactive audit outputs (JSON/exit codes) for automated pipelines, plus optional machine-readable reports.
@@ -287,8 +289,8 @@ cargo install cleansh # Use `cargo install cleansh --force` to update
 ```bash
 git clone [https://github.com/KarmaYama/cleansh.git](https://github.com/KarmaYama/cleansh.git)
 cd cleansh
-cargo build --release
-cargo test
+cargo build --release --features "test-exposed clipboard"
+cargo test --package cleansh --features "test-exposed clipboard"
 ```
 
 -----
@@ -298,5 +300,8 @@ cargo test
 This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
 
 -----
+
 **Precision redaction. Local‑only trust. Built for devs.**
 
+```
+```

@@ -15,11 +15,11 @@ This provides detailed information regarding the licensing of Cleansh, particula
 * Where the use of Cleansh directly or indirectly contributes to commercial advantage or monetary compensation.
 * By government agencies, unless explicitly covered by a separate agreement.
 
-## Cleansh v0.1.5: Evaluation & Trial Period for Commercial Use
+## Cleansh v0.1.5 - v0.9.x: Evaluation & Trial Period for Commercial Use
 
-**Cleansh version 0.1.5 (current release) includes "Pro Features" that are typically intended for commercial applications.**
+**All versions of Cleansh from `v0.1.5` up to `v0.9.x` include "Pro Features" that are typically intended for commercial applications.**
 * While the core distribution remains under the PolyForm Noncommercial License 1.0.0, we understand that commercial entities may wish to evaluate these features.
-* For versions 0.1.5 up to 0.1.9 only, commercial users may **use Cleansh for evaluation and trial purposes without immediate legal action** from Cleansh maintainers.
+* For these versions, commercial users may **use Cleansh for evaluation and trial purposes without immediate legal action** from Cleansh maintainers.
 * This evaluation period is intended to allow commercial users to assess Cleansh's suitability for their needs.
 
 ## Future Enforcement: Cleansh v1.0.0 and Beyond
