@@ -18,7 +18,7 @@
 | [1. Overview](#1-overview) |
 | [2. Important Note on Licensing](#2-important-note-on-licensing) |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.1. Commercial Use Defined |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.2. Cleansh v0.1.5 - v0.9.x: Evaluation & Trial Period |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.2. Cleansh v0.1.5 - v0.1.x: Evaluation & Trial Period |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.3. Future Enforcement: Cleansh v1.0.0 and Beyond |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.4. How to Obtain a Commercial License |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.5. Violation of Commercial Use Policy |
@@ -49,14 +49,14 @@ Whether you're debugging, collaborating, or sharing logs, `cleansh` ensures that
 
 As part of `cleansh`'s commitment to sustainable development and continued innovation, we have shifted our licensing model.
 
-| Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and up to v0.9.x) |
+| Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and up to v0.1.x) |
 | :---------------- | :----------------------------- | :---------------------------------------------------- |
 | **Primary License** | **MIT License** | **PolyForm Noncommercial License 1.0.0** |
 | **Noncommercial Use** | Free to use | **Free to use** (for personal, academic, research, etc.) |
 | **Commercial Use** | Free to use | **Trial & Evaluation Period (see below)** |
 | **Enforcement** | N/A | **Enforcement starts with `v1.0.0`** |
 
-Effective with `v0.1.5`, `cleansh` adopts the **PolyForm Noncommercial License 1.0.0**. For versions `v0.1.5` up to `v0.9.x`, commercial use is permitted for evaluation and trial purposes.
+Effective with `v0.1.5`, `cleansh` adopts the **PolyForm Noncommercial License 1.0.0**. For versions `v0.1.5` up to `v0.1.x`, commercial use is permitted for evaluation and trial purposes.
 
 * **Free Use:** `cleansh` remains **free for personal, academic, research, hobby, and charitable use.**
 * **Commercial Use:** Any use by for-profit entities, government agencies, or in a commercial product/service will strictly require a separate commercial license **from `v1.0.0` onwards**.
