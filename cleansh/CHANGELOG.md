@@ -46,15 +46,15 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 * **Introducing Redaction Statistics Mode (`--stats-only`):**
     A brand-new mode specifically designed for **analyzing and summarizing redactions without modifying the input content or producing sanitized output**. This provides detailed counts of matched items per redaction rule, laying the groundwork for advanced analytics and deeper insights into your data.
 
-* **Pro NEW Feature: JSON Statistics Export (`--stats-json-file <FILE>`, `--export-json-to-stdout`):**
+* **NEW Feature: JSON Statistics Export (`--stats-json-file <FILE>`, `--export-json-to-stdout`):**
     Take your redaction analysis to the next level with programmatic access to statistics.
     * `--stats-json-file <FILE>`: **Export a comprehensive redaction summary**, including rule details and match occurrences, to a specified JSON file. Ideal for reporting and integration into other tools.
     * `--export-json-to-stdout`: **Output the full JSON redaction summary directly to standard output**, enabling seamless piping to other scripts or analysis tools.
 
-* **Pro NEW Feature: Sample Matches in Statistics (`--sample-matches <N>`):**
+* **NEW Feature: Sample Matches in Statistics (`--sample-matches <N>`):**
     **Enhance your redaction reports** by including up to `N` unique examples of both the original (unredacted) and sanitized (redacted) text for each matched rule. This provides **immediate context** for identified sensitive data, significantly improving the utility of your redaction reports.
 
-* **Pro NEW Feature: Fail-over Threshold (`--fail-over <X>`):**
+* **NEW Feature: Fail-over Threshold (`--fail-over <X>`):**
     Integrate `cleansh` more robustly into your CI/CD pipelines. This crucial flag allows you to **specify a maximum number of secrets (`X`)**. If the total secrets detected exceed this threshold, `cleansh` will exit with a non-zero status code, signaling a potential security or compliance issue and preventing unintended deployments.
 
 * **New redaction patterns** for emerging/expanded formats:
