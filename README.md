@@ -60,7 +60,7 @@ To explore or contribute to the `cleansh` project:
 
 Please check our [`License Notes`](./cleansh/LICENSE_NOTES.md) for more information.
 
-The overall `cleansh` project, including the `cleansh` CLI application, is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). Please refer to the specific license notes within the `cleansh` directory for full details on commercial use.
+The overall `cleansh` project, the `cleansh` CLI application specifically, is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). Please refer to the specific license notes within the `cleansh` directory for full details on commercial use.
 
 ---
 
