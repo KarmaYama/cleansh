@@ -17,7 +17,8 @@ This document provides detailed information regarding the licensing of Cleansh, 
 We understand that commercial entities need to test and evaluate software. Therefore, all versions of Cleansh from `v0.1.5` up to `v0.1.x` may be used by commercial entities for evaluation and trial purposes. This period is intended to allow for a comprehensive assessment of Cleansh's capabilities and suitability for commercial needs. No immediate license is required for this evaluation phase.
 
 ## Long-Term Plan: Cleansh v1.0.0 and Beyond
-With the release of Cleansh version 1.0.0 (expected Q4 2025 or Q1 2026), all commercial use will strictly require a valid commercial license key.
+With the release of Cleansh version 1.0.0 (expected Q4 2025 or Q1 2026), all commercial use and pro features will strictly require a valid commercial license key. We understand that commercial use is a broad term. Any feature not tagged as a pro feature does not fall under commercial use umbrella regradless of how its used. This effectively means its a free tier feature
+
 * **Noncommercial Use:** The core Cleansh CLI will remain available for noncommercial use under the PolyForm Noncommercial License 1.0.0.
 * **Commercial Use:** Version `1.0.0` and all subsequent versions will incorporate an in-app license key validation mechanism. Commercial entities will be required to purchase a license key to continue using these versions.
 * **All features released in versions < v1.0.0 (e.g., 0.1.x)** remain available for use under their respective licenses without an in-app validation key.
@@ -26,4 +27,5 @@ With the release of Cleansh version 1.0.0 (expected Q4 2025 or Q1 2026), all com
 To obtain a commercial license for Cleansh, please visit our official website (URL to be provided upon v1.0.0 release) or contact us directly at [licenses@cleansh.tech](mailto:cleansshh@gmail.com).
 
 ## Policy Enforcement
-Any commercial use of Cleansh from version 1.0.0 onwards without a valid license key is a violation of the Commercial Use Policy. This policy is in place to ensure the project's sustainability and continued development for all users.
+Any commercial use of Cleansh from version 1.0.0 onwards without a valid license key is a violation of the Commercial Use Policy. This policy is in place to ensure the project's sustainability and continued development for all users. After version 1.0.0 is released we wont be supporting 0.1.x versions of cleansh
+
