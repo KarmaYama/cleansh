@@ -1,7 +1,7 @@
 // cleansh-workspace/cleansh-core/src/lib.rs
-//! # Cleansh Core Library
+//! # CleanSH Core Library
 //!
-//! `cleansh-core` provides the fundamental, platform-independent logic for data sanitization
+//! `CleanSH-core` provides the fundamental, platform-independent logic for data sanitization
 //! and redaction. It defines the core data structures for redaction rules, provides mechanisms
 //! for compiling these rules, and implements the `sanitize_content` function which is
 //! the heart of the redaction engine.

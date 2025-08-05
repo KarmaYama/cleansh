@@ -3,9 +3,9 @@
 name = "cleansh-core"
 version = "0.1.1"
 edition = "2021"
-authors = ["Cleansh Technologies"]
+authors = ["Obscura Tech"]
 license-file = "LICENSE.md"
-description = "Core library for Cleansh, providing essential data sanitization rules, compilation, and application logic independent of the CLI."
+description = "Core library for CleanSH, providing essential data sanitization rules, compilation, and application logic independent of the CLI."
 repository = "https://github.com/KarmaYama/cleansh"
 homepage = "https://cleansh.netlify.app/"
 keywords = ["sanitization", "redaction", "data-security", "privacy", "core-logic"]

@@ -1,8 +1,8 @@
-# Cleansh Workspace – A Monorepo for Secure Terminal Output Sanitization
+# CleanSH Workspace – A Monorepo for Secure Terminal Output Sanitization
 
 [![CodeQL](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql) [![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml) [![Dependabot Updates](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates) [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml) [![Rust CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml) [![Star](https://img.shields.io/github/stars/KarmaYama/cleansh.svg?style=social)](https://github.com/KarmaYama/cleansh/stargazers)
 
-**Stop relying on leaky regex. Cleansh is a high-trust, modular Rust utility designed to securely and programmatically sanitize sensitive data from your terminal output, logs, and text. Star this repo to follow our journey!**
+**Stop relying on leaky regex. CleanSH (Clean Shell) is a high-trust, modular Rust utility designed to securely and programmatically sanitize sensitive data from your terminal output, logs, and text. Star this repo to follow our journey!**
 
 ---
 
@@ -14,11 +14,11 @@ This repository (`cleansh-workspace`) is a **Rust monorepo** designed for the se
 
 ### Key Components
 
-1.  **`cleansh` (CLI Application):** A command-line utility for redacting sensitive information. This is the main user-facing application, built for high-trust and reliability.
+1.  **`CleanSH` (CLI Application):** A command-line utility for redacting sensitive information. This is the main user-facing application, built for high-trust and reliability.
     * **Location:** [`/cleansh`](./cleansh/README.md)
     * **Purpose:** Provides a pre-configured solution for data sanitization with flexible options for custom rules and output formats via the CLI.
 
-2.  **`cleansh-core` (Core Library):** A standalone, reusable Rust library that encapsulates the fundamental logic for data redaction and validation.
+2.  **`CleanSH-core` (Core Library):** A standalone, reusable Rust library that encapsulates the fundamental logic for data redaction and validation.
     * **Location:** [`/cleansh-core`](./cleansh-core/README.md)
     * **Purpose:** Designed to be highly reliable and independent, enabling seamless integration into other Rust projects. The `cleansh` CLI uses this core library.
 
@@ -26,7 +26,7 @@ This repository (`cleansh-workspace`) is a **Rust monorepo** designed for the se
 
 ### Getting Started
 
-To explore or contribute to the `cleansh` project:
+To explore or contribute to the `CleanSH` project:
 
 1.  **Clone the Repository:**
     ```bash
@@ -49,7 +49,7 @@ To explore or contribute to the `cleansh` project:
 
 ### **Community and Support**
 
-**We're building `cleansh` together with our users and contributors!** If you have questions, feedback, or want to discuss a new feature, don't hesitate to reach out.
+**We're building `CleanSH` together with our users and contributors!** If you have questions, feedback, or want to discuss a new feature, don't hesitate to reach out.
 
 * **Ask a Question or Share an Idea:** Our **[GitHub Discussions](https://github.com/KarmaYama/cleansh-workspace/discussions)** page is the best place to connect with us directly.
 * **Report a Bug:** Please open an issue on the **[Issues page](https://github.com/KarmaYama/cleansh-workspace/issues)**. We appreciate detailed bug reports!
@@ -60,8 +60,8 @@ To explore or contribute to the `cleansh` project:
 
 Please check our [`License Notes`](./cleansh/LICENSE_NOTES.md) for more information.
 
-The overall `cleansh` project, the `cleansh` CLI application specifically, is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). Please refer to the specific license notes within the `cleansh` directory for full details on commercial use.
+The overall `CleanSH` project, the `CleanSH` CLI application specifically, is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). Please refer to the specific license notes within the `CleanSH` directory for full details on commercial use.
 
 ---
 
-**Cleansh Workspace: Modular design for secure and adaptable terminal output sanitization.**
+**CleanSH Workspace: Modular design for secure and adaptable terminal output sanitization.**

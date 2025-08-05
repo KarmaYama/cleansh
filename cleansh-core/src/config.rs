@@ -1,9 +1,9 @@
 // cleansh-workspace/cleansh-core/src/config.rs
-//! Configuration management for `cleansh-core`, including data structures for redaction rules
+//! Configuration management for `CleanSH-core`, including data structures for redaction rules
 //! and methods for loading and merging rule sets.
 //!
 //! This module defines the core types `RedactionRule` and `RedactionConfig` which are central
-//! to how sensitive data patterns are defined and managed within the Cleansh ecosystem.
+//! to how sensitive data patterns are defined and managed within the CleanSH ecosystem.
 //! It also provides utility functions for loading these configurations from files or
 //! embedded defaults, and for merging multiple rule sets.
 //! The `RedactionConfig` can be used to load rules from YAML files, apply default rules

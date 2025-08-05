@@ -19,7 +19,7 @@ This release addresses two key issues found during integration testing, ensuring
 
 ## [0.1.0] - 2025-07-31 — Initial Library Crate Release
 
-This is the inaugural release of the `cleansh-core` library crate. This version encapsulates the core logic of the `cleansh` application, providing a robust and reusable engine for sensitive data redaction.
+This is the inaugural release of the `CleanSH-core` library crate. This version encapsulates the core logic of the `CleanSH` application, providing a robust and reusable engine for sensitive data redaction.
 
 ### Added
 

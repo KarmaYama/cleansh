@@ -1,6 +1,6 @@
 // cleansh-workspace/cleansh-core/src/redaction_match.rs
 //! Provides core data structures and utility functions for managing redaction matches
-//! and sensitive data logging within the `cleansh-core` library.
+//! and sensitive data logging within the `CleanSH-core` library.
 //!
 //! This module defines `RedactionMatch` for detailed reporting of sanitization
 //! operations and includes helper functions for conditionally redacting

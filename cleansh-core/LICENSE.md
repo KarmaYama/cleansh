@@ -1,4 +1,4 @@
-# cleansh-core - Business Source License 1.1
+# CleanSH-core - Business Source License 1.1
 
 ## TERMS
 
@@ -10,7 +10,7 @@ Obscura Tech
 
 ## LICENSED WORK
 
-cleansh-core
+CleanSH-core
 
 ## CHANGE DATE
 
@@ -32,8 +32,8 @@ You may use the Licensed Work in production as long as your **Total Contract Val
     The Business Source License (BUSL) is a "Copyleft" license, like the GPL, in the sense that source code is available to all, and modifications and derivatives must also be made available. Unlike the GPL, however, it is not an Open Source license for a defined period of time. After that defined period of time (the "Change Date"), the Licensed Work automatically converts to an Open Source License. This means that after the Change Date, the Licensed Work can be used for any purpose, and the terms of this License no longer apply.
 
 * **1. Definitions**
-    "Licensed Work" means the source code for the cleansh-core library licensed under the terms of this License.
-    "Licensor" means Cleansh Technologies.
+    "Licensed Work" means the source code for the CleanSH-core library licensed under the terms of this License.
+    "Licensor" means CleanSH Technologies.
     "Licensee" means anyone who receives the Licensed Work.
     "Change Date" is specified above.
     "Change License" is specified above.

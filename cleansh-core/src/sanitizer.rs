@@ -1,5 +1,5 @@
 // cleansh-workspace/cleansh-core/src/sanitizer.rs
-//! Core sanitization engine for Cleansh.
+//! Core sanitization engine for CleanSH.
 //!
 //! This module is responsible for compiling redaction rules into efficient regular expressions
 //! and applying them to input content. It handles the actual process of identifying sensitive
