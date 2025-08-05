@@ -40,7 +40,7 @@ This release marks a significant leap forward for `CleanSH`, introducing a **pow
 
 ### Added
 
-* **New Command: Uninstall (`CleanSH uninstall`):**
+* **New Command: Uninstall (`Cleansh uninstall`):**
     Introduced a new command to **cleanly remove `CleanSH`'s configuration files and associated application state** from the user's machine. This provides a straightforward and reliable way to uninstall the application, with a confirmation prompt for safety.
 
 * **Introducing Redaction Statistics Mode (`--stats-only`):**
