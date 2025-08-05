@@ -299,6 +299,6 @@ This project is licensed under the [PolyForm Noncommercial License 1.0.0](https:
 
 **Precision redaction. Local‑only trust. Built for devs.**
 
-```
-Copyright 2025 Obscura Tech.
-```
+
+*Copyright 2025 Obscura Tech.*
+
