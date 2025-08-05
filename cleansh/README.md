@@ -1,11 +1,11 @@
-# Cleansh – Sanitize Your Terminal Output, Securely.
+# CleanSH – Sanitize Your Terminal Output, Securely.
 
 [![Downloads from crates.io](https://img.shields.io/crates/d/cleansh.svg?style=for-the-badge&labelColor=334155&color=4FC3F7)](https://crates.io/crates/cleansh) [![CodeQL](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql) [![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml) [![Dependabot Updates](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates) [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml) [![Rust CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml) [![Star](https://img.shields.io/github/stars/KarmaYama/cleansh.svg?style=social)](https://github.com/KarmaYama/cleansh/stargazers)
 
 
 **[Contributing Guidelines](CONTRIBUTING.md)** | **[Code of Conduct](CODE_OF_CONDUCT.md)** | **[Changelog](CHANGELOG.md)** | **[Security Policy](SECURITY.md)** | **[Trademark Policy](TRADEMARK.md)** | **[Command Handbook](COMMANDS.md)**
 
-> Cleansh is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
+> CleanSH (clean shell) is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
 > It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed.
 > The project is in active development, with **`v0.1.7`** bringing significant enhancements to redaction accuracy, security, and user control.
 > We value your feedback. Please report any issues you encounter. Star the repository if you like it!
@@ -39,8 +39,8 @@
 
 ## 1. Overview
 
-`cleansh` is a powerful and reliable command‑line utility designed to help you quickly and securely redact sensitive information from your terminal output.
-Whether you're debugging, collaborating, or sharing logs, `cleansh` ensures that confidential data like IP addresses, email addresses, and access tokens never leave your local environment unmasked. Piped directly from `stdin` or loaded from files, `cleansh` provides a robust, pre‑configured solution for data sanitization, with flexible options for custom rules and output formats.
+`CleanSH` is a powerful and reliable command‑line utility designed to help you quickly and securely redact sensitive information from your terminal output.
+Whether you're debugging, collaborating, or sharing logs, `CleanSH` ensures that confidential data like IP addresses, email addresses, and access tokens never leave your local environment unmasked. Piped directly from `stdin` or loaded from files, `CleanSH` provides a robust, pre‑configured solution for data sanitization, with flexible options for custom rules and output formats.
 
 **Sanitize your terminal output. One tool. One purpose.**
 
@@ -48,7 +48,7 @@ Whether you're debugging, collaborating, or sharing logs, `cleansh` ensures that
 
 ## 2. Important Note on Licensing
 
-As part of `cleansh`'s commitment to sustainable development and continued innovation, we have shifted our licensing model.
+As part of `CleanSH`'s commitment to sustainable development and continued innovation, we have shifted our licensing model.
 
 | Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and up to v0.1.x) |
 | :---------------- | :----------------------------- | :---------------------------------------------------- |
@@ -57,9 +57,9 @@ As part of `cleansh`'s commitment to sustainable development and continued innov
 | **Commercial Use** | Free to use | **Trial & Evaluation Period (see below)** |
 | **Enforcement** | N/A | **Enforcement starts with `v1.0.0`** |
 
-Effective with `v0.1.5`, `cleansh` adopts the **PolyForm Noncommercial License 1.0.0**. For versions `v0.1.5` up to `v0.1.x`, commercial use is permitted for evaluation and trial purposes.
+Effective with `v0.1.5`, `CleanSH` adopts the **PolyForm Noncommercial License 1.0.0**. For versions `v0.1.5` up to `v0.1.x`, commercial use is permitted for evaluation and trial purposes.
 
-* **Free Use:** `cleansh` remains **free for personal, academic, research, hobby, and charitable use.**
+* **Free Use:** `CleanSH` remains **free for personal, academic, research, hobby, and charitable use.**
 * **Commercial Use:** Any use by for-profit entities, government agencies, or in a commercial product/service will strictly require a separate commercial license **from `v1.0.0` onwards**.
 
 **📢 For Commercial Licenses:**
@@ -71,11 +71,11 @@ For detailed definitions of "Commercial Use," information on the evaluation peri
 
 ## 3. Core Capabilities – Current Version (**v0.1.5**)
 
-This release represents a significant leap forward in `cleansh`'s accuracy, security, and testability. Based on our rigorously passing test suite, `cleansh` accurately masks:
+This release represents a significant leap forward in `Cleansh`'s accuracy, security, and testability. Based on our rigorously passing test suite, `Cleansh` accurately masks:
 
 ### 3.1. Enhanced Redaction Categories:
 
-`cleansh` offers broad and precise detection across a wide range of sensitive data types, complemented by robust programmatic validation for key PII:
+`Cleansh` offers broad and precise detection across a wide range of sensitive data types, complemented by robust programmatic validation for key PII:
 
 * **Emails:** Common email formats (e.g., `user@example.com`).
 * **IP Addresses:** Both **IPv4** (e.g., `192.168.1.1`) and **IPv6** addresses (full uncompressed form, e.g., `2001:0db8:85a3:0000:0000:8a2e:0370:7334`).
@@ -104,7 +104,7 @@ This release represents a significant leap forward in `cleansh`'s accuracy, secu
 
 ### 3.2. Advanced Features (with flags):
 
-`cleansh` provides command‑line flags to customize its behavior, all thoroughly tested:
+`Cleansh` provides command‑line flags to customize its behavior, all thoroughly tested:
 
 * **Copy to Clipboard (`-c` / `--clipboard`):** Instantly copy sanitized output.
 * **Diff View (`-d` / `--diff`):** Show a colored, line‑by‑line diff of redactions.
@@ -130,7 +130,7 @@ This release represents a significant leap forward in `cleansh`'s accuracy, secu
 **Basic Sanitization (stdin):**
 
 ```bash
-echo "My email is test@example.com and my IP is 192.168.1.1." | cleansh
+echo "My email is test@example.com and my IP is 192.168.1.1." | Cleansh
 ````
 
 **Docker Logs:**
@@ -248,7 +248,7 @@ cleansh --disable-rules "email,ipv4_address"
 
 ## 9\. Future Vision & Roadmap
 
-Cleansh is charting a course toward adaptive, user-driven enhancements, transforming it into an intelligent, trainable security assistant. Planned areas of exploration include:
+CleanSH is charting a course toward adaptive, user-driven enhancements, transforming it into an intelligent, trainable security assistant. Planned areas of exploration include:
 
   * **Pluggable Detection Architecture:** Introduce a modular architecture that allows for multiple, independent detection engines to run simultaneously, including an **entropy-based engine** for finding high-randomness secrets and a future **Adaptive Interactive Learning (AIL)** engine. This will significantly reduce false negatives without adding complexity to the user's workflow.
   * **Interactive Feedback Loop:** Enable users to provide feedback on specific matches (e.g., redact, ignore once, always ignore), allowing the tool to refine future detections.

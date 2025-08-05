@@ -1,26 +1,26 @@
-# Cleansh Command Handbook
+# CleanSH Command Handbook
 
-Welcome to the **Cleansh Command Handbook**\! This guide dives deeper into `cleansh`, your indispensable command-line utility for sanitizing sensitive information from terminal output. Whether you're a developer, system administrator, or anyone who values privacy and security in their shared data, `cleansh` empowers you to control what leaves your terminal.
+Welcome to the **CleanSH Command Handbook**\! This guide dives deeper into `CleanSH`, your indispensable command-line utility for sanitizing sensitive information from terminal output. Whether you're a developer, system administrator, or anyone who values privacy and security in their shared data, `CleanSH` empowers you to control what leaves your terminal.
 
-We'll go beyond just listing commands, exploring scenarios, use cases, and how to harness `cleansh`'s full potential, including building your own custom rules.
-
------
-
-## 1\. What is Cleansh?
-
-At its core, `cleansh` (pronounced "clean shell") is a **high-trust, single-purpose CLI tool** designed to redact sensitive data from text streams. Think of it as your digital bouncer, ensuring confidential information like **IP addresses, email addresses, API keys, and even personal identifiers** never accidentally leak when you're sharing logs, debugging output, or collaborating with others.
-
-It operates **locally**, requires zero configuration to get started with its robust default rules, and offers extensive flexibility for custom needs. Whether you pipe output directly from other commands or feed it files, `cleansh` is built for secure, efficient, and precise data sanitization.
+We'll go beyond just listing commands, exploring scenarios, use cases, and how to harness `CleanSH`'s full potential, including building your own custom rules.
 
 -----
 
-## 2\. Getting Started with Cleansh
+## 1\. What is CleanSH?
 
-Before diving into the commands, make sure you have `cleansh` installed.
+At its core, `CleanSH` (pronounced "clean shell") is a **high-trust, single-purpose CLI tool** designed to redact sensitive data from text streams. Think of it as your digital bouncer, ensuring confidential information like **IP addresses, email addresses, API keys, and even personal identifiers** never accidentally leak when you're sharing logs, debugging output, or collaborating with others.
+
+It operates **locally**, requires zero configuration to get started with its robust default rules, and offers extensive flexibility for custom needs. Whether you pipe output directly from other commands or feed it files, `CleanSH` is built for secure, efficient, and precise data sanitization.
+
+-----
+
+## 2\. Getting Started with CleanSH
+
+Before diving into the commands, make sure you have `CleanSH` installed.
 
 ### Installation
 
-The **recommended** way to get `cleansh` is by downloading the latest prebuilt binaries for your platform from the [GitHub Releases](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh/releases) page.
+The **recommended** way to get `CleanSH` is by downloading the latest prebuilt binaries for your platform from the [GitHub Releases](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh/releases) page.
 
 Alternatively, you can use the install script:
 
@@ -47,18 +47,18 @@ Once installed, you're ready to start cleaning your output\!
 
 -----
 
-## 3\. Cleansh in Action: Core Sanitization
+## 3\. CleanSH in Action: Core Sanitization
 
-The primary purpose of `cleansh` is to redact sensitive data. By default, it reads from standard input (`stdin`) and writes the sanitized content to standard output (`stdout`).
+The primary purpose of `CleanSH` is to redact sensitive data. By default, it reads from standard input (`stdin`) and writes the sanitized content to standard output (`stdout`).
 
 ### Basic Usage: Piping Content
 
-The most common way to use `cleansh` is by piping the output of another command into it.
+The most common way to use `CleanSH` is by piping the output of another command into it.
 
 **Scenario:** You're debugging an application, and its logs contain an email address and an internal IP. You want to share these logs with a colleague but without revealing the sensitive information.
 
 ```powershell
-"User login attempt from test@example.com at 192.168.1.1." | cleansh
+"User login attempt from test@example.com at 192.168.1.1." | Cleansh
 ```
 
 **Output:**
@@ -71,7 +71,7 @@ User login attempt from [EMAIL_REDACTED] at [IPV4_REDACTED].
 
 ### Sanitizing File Content
 
-Instead of piping, you can also provide `cleansh` with a file path.
+Instead of piping, you can also provide `CleanSH` with a file path.
 
 **Scenario:** You have an existing log file, `application.log`, that might contain sensitive data, and you want to create a sanitized version.
 
@@ -106,11 +106,11 @@ Sometimes you want to see exactly what `cleansh` redacted. The `--diff` (or `-d`
 +My Stripe key is [STRIPE_SECRET_REDACTED] and my email is [EMAIL_REDACTED].
 ```
 
-**Why this is useful:** Excellent for auditing, debugging your redaction rules, or simply gaining confidence that `cleansh` is working as expected.
+**Why this is useful:** Excellent for auditing, debugging your redaction rules, or simply gaining confidence that `CleanSH` is working as expected.
 
 ### Copying to Clipboard with `--clipboard`
 
-For quick sharing, `cleansh` can directly copy the sanitized output to your system's clipboard using the `--clipboard` (or `-c`) flag.
+For quick sharing, `CleanSH` can directly copy the sanitized output to your system's clipboard using the `--clipboard` (or `-c`) flag.
 
 **Scenario:** You've just run a command that spits out some sensitive configuration, and you want to paste a clean version directly into a chat or document.
 
@@ -131,9 +131,9 @@ For quick sharing, `cleansh` can directly copy the sanitized output to your syst
 
 ### Suppressing the Redaction Summary (`--no-redaction-summary`)
 
-By default, `cleansh` provides a summary of all redacted items. In some automated scripts or when piping output to another tool, you might want to suppress this summary.
+By default, `CleanSH` provides a summary of all redacted items. In some automated scripts or when piping output to another tool, you might want to suppress this summary.
 
-**Scenario:** You're integrating `cleansh` into a script where only the sanitized text is needed, and any extra output to `stderr` would interfere.
+**Scenario:** You're integrating `CleanSH` into a script where only the sanitized text is needed, and any extra output to `stderr` would interfere.
 
 ```powershell
 "My email is user@example.org" | cleansh --no-redaction-summary
@@ -149,13 +149,13 @@ My email is [EMAIL_REDACTED]
 
 -----
 
-## 4\. Understanding Cleansh's Rule System
+## 4\. Understanding CleanSH's Rule System
 
-`cleansh` comes with a robust set of default rules for common sensitive data types. However, its true power lies in its flexibility to manage and customize these rules.
+`CleanSH` comes with a robust set of default rules for common sensitive data types. However, its true power lies in its flexibility to manage and customize these rules.
 
 ### Default Redaction Categories
 
-`cleansh` accurately masks:
+`CleanSH` accurately masks:
 
   * **Emails** (e.g., `user@example.com`)
   * **IP Addresses** (IPv4 and uncompressed IPv6)
@@ -166,13 +166,13 @@ My email is [EMAIL_REDACTED]
 
 ### Custom Rule Management
 
-`cleansh` provides powerful ways to tailor its behavior:
+`CleanSH` provides powerful ways to tailor its behavior:
 
 #### Loading Custom Rules with `--config`
 
-You can define your own redaction rules in a YAML file and tell `cleansh` to use them. These custom rules will be **merged with Cleansh's built-in defaults**, and any custom rule with the same `name` as a default rule will override it.
+You can define your own redaction rules in a YAML file and tell `CleanSH` to use them. These custom rules will be **merged with CleanSH's built-in defaults**, and any custom rule with the same `name` as a default rule will override it.
 
-**Scenario:** Your company uses a specific internal employee ID format (`EMP-XXXXX`) that `cleansh` doesn't know about by default. You want to redact these.
+**Scenario:** Your company uses a specific internal employee ID format (`EMP-XXXXX`) that `CleanSH` doesn't know about by default. You want to redact these.
 
 1.  **Create a YAML file** (e.g., `my_custom_rules.yaml`):
 
@@ -186,7 +186,7 @@ You can define your own redaction rules in a YAML file and tell `cleansh` to use
         dot_matches_new_line: false
     ```
 
-2.  **Use it with `cleansh`:**
+2.  **Use it with `CleanSH`:**
 
     ```powershell
     "Employee ID is EMP-12345, email is test@company.com." | cleansh --config ./my_custom_rules.yaml
@@ -198,7 +198,7 @@ You can define your own redaction rules in a YAML file and tell `cleansh` to use
     Employee ID is [EMPLOYEE_ID_REDACTED], email is [EMAIL_REDACTED].
     ```
 
-**Why this is useful:** Essential for extending `cleansh` to protect company-specific sensitive data or to customize how existing categories are redacted.
+**Why this is useful:** Essential for extending `Cleansh` to protect company-specific sensitive data or to customize how existing categories are redacted.
 
 #### Enabling/Disabling Specific Rules
 
@@ -211,7 +211,7 @@ You have granular control over which rules are active using `--enable-rules` and
 Some rules, like `aws_secret_key` or generic hex secrets, are `opt_in` by default because they have a higher false positive risk. You know your data structure, and you want to specifically look for AWS Secret Keys.
 
 ```powershell
-"My AWS Secret Key is f8N/pD+gA5T7j2K1L0mXq9Y4c3b6a8s0d2f1e5i7h9j0k4l3m2n1o6p5q4r3s2t1u9v8w7x6y5z4a3b2c1d0e9f8g7h6i5j4k3l2m1n0o. Also a regular email@example.com." | cleansh --enable-rules aws_secret_key
+"My AWS Secret Key is f8N/pD+gA5T7j2K1L0mXq9Y4c3b6a8s0d2f1e5i7h9j0k4l3m2n1o6p5q4r3s2t1u9v8w7x6y5z4a3b2c1d0e9f8g7h6i5j4k3l2m1n0o. Also a regular email@example.com." | Cleansh --enable-rules aws_secret_key
 ```
 
 **Output:** Both the AWS key (`[AWS_SECRET_KEY_REDACTED]`) and email (`[EMAIL_REDACTED]`) are redacted. (Email is a default rule).
@@ -229,7 +229,7 @@ If the `ipv4_address` rule is causing false positives by redacting values that *
 My email is test@example.com but I don't want to redact it.
 ```
 
-**Why this is useful:** This precise control helps `cleansh` adapt to your specific data environment, minimizing unintended redactions while ensuring sensitive data is still caught by other active rules.
+**Why this is useful:** This precise control helps `CleanSH` adapt to your specific data environment, minimizing unintended redactions while ensuring sensitive data is still caught by other active rules.
 
 #### Rule Configurations: `default` vs. `strict`
 
@@ -238,7 +238,7 @@ The `--rules <name>` flag allows you to select a predefined set of rules.
   * **`--rules default`**: This is the default behavior if `--rules` isn't specified. It loads all non-opt-in rules from the default configuration and any custom rules you've loaded with `--config`. Opt-in rules are *not* active unless explicitly enabled with `--enable-rules`.
   * **`--rules strict`**: This configuration activates *all* rules, including those marked as `opt_in` in your default or custom configurations. Use this when you need the most comprehensive redaction, even if it might lead to more false positives.
 
-**Scenario:** You're performing a deep security audit and want `cleansh` to be as aggressive as possible in finding potential secrets, including generic hex strings that might be secret keys.
+**Scenario:** You're performing a deep security audit and want `CleanSH` to be as aggressive as possible in finding potential secrets, including generic hex strings that might be secret keys.
 
 ```powershell
 "My secret token is ABCDEF1234567890abcdef1234567890 and my email is test@example.com." | cleansh --enable-rules generic_token --disable-rules email
@@ -252,20 +252,20 @@ The `--rules <name>` flag allows you to select a predefined set of rules.
 
 ## 5\. Building Your Own Custom Rules
 
-Creating effective custom rules for `cleansh` involves understanding regular expressions and the `RedactionRule` structure.
+Creating effective custom rules for `Cleansh` involves understanding regular expressions and the `RedactionRule` structure.
 
 ### Anatomy of a `RedactionRule`
 
 Each rule in your YAML file has several key fields:
 
   * **`name` (string, required):** A unique identifier for your rule (e.g., `"emp_id"`). Use snake\_case for consistency.
-  * **`pattern` (string, required):** The regular expression that `cleansh` will use to find sensitive data. This is the core of your rule.
+  * **`pattern` (string, required):** The regular expression that `Cleansh` will use to find sensitive data. This is the core of your rule.
   * **`replace_with` (string, required):** The string that will replace any matches found by the `pattern` (e.g., `"[EMPLOYEE_ID_REDACTED]"`).
   * **`description` (string, optional):** A brief explanation of what the rule matches. Good for documentation.
   * **`multiline` (boolean, default: `false`):** If `true`, the `^` and `$` anchors in your pattern will match the start/end of *lines* within the input, not just the start/end of the entire input string. Useful for patterns that span multiple lines or need to anchor to line beginnings/ends.
   * **`dot_matches_new_line` (boolean, default: `false`):** If `true`, the `.` (dot) character in your pattern will also match newline characters (`\n`). This is crucial for patterns that might span multiple lines, like SSH keys.
   * **`opt_in` (boolean, default: `false`):** If `true`, this rule will only be active if explicitly enabled via `--enable-rules` or if the `--rules strict` configuration is used. Use this for patterns that are prone to false positives.
-  * **`programmatic_validation` (boolean, default: `false`):** If `true`, `cleansh` will attempt to apply additional, code-based validation after a regex match (e.g., for US SSNs or UK NINOs). This significantly increases accuracy for specific structured data but requires an internal validator function to exist. **You cannot define new programmatic validators in custom rules**, but you can use this flag if you're overriding an existing default rule that *already* has programmatic validation, and you want to maintain that behavior.
+  * **`programmatic_validation` (boolean, default: `false`):** If `true`, `Cleansh` will attempt to apply additional, code-based validation after a regex match (e.g., for US SSNs or UK NINOs). This significantly increases accuracy for specific structured data but requires an internal validator function to exist. **You cannot define new programmatic validators in custom rules**, but you can use this flag if you're overriding an existing default rule that *already* has programmatic validation, and you want to maintain that behavior.
 
 ### Regular Expression Best Practices
 
@@ -294,7 +294,7 @@ rules:
 Then use it:
 
 ```powershell
-"My internal system uses APIKEY_aBcDeFgHiJkLmNoPqRsT. Access granted." | cleansh --config my_api_keys.yaml
+"My internal system uses APIKEY_aBcDeFgHiJkLmNoPqRsT. Access granted." | Cleansh --config my_api_keys.yaml
 ```
 
 -----
@@ -303,12 +303,12 @@ Then use it:
 
 ### Combined Flags for Complex Workflows
 
-`cleansh` flags are designed to be composable, allowing you to build powerful, tailored commands.
+`Cleansh` flags are designed to be composable, allowing you to build powerful, tailored commands.
 
 **Scenario:** You need to sanitize Docker logs, save the cleaned version to a file, and also see a diff of what changed, while only looking for specific `github_pat` tokens.
 
 ```powershell
-docker logs my-app-container | cleansh -o sanitized_docker.log -d --enable-rules github_pat
+docker logs my-app-container | Cleansh -o sanitized_docker.log -d --enable-rules github_pat
 ```
 
 **Explanation:**
@@ -321,14 +321,14 @@ docker logs my-app-container | cleansh -o sanitized_docker.log -d --enable-rules
 
 ### Debugging Your Rules with Logging
 
-`cleansh` uses `env_logger` for its internal logging. You can control the verbosity using the `RUST_LOG` environment variable or by using `cleansh`'s dedicated flags. This is invaluable when building or troubleshooting custom rules.
+`CleanSH` uses `env_logger` for its internal logging. You can control the verbosity using the `RUST_LOG` environment variable or by using `CleanSH`'s dedicated flags. This is invaluable when building or troubleshooting custom rules.
 
-  * **`--debug`:** Sets the log level to `debug` for `cleansh`'s internal operations. This is highly verbose and will print detailed information about rule compilation, matching, and decisions to `stderr`.
+  * **`--debug`:** Sets the log level to `debug` for `CleanSH`'s internal operations. This is highly verbose and will print detailed information about rule compilation, matching, and decisions to `stderr`.
   * **`--no-debug`:** Explicitly disables debug logging (equivalent to `RUST_LOG=warn`).
   * **`--quiet`:** Sets the log level to `error`, suppressing warnings and info messages.
-  * **`CLEANSH_ALLOW_DEBUG_PII=1`:** (Environment Variable) **Use with extreme caution\!** If set, `cleansh` will log the *original content* of matched sensitive strings in debug mode. This is strictly for development and testing in isolated, secure environments and should **never** be used in production or on real sensitive data.
+  * **`CLEANSH_ALLOW_DEBUG_PII=1`:** (Environment Variable) **Use with extreme caution\!** If set, `CleanSH` will log the *original content* of matched sensitive strings in debug mode. This is strictly for development and testing in isolated, secure environments and should **never** be used in production or on real sensitive data.
 
-**Scenario:** Your new custom rule isn't matching as expected. You want to see `cleansh`'s internal processing.
+**Scenario:** Your new custom rule isn't matching as expected. You want to see `CleanSH`'s internal processing.
 
 ```powershell
 $env:CLEANSH_ALLOW_DEBUG_PII="true"
@@ -338,19 +338,19 @@ Remove-Item Env:\CLEANSH_ALLOW_DEBUG_PII -ErrorAction SilentlyContinue
 Remove-Item Env:\RUST_LOG -ErrorAction SilentlyContinue
 ```
 
-**Why this is useful:** Provides deep insight into how `cleansh` is interpreting your rules and processing content, helping you pinpoint issues with regex patterns or rule configurations.
+**Why this is useful:** Provides deep insight into how `CleanSH` is interpreting your rules and processing content, helping you pinpoint issues with regex patterns or rule configurations.
 
 -----
 
 ## 7\. Statistics-Only Mode (`--stats-only`)
 
-Beyond simple redaction, `cleansh` offers a powerful `--stats-only` mode for auditing and analysis. This mode identifies potential sensitive data matches without performing any redaction, providing a comprehensive report. It's perfect for pre-scan assessments or integrating into CI/CD pipelines for security checks.
+Beyond simple redaction, `CleanSH` offers a powerful `--stats-only` mode for auditing and analysis. This mode identifies potential sensitive data matches without performing any redaction, providing a comprehensive report. It's perfect for pre-scan assessments or integrating into CI/CD pipelines for security checks.
 
 ### Basic Statistics
 
 The most straightforward use of `--stats-only` is to get a human-readable summary of detected secrets.
 
-**Scenario:** You want to see what sensitive data `cleansh` would find in a log file without actually changing the file.
+**Scenario:** You want to see what sensitive data `CleanSH` would find in a log file without actually changing the file.
 
 ```powershell
 "Found email: test@example.com, IP: 192.168.1.1, and an SSN: 987-65-4321." | cleansh --stats-only
@@ -369,10 +369,10 @@ Redaction Statistics Summary:
 
 ### Exporting Statistics to JSON (`--stats-json-file`, `--export-json-to-stdout`)
 
-For machine-readable output, especially for integration with other tools or dashboards, `cleansh` can export the statistics as JSON.
+For machine-readable output, especially for integration with other tools or dashboards, `CleanSH` can export the statistics as JSON.
 
   * **`--stats-json-file <path>`:** Writes the JSON summary to a specified file.
-  * **`--export-json-to-stdout`:** Prints the JSON summary directly to `stdout`. **Important:** When this flag is used, `cleansh` will suppress all other human-readable output (like the summary to `stderr`) to ensure pure JSON output.
+  * **`--export-json-to-stdout`:** Prints the JSON summary directly to `stdout`. **Important:** When this flag is used, `CleanSH` will suppress all other human-readable output (like the summary to `stderr`) to ensure pure JSON output.
 
 **Scenario 1: Saving statistics to a report file.**
 
@@ -395,7 +395,7 @@ Get-Content "stats.json"
 # Redaction_summary : @{EmailAddress=@{count=1}; IPv4Address=@{count=1}; UsSsn=@{count=1}}
 ```
 
-**Why this is useful:** Enables programmatic analysis and integration of `cleansh`'s detection capabilities into larger security or data governance workflows.
+**Why this is useful:** Enables programmatic analysis and integration of `CleanSH`'s detection capabilities into larger security or data governance workflows.
 
 ### Sampling Matches (`--sample-matches <count>`)
 
@@ -443,16 +443,16 @@ Remove-Item "test_code.txt" -ErrorAction SilentlyContinue
 
 **Explanation:**
 
-  * If total secrets found are 2 or less, `cleansh` exits with code 0 (success).
-  * If total secrets found are 3 or more, `cleansh` prints an error message to `stderr` and exits with code 1 (failure), causing the pipeline to fail.
+  * If total secrets found are 2 or less, `CleanSH` exits with code 0 (success).
+  * If total secrets found are 3 or more, `CleanSH` prints an error message to `stderr` and exits with code 1 (failure), causing the pipeline to fail.
 
 **Why this is useful:** Enforces a "security by design" principle by automatically flagging builds or deployments that might introduce too much sensitive data.
 
 ### Suppressing Donation Prompts (`--cli-disable-donation-prompts`)
 
-`cleansh` might occasionally prompt for donations to support development. For automated environments, you can disable these prompts.
+`CleanSH` might occasionally prompt for donations to support development. For automated environments, you can disable these prompts.
 
-**Scenario:** Running `cleansh` in a CI/CD pipeline where interactive prompts are not desired.
+**Scenario:** Running `CleanSH` in a CI/CD pipeline where interactive prompts are not desired.
 
 ```powershell
 "Sensitive data here." | cleansh --stats-only --cli-disable-donation-prompts
@@ -464,29 +464,29 @@ Remove-Item "test_code.txt" -ErrorAction SilentlyContinue
 
 ## 8\. Logging and Verbosity
 
-`cleansh` uses a flexible logging system to provide feedback on its operations. You can control how verbose `cleansh` is.
+`CleanSH` uses a flexible logging system to provide feedback on its operations. You can control how verbose `CleanSH` is.
 
-  * **Default:** `cleansh` operates relatively quietly, primarily outputting info messages to `stderr` for general operations and errors.
-  * **`--debug`:** Activates detailed debug logging. This is invaluable for troubleshooting rule matching, understanding internal processes, and seeing more about how `cleansh` identifies and processes data.
+  * **Default:** `CleanSH` operates relatively quietly, primarily outputting info messages to `stderr` for general operations and errors.
+  * **`--debug`:** Activates detailed debug logging. This is invaluable for troubleshooting rule matching, understanding internal processes, and seeing more about how `CleanSH` identifies and processes data.
   * **`--no-debug`:** Explicitly mutes debug logging, ensuring only warnings and errors are shown.
   * **`--quiet`:** Suppresses all informational messages and warnings, only displaying critical errors.
 
 **Example:** Seeing verbose debug output.
 
 ```powershell
-echo "Hello World" | cleansh --debug
+echo "Hello World" | Cleansh --debug
 ```
 
 **Important Note on PII Debugging:**
-There is an environment variable, `CLEANSH_ALLOW_DEBUG_PII`, which, if set to any value (e.g., `CLEANSH_ALLOW_DEBUG_PII=1`), will allow `cleansh` to log the *original, unredacted content* of matched sensitive strings in debug output. **Only use this in highly controlled, secure, and isolated development or testing environments. Never enable this on production systems or with real sensitive data.**
+There is an environment variable, `CLEANSH_ALLOW_DEBUG_PII`, which, if set to any value (e.g., `CLEANSH_ALLOW_DEBUG_PII=1`), will allow `CleanSH` to log the *original, unredacted content* of matched sensitive strings in debug output. **Only use this in highly controlled, secure, and isolated development or testing environments. Never enable this on production systems or with real sensitive data.**
 
 -----
 
 ## 9\. Security By Default Principles
 
-`cleansh` is built with a strong focus on security and trust:
+`CleanSH` is built with a strong focus on security and trust:
 
-  * **No Runtime Evaluation:** All redaction occurs via static regular expressions. `cleansh` does not execute arbitrary code from patterns.
+  * **No Runtime Evaluation:** All redaction occurs via static regular expressions. `CleanSH` does not execute arbitrary code from patterns.
   * **Local-Only Operation:** No network calls, telemetry, or data transmission. Your sensitive data stays on your machine.
   * **Immutable Defaults:** Built-in rules are embedded at compile time, preventing external tampering.
   * **Path Redaction:** Filesystem paths are intelligently normalized or redacted to prevent revealing system structure.
@@ -499,7 +499,7 @@ There is an environment variable, `CLEANSH_ALLOW_DEBUG_PII`, which, if set to an
 
 ## 10\. Docker & Log Sanitization Scenarios
 
-This is where `cleansh` shines for operational security. We'll simulate a scenario where a container generates sensitive logs, and `cleansh` intercepts and sanitizes them.
+This is where `CleanSH` shines for operational security. We'll simulate a scenario where a container generates sensitive logs, and `CleanSH` intercepts and sanitizes them.
 
 ### Prerequisites:
 
@@ -557,7 +557,7 @@ This is where `cleansh` shines for operational security. We'll simulate a scenar
 
 ### 10.1. Sanitizing Past Docker Logs to a File (Batch):
 
-  * **Description:** Dumps all historical logs from a container, sanitizes them, and saves to a file. This is generally the **recommended and most stable approach** for persistent logging. When satisfied with the output, you can stop the Docker container, and `cleansh` will have already redacted the output to the specified file or the terminal if no output file was given.
+  * **Description:** Dumps all historical logs from a container, sanitizes them, and saves to a file. This is generally the **recommended and most stable approach** for persistent logging. When satisfied with the output, you can stop the Docker container, and `CleanSH` will have already redacted the output to the specified file or the terminal if no output file was given.
 
   * **Command:**
 
@@ -572,7 +572,7 @@ This is where `cleansh` shines for operational security. We'll simulate a scenar
 
 ### 10.2. Real-time Sanitization of Docker Logs (Experimental on Windows PowerShell):
 
-  * **Description:** Pipes the live logs from the Docker container through `cleansh`, redacting sensitive information as it appears. This is the "real-time" aspect.
+  * **Description:** Pipes the live logs from the Docker container through `CleanSH`, redacting sensitive information as it appears. This is the "real-time" aspect.
 
   * **Important Note:** This feature can be **unstable on Windows PowerShell** due to how PowerShell handles live pipe termination. It may work more reliably on Linux/WSL environments.
 

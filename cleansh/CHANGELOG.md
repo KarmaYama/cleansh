@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.7] - 2025-08-03 — Fix: Improved Redaction Accuracy & CLI Stability Enhancements
 
-This release focuses on addressing a critical issue in path redaction and a configuration parsing error, enhancing the overall precision and reliability of `cleansh`. This ensures that sensitive file paths are redacted correctly without corrupting the rest of the path.
+This release focuses on addressing a critical issue in path redaction and a configuration parsing error, enhancing the overall precision and reliability of `CleanSH`. This ensures that sensitive file paths are redacted correctly without corrupting the rest of the path.
 
 ### Fixed
 
@@ -20,28 +20,28 @@ This release focuses on addressing a critical issue in path redaction and a conf
 
 ## [0.1.6] - 2025-07-31 — Architectural Refinement for Stability & Future Growth
 
-This release primarily focuses on a significant **architectural refinement** within `cleansh`, laying a more robust and modular foundation for its continued evolution. This strategic internal restructuring enhances `cleansh`'s stability, maintainability, and readiness for advanced features, solidifying its role as an indispensable tool in developer workflows. This ensures `cleansh` can adapt more flexibly to future demands while maintaining its high-trust security posture.
+This release primarily focuses on a significant **architectural refinement** within `CleanSH`, laying a more robust and modular foundation for its continued evolution. This strategic internal restructuring enhances `CleanSH`'s stability, maintainability, and readiness for advanced features, solidifying its role as an indispensable tool in developer workflows. This ensures `CleanSH` can adapt more flexibly to future demands while maintaining its high-trust security posture.
 
 ### Changed
 
-* **Underlying Architectural Reorganization:** `cleansh` has undergone a substantial internal architectural shift. This change introduces a clearer separation of concerns, decoupling the core data processing and redaction logic from the CLI's user interface and command handling. This makes the `cleansh` CLI more resilient, easier to maintain, and significantly more scalable for future enhancements.
-* **Foundation for Future Modularity:** The new architecture prepares `cleansh` for upcoming capabilities by establishing a highly modular design. This foundational work will enable more efficient integration of complex features and specialized redaction functionalities in subsequent releases.
+* **Underlying Architectural Reorganization:** `CleanSH` has undergone a substantial internal architectural shift. This change introduces a clearer separation of concerns, decoupling the core data processing and redaction logic from the CLI's user interface and command handling. This makes the `CleanSH` CLI more resilient, easier to maintain, and significantly more scalable for future enhancements.
+* **Foundation for Future Modularity:** The new architecture prepares `CleanSH` for upcoming capabilities by establishing a highly modular design. This foundational work will enable more efficient integration of complex features and specialized redaction functionalities in subsequent releases.
 
 ### Improved
 
-* **Enhanced Maintainability and Clarity:** The refactored codebase improves overall code clarity and adheres more rigorously to best practices in modular design. This facilitates easier contributions and faster development cycles for the `cleansh` CLI.
-* **Robustness for Complex Operations:** By abstracting core logic, `cleansh` is now better equipped to handle increasingly complex data streams and redaction requirements with improved stability and performance predictability.
+* **Enhanced Maintainability and Clarity:** The refactored codebase improves overall code clarity and adheres more rigorously to best practices in modular design. This facilitates easier contributions and faster development cycles for the `CleanSH` CLI.
+* **Robustness for Complex Operations:** By abstracting core logic, `CleanSH` is now better equipped to handle increasingly complex data streams and redaction requirements with improved stability and performance predictability.
 
 ---
 
 ## [0.1.5] - 2025-07-27 — Phase 1: Refined Redaction, Stats Foundation & Rule Expansion
 
-This release marks a significant leap forward for `cleansh`, introducing a **powerful new statistics mode for in-depth redaction analysis**. Alongside this flagship feature, we've implemented substantial improvements to **CLI usability, logging, and overall stability**, making `cleansh` even more robust and user-friendly.
+This release marks a significant leap forward for `CleanSH`, introducing a **powerful new statistics mode for in-depth redaction analysis**. Alongside this flagship feature, we've implemented substantial improvements to **CLI usability, logging, and overall stability**, making `CleanSH` even more robust and user-friendly.
 
 ### Added
 
-* **New Command: Uninstall (`cleansh uninstall`):**
-    Introduced a new command to **cleanly remove `cleansh`'s configuration files and associated application state** from the user's machine. This provides a straightforward and reliable way to uninstall the application, with a confirmation prompt for safety.
+* **New Command: Uninstall (`CleanSH uninstall`):**
+    Introduced a new command to **cleanly remove `CleanSH`'s configuration files and associated application state** from the user's machine. This provides a straightforward and reliable way to uninstall the application, with a confirmation prompt for safety.
 
 * **Introducing Redaction Statistics Mode (`--stats-only`):**
     A brand-new mode specifically designed for **analyzing and summarizing redactions without modifying the input content or producing sanitized output**. This provides detailed counts of matched items per redaction rule, laying the groundwork for advanced analytics and deeper insights into your data.
@@ -55,7 +55,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
     **Enhance your redaction reports** by including up to `N` unique examples of both the original (unredacted) and sanitized (redacted) text for each matched rule. This provides **immediate context** for identified sensitive data, significantly improving the utility of your redaction reports.
 
 * **NEW Feature: Fail-over Threshold (`--fail-over <X>`):**
-    Integrate `cleansh` more robustly into your CI/CD pipelines. This crucial flag allows you to **specify a maximum number of secrets (`X`)**. If the total secrets detected exceed this threshold, `cleansh` will exit with a non-zero status code, signaling a potential security or compliance issue and preventing unintended deployments.
+    Integrate `CleanSH` more robustly into your CI/CD pipelines. This crucial flag allows you to **specify a maximum number of secrets (`X`)**. If the total secrets detected exceed this threshold, `CleanSH` will exit with a non-zero status code, signaling a potential security or compliance issue and preventing unintended deployments.
 
 * **New redaction patterns** for emerging/expanded formats:
     * **GitHub PATs** (`ghp_…`)
@@ -116,7 +116,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
     * Now respects `opt_in: true` and filters rules at runtime using `--enable-rules` and `--disable-rules`.
     * Unknown `--enable-rule` names are ignored with a debug warning, ensuring robust fail-safe behavior.
 
-* **Unified Input Handling:** We've **streamlined the input mechanism** for clearer argument parsing. Content is now read exclusively from a specified file (`--input-file`) or standard input (stdin), removing ambiguity and making `cleansh`'s behavior more predictable. The `--line-buffered` mode is specifically for `stdin` streaming.
+* **Unified Input Handling:** We've **streamlined the input mechanism** for clearer argument parsing. Content is now read exclusively from a specified file (`--input-file`) or standard input (stdin), removing ambiguity and making `CleanSH`'s behavior more predictable. The `--line-buffered` mode is specifically for `stdin` streaming.
 
 * **Filesystem Path Rules**
     * **Windows** path redaction now uses clear anchors and broader detection of drive letters.
@@ -177,7 +177,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 
 | Flag | Purpose |
 |:---|:---|
-| `uninstall` | **NEW: Removes cleansh config and app state** |
+| `uninstall` | **NEW: Removes CleanSH config and app state** |
 | `--stats-only` | Summary of matches without redaction |
 | `--stats-json-file <FILE>` | Write stats JSON to file |
 | `--export-json-to-stdout` | Dump stats JSON to stdout |
@@ -193,7 +193,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 ---
 ---
 
-*This release represents a major leap forward in `cleansh`'s accuracy, testability, and secure-by-default foundation. It lays the groundwork for future enhancements such as entropy-based token detection, contextual redaction, and Luhn checksum integration in Phase 2.*
+*This release represents a major leap forward in `CleanSH`'s accuracy, testability, and secure-by-default foundation. It lays the groundwork for future enhancements such as entropy-based token detection, contextual redaction, and Luhn checksum integration in Phase 2.*
 
 ---
 
@@ -207,7 +207,7 @@ This release marks a significant leap forward for `cleansh`, introducing a **pow
 
 ### Changed
 
-* Adjusted internal test expectations to precisely match the `cleansh` application's refined output behavior, particularly concerning newlines and summary messages.
+* Adjusted internal test expectations to precisely match the `CleanSH` application's refined output behavior, particularly concerning newlines and summary messages.
 
 ---
 

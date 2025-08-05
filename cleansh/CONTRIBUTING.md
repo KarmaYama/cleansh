@@ -1,17 +1,17 @@
-# Contributing to Cleansh
+# Contributing to CleanSH
 
-First and foremost, thank you for considering contributing to `cleansh`\! Your interest, whether through bug reports, feature requests, or code contributions, is incredibly valuable. `cleansh` is a high-trust, single-purpose CLI tool, and we believe that community involvement is key to its security, robustness, and continued growth.
+First and foremost, thank you for considering contributing to `CleanSH`\! Your interest, whether through bug reports, feature requests, or code contributions, is incredibly valuable. `CleanSH` is a high-trust, single-purpose CLI tool, and we believe that community involvement is key to its security, robustness, and continued growth.
 
-This document outlines the guidelines for contributing to the `cleansh` project. Following these guidelines helps ensure a smooth and effective collaboration for everyone involved.
+This document outlines the guidelines for contributing to the `CleanSH` project. Following these guidelines helps ensure a smooth and effective collaboration for everyone involved.
 
 -----
 
 ## 💡 How Can I Contribute?
 
-There are many ways to contribute to `cleansh`, even if you're not a Rust expert:
+There are many ways to contribute to `CleanSH`, even if you're not a Rust expert:
 
   * **Reporting Bugs:** Found an issue? Let us know\!
-  * **Suggesting Features:** Have an idea to make `cleansh` even better? We'd love to hear it.
+  * **Suggesting Features:** Have an idea to make `CleanSH` even better? We'd love to hear it.
   * **Improving Documentation:** Clarity in documentation is crucial. If something is unclear or missing, consider suggesting improvements.
   * **Writing Code:** This includes bug fixes, new features, or performance enhancements.
   * **Providing Feedback:** General feedback on usability, design, or anything else is always welcome.
@@ -26,7 +26,7 @@ If you encounter a bug or unexpected behavior, please help us by reporting it. B
 2.  **Provide Clear Information:** If it's a new bug, open a [new issue](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh/issues/new/choose) and include:
       * A clear and concise **description** of the bug.
       * **Steps to reproduce** the behavior (e.g., specific command, input data, configuration).
-      * The **`cleansh` version** you are using (e.g., `v0.1.2`).
+      * The **`CleanSH` version** you are using (e.g., `v0.1.2`).
       * Your **operating system** and environment details (e.g., Windows 10, macOS Ventura, Ubuntu 22.04, PowerShell, Bash, Zsh).
       * Any **error messages** or stack traces.
       * Expected vs. Actual behavior.
@@ -35,10 +35,10 @@ If you encounter a bug or unexpected behavior, please help us by reporting it. B
 
 ## ✨ Suggesting Enhancements
 
-We're always looking for ways to improve `cleansh`\! If you have an idea for a new feature or an enhancement to existing functionality:
+We're always looking for ways to improve `CleanSH`\! If you have an idea for a new feature or an enhancement to existing functionality:
 
 1.  **Search Existing Issues:** Check for similar suggestions first.
-2.  **Open a Feature Request:** Open a [new issue](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh/issues/new/choose) and choose the "Feature Request" template.
+2.  **Open a Feature Request:** Open a [new issue](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh-workspace/issues/new/choose) and choose the "Feature Request" template.
       * Clearly describe the **proposed feature** and its **purpose**.
       * Explain the **problem it solves** or the **value it adds**.
       * Provide any **examples** of how it might be used.
@@ -52,13 +52,13 @@ Ready to dive into the code? We appreciate well-crafted contributions that adher
 
 ### Setting Up Your Development Environment
 
-1.  **Fork the Repository:** Start by forking the [cleansh repository](https://github.com/KarmaYama/cleansh) to your GitHub account.
+1.  **Fork the Repository:** Start by forking the [CleanSH repository](https://github.com/KarmaYama/cleansh-workspace/cleansh) to your GitHub account.
 2.  **Clone Your Fork:**
     ```bash
-    git clone https://github.com/YourUsername/cleansh.git
+    git clone https://github.com/KarmYama/cleansh-workspace.git
     cd cleansh
     ```
-3.  **Install Rust:** If you don't have Rust installed, follow the instructions on [rustup.rs](https://rustup.rs/). `cleansh` uses the latest stable Rust version (currently `1.88.0` as per `Cargo.toml`).
+3.  **Install Rust:** If you don't have Rust installed, follow the instructions on [rustup.rs](https://rustup.rs/). `CleanSH` uses the latest stable Rust version (currently `1.88.0` as per `Cargo.toml`).
 4.  **Build and Test:**
     ```bash
     cargo build
@@ -90,7 +90,7 @@ Ready to dive into the code? We appreciate well-crafted contributions that adher
     ```bash
     git push origin your-feature-or-bugfix-branch
     ```
-2.  **Open a Pull Request:** Go to the [cleansh GitHub repository](https://github.com/KarmaYama/cleansh) and open a new Pull Request.
+2.  **Open a Pull Request:** Go to the [cleansh GitHub repository](https://github.com/KarmaYama/cleansh-workspace) and open a new Pull Request.
       * Provide a clear **title** and detailed **description** of your changes.
       * Reference the issue your PR addresses (e.g., `Closes #123`, `Fixes #456`).
       * Explain your **solution** and any **design decisions**.
@@ -110,7 +110,7 @@ We prioritize the security of `cleansh`. If you believe you've found a security 
 
 ## ❓ Questions?
 
-If you have any questions about contributing, don't hesitate to open a [discussion on GitHub](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh/discussions) or reach out to the maintainers.
+If you have any questions about contributing, don't hesitate to open a [discussion on GitHub](https://www.google.com/search?q=https://github.com/KarmaYama/cleansh-workspace/discussions) or reach out to the maintainers.
 
 We're excited to see your contributions\!
 

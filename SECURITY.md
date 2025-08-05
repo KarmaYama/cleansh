@@ -1,12 +1,12 @@
-# Security Policy for Cleansh
+# Security Policy for CleanSH
 
-We take the security of `cleansh` very seriously. We are committed to protecting our users and ensuring the integrity of the tool. This policy outlines our approach to security, including supported versions and how to report vulnerabilities.
+We take the security of `CleanSH` very seriously. We are committed to protecting our users and ensuring the integrity of the tool. This policy outlines our approach to security, including supported versions and how to report vulnerabilities.
 
 ---
 
 ## Supported Versions
 
-`cleansh` is currently in active development, and we aim to provide security updates for the **latest stable release**. As a command-line utility, `cleansh` does not have "versions" in the traditional sense of long-term support branches like larger software frameworks. Instead, we follow a rapid release cycle, with each new version building upon and enhancing the previous one.
+`CleanSH` is currently in active development, and we aim to provide security updates for the **latest stable release**. As a command-line utility, `CleanSH` does not have "versions" in the traditional sense of long-term support branches like larger software frameworks. Instead, we follow a rapid release cycle, with each new version building upon and enhancing the previous one.
 
 **Therefore, we recommend all users update to the <a href="https://crates.io/crates/cleansh" target="_blank" rel="noopener noreferrer">latest available version on crates.io</a> to ensure they receive all security patches and bug fixes.**
 
@@ -17,13 +17,13 @@ At this stage of development (pre-v1.0), only the **most recent published versio
 | **0.1.x** | :white_check_mark: |
 | < 0.1.x | :x:                |
 
-*Note: The table above reflects the current `v0.1.x` series. As `cleansh` matures and reaches `v1.0` and beyond, this policy will be updated to reflect a more structured long-term support model if applicable.*
+*Note: The table above reflects the current `v0.1.x` series. As `CleanSH` matures and reaches `v1.0` and beyond, this policy will be updated to reflect a more structured long-term support model if applicable.*
 
 ---
 
 ## Reporting a Vulnerability
 
-We deeply appreciate the efforts of security researchers and the open-source community. If you discover a security vulnerability in `cleansh`, we ask that you report it responsibly to give us an opportunity to address it before public disclosure.
+We deeply appreciate the efforts of security researchers and the open-source community. If you discover a security vulnerability in `CleanSH`, we ask that you report it responsibly to give us an opportunity to address it before public disclosure.
 
 **How to Report a Vulnerability:**
 
@@ -32,7 +32,7 @@ We deeply appreciate the efforts of security researchers and the open-source com
 3.  **Provide Details:** In your report, please include as much detail as possible:
     * A clear and concise description of the vulnerability.
     * Steps to reproduce the vulnerability.
-    * The version of `cleansh` affected (e.g., `v0.1.2`).
+    * The version of `CleanSH` affected (e.g., `v0.1.2`).
     * The operating system and Rust toolchain version you used.
     * Any potential impact or exploit scenario.
 
@@ -40,7 +40,7 @@ We deeply appreciate the efforts of security researchers and the open-source com
 
 ## 🔐 Key Security Concerns
 
-We recognize that `cleansh` operates in environments where sensitive information is present, and we take potential security risks seriously. Below are the core concerns we’ve evaluated and the measures taken to address them:
+We recognize that `CleanSH` operates in environments where sensitive information is present, and we take potential security risks seriously. Below are the core concerns we’ve evaluated and the measures taken to address them:
 
 ---
 
@@ -50,7 +50,7 @@ We recognize that `cleansh` operates in environments where sensitive information
 
 **Our Response:**
 
-* `cleansh` compiles **trusted patterns at startup**, sourced from user-defined YAML or internal rules. It does **not** accept untrusted patterns at runtime.
+* `CleanSH` compiles **trusted patterns at startup**, sourced from user-defined YAML or internal rules. It does **not** accept untrusted patterns at runtime.
 * We use the [`regex`](https://docs.rs/regex) crate, which is designed to **avoid catastrophic backtracking** and has received [specific hardening updates](https://github.com/advisories/GHSA-m5pq-gvj9-9vr8).
 * Still, users are advised to avoid unsafe constructs like `(a+)+` when writing their own patterns. Future versions may introduce static pattern validation and fail-safe limits for high-load scenarios.
 
@@ -62,7 +62,7 @@ We recognize that `cleansh` operates in environments where sensitive information
 
 **Our Response:**
 
-* `cleansh` only operates on the **captured output**, not live shells. It does not interact with environment variables, user history, or shell internals.
+* `CleanSH` only operates on the **captured output**, not live shells. It does not interact with environment variables, user history, or shell internals.
 * ANSI escape sequences are stripped safely before processing, reducing risks of visual obfuscation attacks or hidden input.
 
 ---
@@ -72,20 +72,20 @@ We recognize that `cleansh` operates in environments where sensitive information
 
 ### 🧠 3. AI-Assisted Codebase (Full Transparency)
 
-**Concern:** The codebase of `cleansh` was developed in close collaboration with AI, raising questions about trust, correctness, and originality.
+**Concern:** The codebase of `CleanSH` was developed in close collaboration with AI, raising questions about trust, correctness, and originality.
 
 **Our Response:**
 
 * All code was generated **under direct supervision and review** by the project maintainer, who remains responsible for the logic, architecture, and decisions behind every component.
 * Every generated segment was **manually validated, tested, and iterated on** to ensure correctness, security, and maintainability.
-* `cleansh` is not a copy-paste artifact — it is an intentionally built CLI tool with test coverage, clear design principles, and continuous refinement.
+* `CleanSH` is not a copy-paste artifact — it is an intentionally built CLI tool with test coverage, clear design principles, and continuous refinement.
 * We believe that AI is a tool — not a substitute for ownership — and we stand by the quality and originality of the final product.
 
 ---
 
 ### 📁 4. File System & Clipboard Safety
 
-**Concern:** As a sanitization tool, users may expect `cleansh` to handle clipboard or file input/output securely.
+**Concern:** As a sanitization tool, users may expect `CleanSH` to handle clipboard or file input/output securely.
 
 **Our Response:**
 
@@ -96,7 +96,7 @@ We recognize that `cleansh` operates in environments where sensitive information
 
 ### 🔄 5. Trust Boundaries
 
-`cleansh` is a **stateless utility**—it does not:
+`CleanSH` is a **stateless utility**—it does not:
 
 * Connect to the network or send telemetry
 * Write configuration data silently
@@ -118,7 +118,7 @@ If you identify a concern not addressed here, or believe a threat model has been
 3.  **Status Updates:** We aim to provide regular updates on the progress of our investigation, typically within **5 business days** of the initial acknowledgment and then as significant progress is made.
 4.  **Resolution & Disclosure:**
     * If the vulnerability is confirmed, we will work to develop a fix as quickly as possible.
-    * Once a fix is ready, we will coordinate with you on the disclosure timeline. We typically aim for a public disclosure after the fix has been released in a new `cleansh` version.
+    * Once a fix is ready, we will coordinate with you on the disclosure timeline. We typically aim for a public disclosure after the fix has been released in a new `CleanSH` version.
     * We believe in responsible disclosure and will credit you for your discovery in our release notes and/or security advisory, unless you prefer to remain anonymous.
     * If the vulnerability is declined (e.g., deemed not a security issue or out of scope), we will provide a clear explanation for our decision.
 
