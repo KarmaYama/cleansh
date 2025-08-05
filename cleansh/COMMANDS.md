@@ -604,3 +604,5 @@ This is where `cleansh` shines for operational security. We'll simulate a scenar
 **Precision redaction. Local-only trust. Built for devs.**
 
 Have you tried out the `--stats-only` command yet? It's a game-changer for auditing\!
+
+*Copyright 2025 Obscura Tech.*
