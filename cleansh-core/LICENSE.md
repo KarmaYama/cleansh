@@ -6,7 +6,7 @@ This Business Source License (this "License") is made available by the Licensor 
 
 ## LICENSOR
 
-Cleansh Technologies
+Obscura Tech.
 
 ## LICENSED WORK
 
