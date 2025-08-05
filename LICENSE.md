@@ -17,4 +17,4 @@ Full text in `cleansh/LICENSE.md`.
 
 ---
 
-*Copyright 2025 Cleansh Technologies*  
+*Copyright 2025 Obscura Tech*  

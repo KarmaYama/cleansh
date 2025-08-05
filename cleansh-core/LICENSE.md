@@ -6,7 +6,7 @@ This Business Source License (this "License") is made available by the Licensor 
 
 ## LICENSOR
 
-Obscura Tech.
+Obscura Tech
 
 ## LICENSED WORK
 
