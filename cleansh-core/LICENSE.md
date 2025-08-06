@@ -33,7 +33,7 @@ You may use the Licensed Work in production as long as your **Total Contract Val
 
 * **1. Definitions**
     "Licensed Work" means the source code for the CleanSH-core library licensed under the terms of this License.
-    "Licensor" means CleanSH Technologies.
+    "Licensor" means Obscura Tech.
     "Licensee" means anyone who receives the Licensed Work.
     "Change Date" is specified above.
     "Change License" is specified above.
