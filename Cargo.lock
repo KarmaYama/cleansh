@@ -242,7 +242,7 @@ checksum = "b94f61472cee1439c0b966b47e3aca9ae07e45d070759512cd390ea2bebc6675"
 
 [[package]]
 name = "cleansh"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "anyhow",
  "arboard",
@@ -274,7 +274,7 @@ dependencies = [
 
 [[package]]
 name = "cleansh-core"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "lazy_static",

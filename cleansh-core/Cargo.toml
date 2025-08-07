@@ -19,7 +19,6 @@ serde_yaml = { package = "serde_yaml_ok", version = "0.9.36" }
 regex = "1.10"
 lazy_static = "1.4"
 strip-ansi-escapes = "0.2.1"
-cleansh_entropy = { path = "C:/Users/alexm/cleansh_plugins" }
 
 [dev-dependencies]
 test-log = "0.2.14" 
