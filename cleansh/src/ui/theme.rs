@@ -1,4 +1,3 @@
-// cleansh-workspace/cleansh/src/ui/theme.rs
 //! Module for managing the application's command-line interface (CLI) theme.
 //!
 //! This module defines the structure for theme configuration, allowing users
@@ -13,15 +12,9 @@ use std::path::{Path, PathBuf}; // Added PathBuf
 use std::str::FromStr;
 use anyhow::{Context, Result};
 use owo_colors::AnsiColors;
-// Removed: use is_terminal::IsTerminal; // This import is not directly used in this module
 
 /// Type alias for the theme map, providing a consistent type definition.
 pub type ThemeMap = HashMap<ThemeEntry, ThemeStyle>;
-
-// Removed: `HasIsTerminal` trait and its implementations.
-// Removed: `TerminalWrite` trait and its implementations.
-// We will rely directly on `is_terminal::IsTerminal` and `std::io::Write`.
-
 
 /// The different logical parts of your output that can be styled.
 ///
@@ -49,8 +42,8 @@ pub enum ThemeEntry {
     /// Style for the header/footer of a diff view.
     DiffHeader,
     /// Style for the name of a rule in a summary or statistics output.
-    /// Style for the count of occurrences in a summary or statistics output.
     SummaryRuleName,
+    /// Style for the number of occurrences in a summary or statistics output.
     SummaryOccurrences,
     /// Style for user prompts or confirmation questions.
     Prompt,
@@ -234,7 +227,7 @@ impl ThemeStyle {
             ThemeEntry::DiffRemoved,
             ThemeEntry::DiffHeader,
             ThemeEntry::SummaryRuleName,
-            ThemeEntry::SummaryOccurrences,
+            ThemeEntry::SummaryOccurrences, // Add this here as well
             ThemeEntry::Prompt,
         ] {
             custom.entry(entry).or_insert_with(|| ThemeStyle { fg: Some(ThemeColor::Named("white".into())) });
@@ -263,7 +256,7 @@ impl ThemeStyle {
             ThemeEntry::DiffRemoved,
             ThemeEntry::DiffHeader,
             ThemeEntry::SummaryRuleName,
-            ThemeEntry::SummaryOccurrences,
+            ThemeEntry::SummaryOccurrences, // And here
             ThemeEntry::Prompt,
         ] {
             default_theme.insert(entry, ThemeStyle { fg: Some(ThemeColor::Named("white".into())) });

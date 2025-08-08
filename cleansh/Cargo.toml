@@ -1,12 +1,12 @@
-# cleansh-workspace/cleansh/#Cargo.toml
-
 [package]
 name = "cleansh"
 version = "0.1.8"
 edition = "2024"
+build = "build.rs"
+publish = false
 license-file = "LICENSE.md"
-repository = "https://github.com/KarmaYama/cleansh"
-homepage = "https://cleansh.netlify.app/"
+repository = "https://github.com/KarmaYama/cleansh-workspace"
+homepage = "https://github.com/KarmaYama/cleansh-workspace"
 authors = ["Obscura Tech"]
 readme = "README.md"
 rust-version = "1.88.0"
@@ -17,8 +17,12 @@ description = "Sanitize your terminal output. One tool. One purpose."
 [package.metadata.wix]
 upgrade-guid = "F47C98E6-B908-4CB3-A38B-0EFD5F3DE62D"
 path-guid = "DB8DAC94-9423-4D0E-A466-24166013B8BB"
-license = false
+license = true
 eula = false
+
+[package.metadata.cleansh]
+license_notes = "Deleting this build.rs script or modifying this Cargo.toml file does not invalidate the license terms. By interacting with this codebase, you agree to the conditions of the Polyform Noncommercial License 1.0.0. For commercial use, a separate license is required."
+
 
 [dependencies]
 cleansh-core = { path = "../cleansh-core", version = "0.1.1" }
@@ -49,11 +53,14 @@ tempfile = "3.10"
 test-log = "0.2.18"
 gag = "1.0"
 
+[build-dependencies]
+toml = "0.9.5"
+
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3"
 
 [features]
-default = []
+default = ["clipboard", "test-exposed"]
 test-exposed = []
 clipboard = ["arboard"]
 

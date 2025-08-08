@@ -11,16 +11,19 @@
 //! assertion against terminal output that might contain ANSI color codes.
 //! The `test_exposed` feature is used to access internal functions for testing.
 
-use anyhow::Result;
-use anyhow::Context;
+use anyhow::{Context, Result};
 use std::collections::HashMap;
+use std::path::PathBuf;
 // Import strip_ansi_escapes to remove ANSI color codes before assertions.
 use strip_ansi_escapes;
 
-// Import the specific function and types needed from the main crate for testing.
-use cleansh::test_exposed::commands::run_cleansh;
-use cleansh::test_exposed::config;
+// Import the specific functions and types needed from the main crate for testing.
+use cleansh::test_exposed::commands::run_cleansh_opts;
 use cleansh::test_exposed::ui::theme::{self, ThemeEntry};
+use cleansh::test_exposed::config::{RedactionConfig, merge_rules};
+use cleansh_core::engine::{SanitizationEngine, RegexEngine};
+use cleansh::commands::cleansh::CleanshOptions;
+
 
 /// This module ensures that logging (e.g., from `pii_debug!` macro) is set up for tests.
 ///
@@ -61,6 +64,21 @@ fn get_default_theme_map() -> HashMap<ThemeEntry, theme::ThemeStyle> {
     theme::ThemeStyle::default_theme_map()
 }
 
+/// Helper to create and configure a SanitizationEngine for tests.
+fn create_test_engine(custom_config_path: Option<PathBuf>) -> Result<Box<dyn SanitizationEngine>> {
+    let mut config = RedactionConfig::load_default_rules()
+        .context("Failed to load default redaction rules")?;
+
+    if let Some(path) = custom_config_path {
+        let user_config = RedactionConfig::load_from_file(&path)
+            .context("Failed to load user-defined configuration file")?;
+        config = merge_rules(config, Some(user_config));
+    }
+
+    let engine = RegexEngine::new(config)?;
+    Ok(Box::new(engine))
+}
+
 /// Tests basic sanitization functionality of `run_cleansh`.
 ///
 /// This test sets up a simple redaction configuration with rules for email
@@ -74,17 +92,14 @@ fn get_default_theme_map() -> HashMap<ThemeEntry, theme::ThemeStyle> {
 /// 1. Initialize logger.
 /// 2. Define sample `input` string containing an email and an SSN.
 /// 3. Create a `RedactionConfig` with rules for email and US SSN,
-///     marking the SSN rule for programmatic validation.
+///    marking the SSN rule for programmatic validation.
 /// 4. Create a temporary directory and an output file path.
 /// 5. Serialize the `RedactionConfig` to a temporary YAML file.
-/// 6. Call `run_cleansh` with the input, temporary config file, and output file path.
-///     - `clipboard_enabled` is `false`.
-///     - `diff_enabled` is `false`.
-///     - `no_redaction_summary` is `false` (meaning summary would print to console, not captured here).
+/// 6. Call `run_cleansh_opts` with the new `CleanshOptions` struct.
 /// 7. Read the content from the temporary output file.
 /// 8. Strip any ANSI escape codes from the read content.
 /// 9. Assert that the stripped output matches the expected sanitized string.
-///     The email and the valid SSN should both be redacted.
+///    The email and the valid SSN should both be redacted.
 ///
 /// # Returns
 ///
@@ -94,9 +109,9 @@ fn test_run_cleansh_basic_sanitization() -> Result<()> {
     test_setup::setup_logger(); // Initialize logger for this test
     // Setup: Minimal configuration for testing
     let input = "email: test@example.com. My SSN is 123-45-6789.";
-    let config = config::RedactionConfig {
+    let config = cleansh::test_exposed::config::RedactionConfig {
         rules: vec![
-            config::RedactionRule {
+            cleansh::test_exposed::config::RedactionRule {
                 name: "email".to_string(),
                 pattern: r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b".to_string(),
                 replace_with: "[EMAIL]".to_string(),
@@ -106,7 +121,7 @@ fn test_run_cleansh_basic_sanitization() -> Result<()> {
                 opt_in: false,
                 programmatic_validation: false,
             },
-            config::RedactionRule {
+            cleansh::test_exposed::config::RedactionRule {
                 name: "us_ssn".to_string(),
                 pattern: r"\b(\d{3})-(\d{2})-(\d{4})\b".to_string(), // Pattern with capturing groups for SSN validation
                 replace_with: "[US_SSN_REDACTED]".to_string(),
@@ -128,33 +143,30 @@ fn test_run_cleansh_basic_sanitization() -> Result<()> {
     let config_yaml = serde_yaml::to_string(&config)?;
     std::fs::write(&temp_config_file, config_yaml)?;
 
-    // Call the public function from the commands module
-    run_cleansh(
-        input,
-        false, // clipboard_enabled: Not testing clipboard here.
-        false, // diff_enabled: Not testing diff here.
-        Some(temp_config_file), // config_path: Use the temporary config file.
-        None, // rules_config_name: No specific named rules config.
-        Some(output_file_path.clone()), // output_path: Direct output to the temporary file.
-        false, // no_redaction_summary: Summary will be printed to stderr, not part of file output capture.
-        &get_default_theme_map(), // Pass default theme map for consistent styling.
-        vec![], // enable_rules: No specific rules enabled.
-        vec![], // disable_rules: No specific rules disabled.
-        None, // input_file_path: Input is from string, not a file.
-    )?;
+    // Create the sanitization engine using the new helper
+    let engine = create_test_engine(Some(temp_config_file.clone()))?;
+
+    // Create the new CleanshOptions struct
+    let opts = CleanshOptions {
+        input: input.to_string(),
+        clipboard: false,
+        diff: false,
+        output_path: Some(output_file_path.clone()),
+        no_redaction_summary: false,
+        quiet: false, // Added the missing field
+    };
+    let theme_map = get_default_theme_map();
+
+    // Call the new, refactored function
+    run_cleansh_opts(&*engine, opts, &theme_map)?;
 
     let output_from_file = std::fs::read_to_string(&output_file_path)?;
-    // Strip ANSI escape codes before assertions for robust comparison.
+    // Strip any ANSI escape codes from the read content.
     let output_stripped_from_file = strip_ansi_escapes::strip_str(&output_from_file);
 
     // Check output: Should ONLY contain sanitized content, as summary goes to stderr/console.
     // Assert that both email and SSN (which passes programmatic validation) are redacted.
     assert_eq!(output_stripped_from_file.trim(), "email: [EMAIL]. My SSN is [US_SSN_REDACTED].");
-
-    // As noted, direct capture of stdout/stderr from `run_cleansh` isn't feasible here
-    // for summary output, as the `print_summary` function writes directly to the writer
-    // passed to it, which is io::stderr() in a real console run.
-    // The `cli_integration_tests.rs` suite handles this aspect by redirecting stderr/stdout.
 
     Ok(())
 }
@@ -172,9 +184,7 @@ fn test_run_cleansh_basic_sanitization() -> Result<()> {
 /// 2. Define sample `input` with an email and an *invalid* SSN.
 /// 3. Create a `RedactionConfig` for email and US SSN (with programmatic validation).
 /// 4. Create temporary files for output and config.
-/// 5. Call `run_cleansh` with:
-///     - `no_redaction_summary` set to `true`.
-///     - `output_path` directed to a file.
+/// 5. Call `run_cleansh_opts` with the new `CleanshOptions` struct.
 /// 6. Read the content from the output file.
 /// 7. Strip ANSI escape codes from the output.
 /// 8. Assert that the email is redacted, but the invalid SSN is *not* redacted.
@@ -187,9 +197,9 @@ fn test_run_cleansh_basic_sanitization() -> Result<()> {
 fn test_run_cleansh_no_redaction_summary() -> Result<()> {
     test_setup::setup_logger();
     let input = "email: test@example.com. Invalid SSN: 000-12-3456."; // SSN 000-12-3456 is invalid programmatically
-    let config = config::RedactionConfig {
+    let config = cleansh::test_exposed::config::RedactionConfig {
         rules: vec![
-            config::RedactionRule {
+            cleansh::test_exposed::config::RedactionRule {
                 name: "email".to_string(),
                 pattern: r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b".to_string(),
                 replace_with: "[EMAIL]".to_string(),
@@ -199,7 +209,7 @@ fn test_run_cleansh_no_redaction_summary() -> Result<()> {
                 opt_in: false,
                 programmatic_validation: false,
             },
-            config::RedactionRule {
+            cleansh::test_exposed::config::RedactionRule {
                 name: "us_ssn".to_string(),
                 pattern: r"\b(\d{3})-(\d{2})-(\d{4})\b".to_string(),
                 replace_with: "[US_SSN_REDACTED]".to_string(),
@@ -218,19 +228,22 @@ fn test_run_cleansh_no_redaction_summary() -> Result<()> {
     let config_yaml = serde_yaml::to_string(&config)?;
     std::fs::write(&temp_config_file, config_yaml)?;
 
-    run_cleansh(
-        input,
-        false, // clipboard_enabled
-        false, // diff_enabled
-        Some(temp_config_file), // config_path
-        None, // rules_config_name
-        Some(output_file_path.clone()), // output_path
-        true, // no_redaction_summary = true: This is the core of this test
-        &get_default_theme_map(),
-        vec![],
-        vec![],
-        None, // input_file_path
-    )?;
+    // Create the sanitization engine using the new helper
+    let engine = create_test_engine(Some(temp_config_file.clone()))?;
+
+    // Create the new CleanshOptions struct
+    let opts = CleanshOptions {
+        input: input.to_string(),
+        clipboard: false,
+        diff: false,
+        output_path: Some(output_file_path.clone()),
+        no_redaction_summary: true, // This is the core of this test
+        quiet: false, // Added the missing field
+    };
+    let theme_map = get_default_theme_map();
+
+    // Call the new, refactored function
+    run_cleansh_opts(&*engine, opts, &theme_map)?;
 
     let output = std::fs::read_to_string(&output_file_path)?;
     let output_stripped = strip_ansi_escapes::strip_str(&output); // Strip ANSI escape codes
@@ -260,10 +273,7 @@ fn test_run_cleansh_no_redaction_summary() -> Result<()> {
 /// 2. Skip if in CI environment.
 /// 3. Define sample `input` and `RedactionConfig` for email redaction.
 /// 4. Create temporary files for output and config.
-/// 5. Call `run_cleansh` with:
-///     - `clipboard_enabled` set to `true`.
-///     - `output_path` directed to a file.
-///     - `no_redaction_summary` set to `true` for cleaner output focus.
+/// 5. Call `run_cleansh_opts` with the new `CleanshOptions` struct.
 /// 6. Attempt to acquire a clipboard instance and read its content.
 /// 7. Assert that the clipboard content matches the expected sanitized string (trimmed to handle OS differences).
 /// 8. Read the content from the output file and strip ANSI codes.
@@ -284,8 +294,8 @@ fn test_run_cleansh_clipboard_copy() -> Result<()> {
     }
 
     let input = "email: test@example.com";
-    let config = config::RedactionConfig {
-        rules: vec![config::RedactionRule {
+    let config = cleansh::test_exposed::config::RedactionConfig {
+        rules: vec![cleansh::test_exposed::config::RedactionRule {
             name: "email".to_string(),
             pattern: r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b".to_string(),
             replace_with: "[EMAIL]".to_string(),
@@ -303,19 +313,22 @@ fn test_run_cleansh_clipboard_copy() -> Result<()> {
     let config_yaml = serde_yaml::to_string(&config)?;
     std::fs::write(&temp_config_file, config_yaml)?;
 
-    run_cleansh(
-        input,
-        true, // clipboard_enabled = true: This is the core of this test
-        false, // diff_enabled
-        Some(temp_config_file), // config_path
-        None, // rules_config_name
-        Some(output_file_path.clone()), // output_path: Output to file, *and* clipboard
-        true, // no_redaction_summary: No summary for cleaner test focus.
-        &get_default_theme_map(),
-        vec![],
-        vec![],
-        None, // input_file_path
-    )?;
+    // Create the sanitization engine using the new helper
+    let engine = create_test_engine(Some(temp_config_file.clone()))?;
+
+    // Create the new CleanshOptions struct
+    let opts = CleanshOptions {
+        input: input.to_string(),
+        clipboard: true, // This is the core of this test
+        diff: false,
+        output_path: Some(output_file_path.clone()),
+        no_redaction_summary: true, // No summary for cleaner test focus.
+        quiet: false, // Added the missing field
+    };
+    let theme_map = get_default_theme_map();
+
+    // Call the new, refactored function
+    run_cleansh_opts(&*engine, opts, &theme_map)?;
 
     // Attempt to get clipboard content *after* run_cleansh has completed.
     // This part will only run if the CI check above allowed the test to proceed.
@@ -346,16 +359,13 @@ fn test_run_cleansh_clipboard_copy() -> Result<()> {
 /// 2. Define sample `input` with an email and another line.
 /// 3. Create a `RedactionConfig` for email redaction.
 /// 4. Create temporary files for output and config.
-/// 5. Call `run_cleansh` with:
-///     - `diff_enabled` set to `true`.
-///     - `output_path` directed to a file.
-///     - `no_redaction_summary` set to `true` to focus on diff output.
+/// 5. Call `run_cleansh_opts` with the new `CleanshOptions` struct.
 /// 6. Read the content from the output file.
 /// 7. Strip ANSI escape codes from the output.
 /// 8. Construct the expected diff output fragment.
 /// 9. Assert that the stripped output contains the expected diff fragment.
 /// 10. Assert that the stripped output does *not* contain literal `\n` sequences,
-///     confirming correct newline handling.
+///    confirming correct newline handling.
 /// 11. Assert that the "Redaction Summary" header is *not* present in the diff output.
 ///
 /// # Returns
@@ -365,8 +375,8 @@ fn test_run_cleansh_clipboard_copy() -> Result<()> {
 fn test_run_cleansh_diff_output() -> Result<()> {
     test_setup::setup_logger();
     let input = "Original email: test@example.com\nAnother line.";
-    let config = config::RedactionConfig {
-        rules: vec![config::RedactionRule {
+    let config = cleansh::test_exposed::config::RedactionConfig {
+        rules: vec![cleansh::test_exposed::config::RedactionRule {
             name: "email".to_string(),
             pattern: r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b".to_string(),
             replace_with: "[EMAIL]".to_string(),
@@ -384,32 +394,33 @@ fn test_run_cleansh_diff_output() -> Result<()> {
     let config_yaml = serde_yaml::to_string(&config)?;
     std::fs::write(&temp_config_file, config_yaml)?;
 
-    run_cleansh(
-        input,
-        false, // clipboard_enabled
-        true, // diff_enabled = true: This is the core of this test
-        Some(temp_config_file), // config_path
-        None, // rules_config_name
-        Some(output_file_path.clone()), // output_path: Output to file
-        true, // no_redaction_summary: No summary to focus on diff output.
-        &get_default_theme_map(),
-        vec![],
-        vec![],
-        None, // input_file_path
-    )?;
+    // Create the sanitization engine using the new helper
+    let engine = create_test_engine(Some(temp_config_file.clone()))?;
+
+    // Create the new CleanshOptions struct
+    let opts = CleanshOptions {
+        input: input.to_string(),
+        clipboard: false,
+        diff: true, // This is the core of this test
+        output_path: Some(output_file_path.clone()),
+        no_redaction_summary: true, // No summary to focus on diff output.
+        quiet: false, // Added the missing field
+    };
+    let theme_map = get_default_theme_map();
+
+    // Call the new, refactored function
+    run_cleansh_opts(&*engine, opts, &theme_map)?;
 
     let output = std::fs::read_to_string(&output_file_path)?;
     let output_stripped = strip_ansi_escapes::strip_str(&output); // Strip ANSI escape codes
 
     // Assert that the diff output contains correctly formatted lines.
-    // The `\n` characters should be interpreted as actual newlines, not literal strings.
-    // We'll check for the presence of the exact lines expected in a multi-line diff.
     let expected_diff_output_part = vec![
-        // Note: The diff header/footer are printed to stderr, not the main output file in current impl.
         "-Original email: test@example.com",
         "+Original email: [EMAIL]",
         " Another line.",
-    ].join("\n"); // Join with actual newlines to match expected file content
+    ]
+    .join("\n"); // Join with actual newlines to match expected file content
 
     assert!(output_stripped.contains(&expected_diff_output_part), "Expected diff part not found in output:\n'{}'\nActual output:\n'{}'", expected_diff_output_part, output_stripped);
     // Explicitly check for absence of literal \n sequences, confirming correct newline handling by diffy/printer.

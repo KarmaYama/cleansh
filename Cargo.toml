@@ -3,12 +3,8 @@
 members = [
     "cleansh-core",
     "cleansh",
-    # Future crates to be added later:
-    # "cleansh-memory",
-    # "cleansh-interactive-ui",
-    # "cleansh-v1-app",
 ]
-resolver = "2" # Use the new Cargo feature resolver for consistency
+resolver = "2" 
 
 [profile.release]
 lto = true
