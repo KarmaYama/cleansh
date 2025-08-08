@@ -2,3 +2,4 @@
 
 pub mod app_state;
 pub mod platform;
+pub mod clipboard;

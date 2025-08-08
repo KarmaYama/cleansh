@@ -1,4 +1,5 @@
 // cleansh-workspace/cleansh/src/commands/uninstall.rs
+
 //! Cleansh Uninstallation Command (`uninstall`).
 //!
 //! This module implements the `cleansh uninstall` command, providing a mechanism

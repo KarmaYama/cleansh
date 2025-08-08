@@ -7,7 +7,7 @@
 
 > CleanSH (clean shell) is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
 > It prioritizes security by default, requires zero configuration to get started, and offers extendability when needed.
-> The project is in active development, with **`v0.1.7`** bringing significant enhancements to redaction accuracy, security, and user control.
+> The project is in active development, with **`v0.1.8`** bringing significant enhancements to redaction accuracy, security, and user control.
 > We value your feedback. Please report any issues you encounter. Star the repository if you like it!
 
 ---
@@ -19,7 +19,7 @@
 | [1. Overview](#1-overview) |
 | [2. Important Note on Licensing](#2-important-note-on-licensing) |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.1. Commercial Use Defined |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.2. Cleansh v0.1.5 - v0.1.x: Evaluation & Trial Period |
+| &nbsp;&nbsp;&nbsp;&nbsp;2.2. Cleansh v0.1.5 - v0.x.x: Evaluation & Trial Period |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.3. Future Enforcement: Cleansh v1.0.0 and Beyond |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.4. How to Obtain a Commercial License |
 | &nbsp;&nbsp;&nbsp;&nbsp;2.5. Violation of Commercial Use Policy |
@@ -50,14 +50,14 @@ Whether you're debugging, collaborating, or sharing logs, `CleanSH` ensures that
 
 As part of `CleanSH`'s commitment to sustainable development and continued innovation, we have shifted our licensing model.
 
-| Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and up to v0.1.x) |
+| Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and up to v0.x.x) |
 | :---------------- | :----------------------------- | :---------------------------------------------------- |
 | **Primary License** | **MIT License** | **PolyForm Noncommercial License 1.0.0** |
 | **Noncommercial Use** | Free to use | **Free to use** (for personal, academic, research, etc.) |
 | **Commercial Use** | Free to use | **Trial & Evaluation Period (see below)** |
 | **Enforcement** | N/A | **Enforcement starts with `v1.0.0`** |
 
-Effective with `v0.1.5`, `CleanSH` adopts the **PolyForm Noncommercial License 1.0.0**. For versions `v0.1.5` up to `v0.1.x`, commercial use is permitted for evaluation and trial purposes.
+Effective with `v0.1.5`, `CleanSH` adopts the **PolyForm Noncommercial License 1.0.0**. For versions `v0.1.5` up to `v0.x.x`, commercial use is permitted for evaluation and trial purposes.
 
 * **Free Use:** `CleanSH` remains **free for personal, academic, research, hobby, and charitable use.**
 * **Commercial Use:** Any use by for-profit entities, government agencies, or in a commercial product/service will strictly require a separate commercial license **from `v1.0.0` onwards**.

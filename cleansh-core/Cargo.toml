@@ -6,8 +6,8 @@ edition = "2021"
 authors = ["Obscura Tech"]
 license-file = "LICENSE.md"
 description = "Core library for CleanSH, providing essential data sanitization rules, compilation, and application logic independent of the CLI."
-repository = "https://github.com/KarmaYama/cleansh"
-homepage = "https://cleansh.netlify.app/"
+repository = "https://github.com/KarmaYama/cleansh-workspace"
+homepage = "https://github.com/KarmaYama/cleansh-workspace"
 keywords = ["sanitization", "redaction", "data-security", "privacy", "core-logic"]
 categories = ["data-structures", "parsing", "text-processing"]
 

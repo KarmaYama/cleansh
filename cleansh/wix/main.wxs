@@ -62,7 +62,7 @@
         Id='*'
         Name='cleansh'
         UpgradeCode='F47C98E6-B908-4CB3-A38B-0EFD5F3DE62D'
-        Manufacturer='Cleansh Technologies'
+        Manufacturer='Obscura Tech'
         Language='1033'
         Codepage='1252'
         Version='$(var.Version)'>
@@ -70,7 +70,7 @@
         <Package Id='*'
             Keywords='Installer'
             Description='Sanitize your terminal output. One tool. One purpose.'
-            Manufacturer='Cleansh Technologies'
+            Manufacturer='Obscura Tech'
             InstallerVersion='450'
             Languages='1033'
             Compressed='yes'
@@ -88,27 +88,20 @@
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='$(var.PlatformProgramFilesFolder)' Name='PFiles'>
                 <Directory Id='APPLICATIONFOLDER' Name='cleansh'>
-                    
                     <!--
-                      Enabling the license sidecar file in the installer is a four step process:
+                      Disabling the license sidecar file in the installer is a two step process:
 
-                      1. Uncomment the `Component` tag and its contents.
-                      2. Change the value for the `Source` attribute in the `File` tag to a path
-                         to the file that should be included as the license sidecar file. The path
-                         can, and probably should be, relative to this file.
-                      3. Change the value for the `Name` attribute in the `File` tag to the
-                         desired name for the file when it is installed alongside the `bin` folder
-                         in the installation directory. This can be omitted if the desired name is
-                         the same as the file name.
-                      4. Uncomment the `ComponentRef` tag with the Id attribute value of "License"
-                         further down in this file.
+                      1. Comment out or remove the `Component` tag along with its contents.
+                      2. Comment out or remove the `ComponentRef` tag with the "License" Id
+                         attribute value further down in this file.
                     -->
-                    <!--
                     <Component Id='License' Guid='*'>
-                        <File Id='LicenseFile' Name='ChangeMe' DiskId='1' Source='C:\Path\To\File' KeyPath='yes'/>
+                        <File Id='LicenseFile'
+                            DiskId='1'
+                            Source='LICENSE.md'
+                            KeyPath='yes'/>
                     </Component>
-                    -->
-
+                    
                     <Directory Id='Bin' Name='bin'>
                         <Component Id='Path' Guid='DB8DAC94-9423-4D0E-A466-24166013B8BB' KeyPath='yes'>
                             <Environment
@@ -142,13 +135,12 @@
             AllowAdvertise='no'
             Display='expand'
             Absent='disallow'>
-            
             <!--
-              Uncomment the following `ComponentRef` tag to add the license
-              sidecar file to the installer.
+              Comment out or remove the following `ComponentRef` tag to remove
+              the license sidecar file from the installer.
             -->
-            <!--<ComponentRef Id='License'/>-->
-
+            <ComponentRef Id='License'/>
+            
             <ComponentRef Id='binary0'/>
 
             <Feature
@@ -173,7 +165,7 @@
         <!--<Icon Id='ProductICO' SourceFile='wix\Product.ico'/>-->
         <!--<Property Id='ARPPRODUCTICON' Value='ProductICO' />-->
 
-        <Property Id='ARPHELPLINK' Value='https://cleansh.netlify.app/'/>
+        <Property Id='ARPHELPLINK' Value='https://github.com/KarmaYama/cleansh-workspace'/>
         
         <UI>
             <UIRef Id='WixUI_FeatureTree'/>

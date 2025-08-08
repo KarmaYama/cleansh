@@ -8,7 +8,6 @@
 
 // Updated import: Removed ThemeStyle and HasIsTerminal, kept ThemeEntry and ThemeMap
 use crate::ui::theme::{ThemeEntry, ThemeMap};
-// Removed: use is_terminal::IsTerminal; // No longer needed here as we're passing a bool flag
 use std::io::{self, Write};
 use anyhow::Result;
 use diffy::{create_patch, Line};

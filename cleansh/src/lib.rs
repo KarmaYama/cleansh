@@ -1,17 +1,26 @@
-// cleansh-workspace/cleansh/src/lib.rs
-//! # Cleansh
+//! Cleansh CLI Application
 //!
-//! `cleansh` is the command-line interface (CLI) application for securely redacting
-//! sensitive information from text content. It acts as a lightweight wrapper around the
-//! powerful `cleansh-core` library, which contains the core logic for pattern matching,
-//! sanitization, and data validation.
+//! `cleansh` is the command-line interface application that allows users to
+//! sanitize sensitive information from text content. This crate serves as
+//! the main executable wrapper, orchestrating the parsing of command-line
+//! arguments, managing input and output streams, handling application-specific
+//! features like user-interaction (e.g., donation prompts), and integrating
+//! with the core redaction logic provided by the `cleansh-core` library.
 //!
-//! This crate provides the user-facing executable, handling command-line argument parsing,
-//! file system interactions, application state management (like usage statistics and
-//! donation prompts), and user interface elements such as formatted output and diff viewing.
-//!
-//! For details on the redaction rules, sanitization algorithms, and validation logic,
-//! please refer to the `cleansh-core` crate's documentation.
+//! ## Key Responsibilities of this Crate:
+//! - **Argument Parsing:** Defines and parses all CLI options and subcommands
+//!   using the `clap` crate.
+//! - **Input/Output Management:** Handles reading content from stdin or specified
+//!   files, and writing sanitized or statistical output to stdout, files, or
+//!   the system clipboard.
+//! - **Application State:** Manages persistent application state such as usage
+//!   counts and prompt timings, leveraging the `utils::app_state` module.
+//! - **User Interface:** Incorporates modules for theming, formatted output,
+//!   redaction summaries, and diff viewing (`ui` module).
+//! - **Command Execution:** Dispatches to specific command handlers (e.g., `stats`,
+//!   `uninstall`) based on user input, found within the `commands` module.
+//! - **Integration:** Acts as the bridge between user commands and the core
+//!   redaction and validation functionalities exposed by `cleansh-core`.
 //!
 //! ## License
 //!
@@ -49,7 +58,6 @@ pub mod test_exposed {
             CompiledRule,
             CompiledRules,
             compile_rules,
-            sanitize_content,
         };
     }
 
@@ -58,9 +66,6 @@ pub mod test_exposed {
         pub use cleansh_core::redaction_match::{
             RedactionMatch,
             redact_sensitive,
-            log_redaction_match_debug,
-            log_captured_match_debug,
-            log_redaction_action_debug,
         };
     }
 
@@ -74,7 +79,8 @@ pub mod test_exposed {
 
     /// CLI commands for testing
     pub mod commands {
-        pub use crate::commands::cleansh::{run_cleansh, sanitize_single_line, build_redaction_summary_from_matches};
+        // Updated to reflect the refactoring in cleansh/src/commands/cleansh.rs
+        pub use crate::commands::cleansh::{run_cleansh_opts, sanitize_single_line};
         pub use crate::commands::stats::run_stats_command;
         pub use crate::commands::uninstall::run_uninstall_command;
     }

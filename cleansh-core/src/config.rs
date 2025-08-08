@@ -1,4 +1,3 @@
-// cleansh-workspace/cleansh-core/src/config.rs
 //! Configuration management for `CleanSH-core`, including data structures for redaction rules
 //! and methods for loading and merging rule sets.
 //!
@@ -13,9 +12,9 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet}; // ADDED HashSet here
 use std::path::Path;
-use log::{debug, info}; // Added 'info' to imports
+use log::{debug, info};
 use std::fmt;
 
 /// Maximum allowed length for a regex pattern string.
@@ -131,17 +130,12 @@ impl RedactionConfig {
     /// ```
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
-        // Changed logging level from debug! to info! to match test expectation
-        info!("Loading custom rules from: {}", path.display()); 
+        info!("Loading custom rules from: {}", path.display());
         let text = std::fs::read_to_string(path)
             .with_context(|| format!("Failed to read config file {}", path.display()))?;
         let config: RedactionConfig = serde_yaml::from_str(&text)
             .with_context(|| format!("Failed to parse config file {}", path.display()))?;
-
-        debug!("[config.rs] Loaded {} rules from file {}.", config.rules.len(), path.display());
-        for rule in &config.rules {
-            debug!("[config.rs] File Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
-        }
+        info!("Loaded {} rules from file {}.", config.rules.len(), path.display());
         Ok(config)
     }
 
@@ -172,75 +166,78 @@ impl RedactionConfig {
     /// # }
     /// ```
     pub fn load_default_rules() -> Result<Self> {
-        debug!("[config.rs] Loading default rules from embedded string...");
+        debug!("Loading default rules from embedded string...");
         let default_yaml = include_str!("../config/default_rules.yaml");
         let config: RedactionConfig = serde_yaml::from_str(default_yaml).context("Failed to parse default rules")?;
-
-        debug!("[config.rs] Loaded {} default rules.", config.rules.len());
-        for rule in &config.rules {
-            debug!("[config.rs] Default Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
-        }
+        debug!("Loaded {} default rules.", config.rules.len());
         Ok(config)
     }
 
-    /// Sets the active rule configuration based on the provided name.
+    /// Filters the rules within the configuration based on the provided lists of rules to enable or disable.
     ///
-    /// This method filters the `rules` vector in-place. Currently supports "default" and "strict"
-    /// configurations. "default" passes all loaded rules to compilation, while "strict" activates
-    /// all rules including those marked as `opt_in`.
-    ///
-    /// **Note:** This function currently only logs the chosen configuration. The actual filtering
-    /// of opt-in rules based on "default" vs. "strict" modes happens within the `compile_rules`
-    /// function in the `sanitizer` module, which takes `enable_rules` and `disable_rules` lists.
-    /// This method mainly serves as a flag or intent setter for the overall `RedactionConfig` instance.
+    /// This method modifies the `rules` vector in-place, removing rules that are either explicitly
+    /// disabled or are opt-in rules that haven't been explicitly enabled.
     ///
     /// # Arguments
     ///
-    /// * `config_name` - The name of the configuration to apply ("default", "strict").
-    ///
-    /// # Returns
-    ///
-    /// A `Result` which is `Ok(())` on success, or a `RuleConfigNotFoundError` if the
-    /// `config_name` is not recognized.
-    ///
-    /// # Errors
-    ///
-    /// Returns `RuleConfigNotFoundError` if the provided `config_name` does not match
-    /// any predefined configurations.
+    /// * `enable_rules` - A slice of `String`s representing the names of rules to explicitly enable.
+    ///                     Only opt-in rules need to be explicitly enabled.
+    /// * `disable_rules` - A slice of `String`s representing the names of rules to explicitly disable.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use cleansh_core::config::RedactionConfig;
+    /// # use cleansh_core::config::{RedactionConfig, RedactionRule};
     /// # use anyhow::Result;
     /// # fn main() -> Result<()> {
-    /// let mut config = RedactionConfig::load_default_rules()?;
-    /// config.set_active_rules_config("default")?; // Intends to use default rules (non-opt-in)
-    /// config.set_active_rules_config("strict")?;  // Intends to use all rules (including opt-in)
-    /// // config.set_active_rules_config("invalid")?; // This would return an error
+    /// let mut config = RedactionConfig::default();
+    /// config.rules.push(RedactionRule { name: "default_rule".to_string(), pattern: "".to_string(), replace_with: "".to_string(), description: None, multiline: false, dot_matches_new_line: false, opt_in: false, programmatic_validation: false });
+    /// config.rules.push(RedactionRule { name: "opt_in_rule".to_string(), pattern: "".to_string(), replace_with: "".to_string(), description: None, multiline: false, dot_matches_new_line: false, opt_in: true, programmatic_validation: false });
+    /// config.rules.push(RedactionRule { name: "another_default".to_string(), pattern: "".to_string(), replace_with: "".to_string(), description: None, multiline: false, dot_matches_new_line: false, opt_in: false, programmatic_validation: false });
+    ///
+    /// // Initially, there are 3 rules.
+    /// assert_eq!(config.rules.len(), 3);
+    ///
+    /// // Only enable "opt_in_rule", disable "another_default".
+    /// config.set_active_rules(&["opt_in_rule".to_string()], &["another_default".to_string()]);
+    ///
+    /// // Now, there should be only two active rules.
+    /// assert_eq!(config.rules.len(), 2);
+    /// assert!(config.rules.iter().any(|r| r.name == "default_rule"));
+    /// assert!(config.rules.iter().any(|r| r.name == "opt_in_rule"));
+    /// assert!(!config.rules.iter().any(|r| r.name == "another_default"));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn set_active_rules_config(&mut self, config_name: &str) -> Result<()> {
-        debug!("[config.rs] Setting active rules configuration to: '{}'", config_name);
-        match config_name {
-            "default" => {
-                // In this implementation, "default" means all rules loaded into this config
-                // are passed to compile_rules, where opt-in rules will be filtered out
-                // unless explicitly enabled via `enable_rules` parameter.
-                debug!("[config.rs] 'default' config applied. All rules loaded from this config will be passed to compilation.");
+    pub fn set_active_rules(&mut self, enable_rules: &[String], disable_rules: &[String]) {
+        let enable_set: HashSet<&str> = enable_rules.iter().map(String::as_str).collect();
+        let disable_set: HashSet<&str> = disable_rules.iter().map(String::as_str).collect();
+
+        debug!("Initial rules count before filtering: {}", self.rules.len());
+        debug!("Rules to enable: {:?}", enable_rules);
+        debug!("Rules to disable: {:?}", disable_rules);
+
+        self.rules.retain(|rule| {
+            let rule_name_str = rule.name.as_str();
+
+            // Check for explicit disable first (highest priority)
+            if disable_set.contains(rule_name_str) {
+                debug!("Rule '{}' disabled by user configuration.", rule_name_str);
+                return false;
             }
-            "strict" => {
-                // "strict" means all rules (including opt-in ones) within this config
-                // are considered for compilation. This implies that compile_rules
-                // should not filter out opt-in rules when 'strict' is in effect.
-                debug!("[config.rs] 'strict' config applied. All rules ({} total) are active for compilation.", self.rules.len());
+
+            // Check for opt-in rules that are not explicitly enabled
+            if rule.opt_in && !enable_set.contains(rule_name_str) {
+                debug!("Opt-in rule '{}' is not explicitly enabled.", rule_name_str);
+                return false;
             }
-            _ => {
-                return Err(RuleConfigNotFoundError { config_name: config_name.to_string() }.into());
-            }
-        }
-        Ok(())
+            
+            // Keep the rule if it's not disabled and either not opt-in or explicitly enabled
+            debug!("Rule '{}' is active.", rule_name_str);
+            true
+        });
+        
+        debug!("Final active rules count after filtering: {}", self.rules.len());
     }
 }
 
@@ -253,7 +250,7 @@ impl RedactionConfig {
 ///
 /// * `default_config` - The base `RedactionConfig`, typically loaded from default rules.
 /// * `user_config` - An `Option` containing a `RedactionConfig` with user-defined rules.
-///                   If `None`, only the `default_config` rules are used.
+///                     If `None`, only the `default_config` rules are used.
 ///
 /// # Returns
 ///
@@ -305,56 +302,55 @@ pub fn merge_rules(
     user_config: Option<RedactionConfig>,
 ) -> RedactionConfig {
     let initial_default_count = default_config.rules.len();
-    debug!("[config.rs] merge_rules called. Initial default rules count: {}", initial_default_count);
+    debug!("merge_rules called. Initial default rules count: {}", initial_default_count);
 
     if let Some(user_cfg) = user_config {
-        debug!("[config.rs] User config provided. Merging {} user rules.", user_cfg.rules.len());
-        let user_rules_map: HashMap<String, RedactionRule> = user_cfg
-            .rules.clone()
-            .into_iter()
-            .map(|rule| {
-                debug!("[config.rs] User rule to merge: '{}', Opt_in: {}", rule.name, rule.opt_in);
-                (rule.name.clone(), rule)
-            })
-            .collect();
+        let user_rules_len = user_cfg.rules.len(); // FIX: Get length before the move
+        debug!("User config provided. Merging {} user rules.", user_rules_len);
+        
+        let mut user_rules_map: HashMap<String, RedactionRule> = HashMap::new();
+        for rule in user_cfg.rules.into_iter() {
+            debug!("User rule to merge: '{}', Opt_in: {}", rule.name, rule.opt_in);
+            user_rules_map.insert(rule.name.clone(), rule);
+        }
 
+        let mut final_rules: Vec<RedactionRule> = Vec::new();
         let mut overridden_count = 0;
-        default_config.rules.retain(|default_rule| {
-            if user_rules_map.contains_key(&default_rule.name) {
-                debug!("Default rule '{}' overridden by user configuration. Skipping default.", default_rule.name);
+        
+        for default_rule in default_config.rules {
+            if let Some(user_override) = user_rules_map.remove(&default_rule.name) {
+                // An override exists; use the user's rule
+                debug!("Default rule '{}' overridden by user configuration. Using user's rule.", default_rule.name);
+                final_rules.push(user_override);
                 overridden_count += 1;
-                false
             } else {
-                debug!("[config.rs] Keeping default rule: '{}', Opt_in: {}", default_rule.name, default_rule.opt_in);
-                true
+                // No override; keep the default rule
+                debug!("Keeping default rule: '{}', Opt_in: {}", default_rule.name, default_rule.opt_in);
+                final_rules.push(default_rule);
             }
-        });
+        }
+        
+        // Add any remaining user rules that didn't override a default
+        for (name, rule) in user_rules_map {
+            debug!("Adding new user rule: '{}'", name);
+            final_rules.push(rule);
+        }
 
-        let added_user_rules_count = user_rules_map.len() - overridden_count;
-        default_config.rules.extend(user_rules_map.into_values());
-
+        default_config.rules = final_rules;
+        
         debug!(
             "Merged rules summary: {} default rules initially, {} user rules processed. Overrode {} defaults, added {} new user rules. Final total rules: {}",
             initial_default_count,
-            user_cfg.rules.len(),
+            user_rules_len, // FIX: Use the variable
             overridden_count,
-            added_user_rules_count,
+            user_rules_len - overridden_count,
             default_config.rules.len()
         );
-        debug!("[config.rs] Final merged rules count: {}", default_config.rules.len());
-        for rule in &default_config.rules {
-            debug!("[config.rs] Final Merged Rule - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
-        }
-
     } else {
         debug!(
             "No user configuration provided. Using {} default rules.",
             default_config.rules.len()
         );
-        debug!("[config.rs] No user configuration to merge. Final rules count: {}", default_config.rules.len());
-        for rule in &default_config.rules {
-            debug!("[config.rs] Final Merged Rule (no user config) - Name: {}, Opt_in: {}", rule.name, rule.opt_in);
-        }
     }
     default_config
 }

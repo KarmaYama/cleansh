@@ -1,4 +1,3 @@
-// cleansh-workspace/cleansh/src/cli.rs
 //! This file defines the command-line interface (CLI) for the cleansh application,
 //! including all available commands and their arguments.
 //! It uses the `clap` library to parse command-line arguments and subcommands.
@@ -12,14 +11,14 @@
 //! License: Polyform Noncommercial License 1.0.0
 
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 /// Top-level CLI definition.
 #[derive(Parser, Debug)]
 #[command(
     name = "cleansh",
-    author = "Cleansh Technologies (Clean Shell)", // Added author as per best practice
+    author = "Obscura Team (Obscura Tech)", // Added author as per best practice
     version = env!("CARGO_PKG_VERSION"), // Use env! for version
     about = "Securely redact sensitive data from text",
     long_about = "Cleansh is a command-line utility for securely redacting sensitive information from text-based data. It helps you sanitize logs, code, documents, or terminal output to ensure that Personally Identifiable Information (PII) and other sensitive patterns are removed or obfuscated according to a configurable rule set.",
@@ -31,20 +30,12 @@ use std::path::PathBuf;
 )]
 pub struct Cli {
     /// Copy sanitized output to clipboard
-    #[arg(short = 'c', long = "clipboard", conflicts_with = "no_clipboard", help = "Copy sanitized output to the system clipboard.")]
+    #[arg(short = 'c', long = "clipboard", default_value = "false", help = "Copy sanitized output to the system clipboard.")]
     pub clipboard: bool,
 
-    /// Do not copy sanitized output to clipboard
-    #[arg(long = "no-clipboard", conflicts_with = "clipboard", help = "Explicitly prevent copying output to clipboard.")]
-    pub no_clipboard: bool, // NEW: Added for explicit disabling
-
     /// Show a unified diff between original and sanitized
-    #[arg(short = 'D', long = "diff", conflicts_with = "no_diff", help = "Show a unified diff to highlight the changes made during the sanitization process.")] // CHANGED: short = 'D', refined help text
+    #[arg(short = 'D', long = "diff", default_value = "false", help = "Show a unified diff to highlight the changes made during the sanitization process.")] // CHANGED: short = 'D', refined help text
     pub diff: bool,
-
-    /// Do not show diff
-    #[arg(long = "no-diff", conflicts_with = "diff", help = "Explicitly prevent showing a diff.")]
-    pub no_diff: bool, // NEW: Added for explicit disabling
 
     /// Path to custom redaction config (YAML)
     #[arg(long = "config", value_name = "FILE", help = "Path to a custom redaction configuration file (YAML).")] // Added value_name for clarity
@@ -69,6 +60,10 @@ pub struct Cli {
     /// Explicitly disable these rule names (comma-separated)
     #[arg(short = 'x', long = "disable", value_delimiter = ',', help = "Explicitly disable these rule names (comma-separated).")] // ADDED: short 'x'
     pub disable: Vec<String>,
+
+    /// Select which sanitization engine to use
+    #[arg(long = "engine", value_name = "ENGINE", default_value = "regex", help = "Select a sanitization engine (e.g., 'regex').")]
+    pub engine: EngineChoice,
 
     // --- Global flags used across commands, or for the main command ---
 
@@ -105,12 +100,23 @@ pub struct Cli {
     pub command: Option<Commands>,
 }
 
+/// Enum for selecting the sanitization engine.
+///
+/// This provides a type-safe way to handle engine choices.
+#[derive(Debug, Clone, ValueEnum)]
+pub enum EngineChoice {
+    /// The default regular expression engine.
+    Regex,
+    /// An example of another engine. This would be a future feature.
+    Entropy,
+}
+
 /// Subcommands
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Analyze content for sensitive data without redacting it, providing statistics.
     /// This is essentially the `--stats-only` mode from earlier versions.
-    #[command(about = "Analyze input for sensitive data and provide a summary without redacting it, providing statistics.")]
+    #[command(about = "Analyze input for sensitive data and provide a summary without redacting it.")]
     Stats(StatsCommand),
     /// Uninstall cleansh (cleanup registry, etc.)
     #[command(about = "Uninstall cleansh and remove its associated files.")]
