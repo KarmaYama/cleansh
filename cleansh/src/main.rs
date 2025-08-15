@@ -9,32 +9,35 @@
 //!
 //! ## Key Responsibilities of this Crate:
 //! - **Argument Parsing:** Defines and parses all CLI options and subcommands
-//!   using the `clap` crate.
+//!   using the `clap` crate.
 //! - **Input/Output Management:** Handles reading content from stdin or specified
-//!   files, and writing sanitized or statistical output to stdout, files, or
-//!   the system clipboard.
+//!   files, and writing sanitized or statistical output to stdout, files, or
+//!   the system clipboard.
 //! - **Application State:** Manages persistent application state such as usage
-//!   counts and prompt timings, leveraging the `utils::app_state` module.
+//!   counts and prompt timings, leveraging the `utils::app_state` module.
 //! - **User Interface:** Incorporates modules for theming, formatted output,
-//!   redaction summaries, and diff viewing (`ui` module).
-//! - **Command Execution:** Dispatches to specific command handlers (e.g., `stats`,
-//!   `uninstall`) based on user input, found within the `commands` module.
+//!   redaction summaries, and diff viewing (`ui` module).
+//! - **Command Execution:** Dispatches to specific command handlers (e.g., `sanitize`,
+//!   `scan`, `uninstall`) based on user input, found within the `commands` module.
 //! - **Integration:** Acts as the bridge between user commands and the core
-//!   redaction and validation functionalities exposed by `cleansh-core`.
+//!   redaction and validation functionalities exposed by `cleansh-core`.
 //!
 //! ## License
 //!
 //! Licensed under the Polyform Noncommercial License 1.0.0.
 
 use cleansh_core::{
-    engine::{SanitizationEngine, RegexEngine}, config::{merge_rules, RedactionConfig}
+    engine::SanitizationEngine,
+    RegexEngine,
+    config::{merge_rules, RedactionConfig},
+    RedactionSummaryItem,
 };
 use anyhow::{Context, Result, anyhow};
 use clap::Parser;
 use std::io::{self, Read, Write, IsTerminal, BufReader, BufRead};
 use std::fs;
 use std::env;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use log::{info, LevelFilter};
 use dotenvy;
 use std::collections::HashMap;
@@ -44,34 +47,38 @@ use cleansh::logger;
 use cleansh::ui;
 use cleansh::utils::app_state::AppState;
 use cleansh::utils::platform;
-use cleansh::cli::{Cli, Commands, EngineChoice};
+use cleansh::cli::{Cli, Commands, EngineChoice, SanitizeCommand, ScanCommand, ProfilesCommand};
+use cleansh_core::profiles;
+
+use cleansh::{check_license_for_feature, consume_license_post_success};
+use cleansh::utils::license as license_utils;
 
 /// Creates a fully configured and compiled sanitization engine based on CLI arguments.
-///
-/// This helper function centralizes the logic for loading default rules,
-/// merging with a custom configuration, and applying enable/disable filters.
-/// It returns a `Box<dyn SanitizationEngine>`, allowing the application to
-/// support different sanitization methods polymorphically.
 fn create_sanitization_engine(
-    config_path: Option<PathBuf>,
-    engine_choice: EngineChoice,
+    config_path: Option<&PathBuf>,
+    profile_name: Option<&String>,
+    engine_choice: &EngineChoice,
     enable_rules: &[String],
     disable_rules: &[String],
 ) -> Result<Box<dyn SanitizationEngine>> {
-    // 1. Load and merge rules
     let mut config = RedactionConfig::load_default_rules()
         .context("Failed to load default redaction rules")?;
 
-    if let Some(path) = config_path {
-        let user_config = RedactionConfig::load_from_file(&path)
+    if let Some(name) = profile_name {
+        let profile = profiles::load_profile_by_name(name)
+            .context("Failed to load specified profile")?;
+
+        profile.validate(&config)?;
+
+        config = profiles::apply_profile_to_config(&profile, config);
+    } else if let Some(path) = config_path {
+        let user_config = RedactionConfig::load_from_file(path)
             .context("Failed to load user-defined configuration file")?;
         config = merge_rules(config, Some(user_config));
     }
 
-    // 2. Apply enable and disable filters
     config.set_active_rules(enable_rules, disable_rules);
 
-    // 3. Instantiate the selected engine
     let engine: Box<dyn SanitizationEngine> = match engine_choice {
         EngineChoice::Regex => {
             Box::new(RegexEngine::new(config)
@@ -86,8 +93,6 @@ fn create_sanitization_engine(
 }
 
 /// Reads input content from a file or stdin, handling both terminal and non-terminal cases.
-///
-/// This helper function centralizes the logic for reading input, avoiding code duplication.
 fn read_input(input_file: &Option<PathBuf>, theme_map: &ui::theme::ThemeMap) -> Result<String> {
     if let Some(path) = input_file.as_ref() {
         commands::cleansh::info_msg(format!("Reading input from file: {}", path.display()), theme_map);
@@ -111,90 +116,190 @@ fn read_input(input_file: &Option<PathBuf>, theme_map: &ui::theme::ThemeMap) -> 
     }
 }
 
-/// A placeholder function for line-buffered mode.
-/// This would be fully implemented to read input line-by-line and sanitize each line.
-fn run_line_buffered_mode(engine: Box<dyn SanitizationEngine>, cli: &Cli) -> Result<()> {
+/// Reads input line-by-line from stdin, sanitizes each line using the provided engine,
+/// writes output line-by-line to stdout or a file, and maintains redaction statistics.
+fn run_line_buffered_mode(engine: Box<dyn SanitizationEngine>, opts: &SanitizeCommand, theme_map: &ui::theme::ThemeMap, quiet: bool) -> Result<()> {
     let stdin = io::stdin().lock();
     let mut reader = BufReader::new(stdin);
     let mut line = String::new();
-    let mut total_matches = 0usize;
-    let mut match_counts: HashMap<String, usize> = HashMap::new();
+    let mut summary_items: HashMap<String, RedactionSummaryItem> = HashMap::new();
 
-    // Use a Boxed writer to handle either stdout or a file
-    let mut writer: Box<dyn Write> = if let Some(path) = cli.output.as_ref() {
+    let mut writer: Box<dyn Write> = if let Some(path) = opts.output.as_ref() {
         Box::new(fs::File::create(path)
             .with_context(|| format!("Failed to create output file: {}", path.display()))?)
     } else {
         Box::new(io::stdout().lock())
     };
 
+    let flush_per_line = opts.output.is_none();
+    
+    commands::cleansh::info_msg("Using line-buffered mode...", theme_map);
+
     while reader.read_line(&mut line)? > 0 {
-        let (sanitized_line, matches) =
-            commands::cleansh::sanitize_single_line_with_count(&line, &*engine);
+        let (sanitized_line, line_summary) = engine.sanitize(&line, "", "", "", "", "", "", None)
+            .context("Sanitization failed in line-buffered mode")?;
         
-        // Write the sanitized line and a newline to the writer
-        write!(writer, "{}", sanitized_line)?;
-        
-        // Aggregate counts from the returned HashMap
-        for (rule, count) in matches {
-            *match_counts.entry(rule).or_insert(0) += count;
-            total_matches += count;
+        let mut sanitized_line = sanitized_line;
+
+        if !sanitized_line.ends_with('\n') {
+            sanitized_line.push('\n');
         }
 
-        line.clear(); // Clear the buffer for the next line
+        writer.write_all(sanitized_line.as_bytes())
+            .context("Failed to write sanitized line")?;
+
+        if flush_per_line {
+            writer.flush().context("Failed to flush stdout")?;
+        }
+
+        for item in line_summary {
+            summary_items
+                .entry(item.rule_name.clone())
+                .and_modify(|existing_item| {
+                    existing_item.occurrences += item.occurrences;
+                })
+                .or_insert(item);
+        }
+
+        line.clear();
     }
-
-    // After streaming, print summary:
-    if total_matches == 0 {
-        eprintln!("No redactions applied.");
-    } else if !cli.quiet && !cli.no_summary {
-        eprintln!("--- Redaction Summary ---");
-        for (rule, &count) in &match_counts {
-            eprintln!("{}: {} occurrences", rule, count);
-        }
+    
+    if !quiet && !opts.no_summary {
+        let summary_vec: Vec<RedactionSummaryItem> = summary_items.into_values().collect();
+        let stderr_supports_color = io::stderr().is_terminal();
+        ui::redaction_summary::print_summary(&summary_vec, &mut io::stderr(), theme_map, stderr_supports_color)?;
     }
 
     Ok(())
 }
 
-/// Handles the main `cleansh` command without a subcommand.
-/// This function encapsulates the core logic for sanitizing content.
-fn handle_main_command(cli: &Cli, engine: Box<dyn SanitizationEngine>, theme_map: &ui::theme::ThemeMap) -> Result<()> {
-    if cli.line_buffered {
-        // banner always to stderr, but only if we're not in quiet mode
-        if !cli.quiet {
-            eprintln!("\x1B[1;33mUsing line-buffered mode. Incompatible with --diff, --clipboard, and --input-file.\x1B[0m");
-        }
-        // warn when output-to-file is in use (even if quiet)
-        if cli.output.is_some() {
-            eprintln!(
-                "Warning: --line-buffered is intended for real-time console output. \
-                 Outputting to a file (--output) will still buffer by line, \
-                 but real-time benefits might be less apparent."
-            );
-        }
-        run_line_buffered_mode(engine, cli)?;
+/// Handles the `cleansh sanitize` command.
+fn handle_sanitize_command(opts: &SanitizeCommand, cli: &Cli, theme_map: &ui::theme::ThemeMap) -> Result<()> {
+    if opts.line_buffered && (opts.diff || opts.clipboard || opts.input_file.is_some()) {
+        commands::cleansh::error_msg(
+            "Error: --line-buffered is incompatible with --diff, --clipboard, and --input-file.",
+            &theme_map,
+        );
+        std::process::exit(1);
+    }
+    
+    let engine = create_sanitization_engine(
+        opts.config.as_ref(),
+        opts.profile.as_ref(),
+        &opts.engine,
+        &opts.enable,
+        &opts.disable,
+    )?;
+
+    if opts.line_buffered {
+        run_line_buffered_mode(engine, &opts, theme_map, cli.quiet)?;
     } else {
-        let input_content = read_input(&cli.input_file, theme_map)?;
+        let input_content = read_input(&opts.input_file, theme_map)?;
 
         let cleansh_options = commands::cleansh::CleanshOptions {
             input: input_content,
-            clipboard: cli.clipboard,
-            diff: cli.diff,
-            output_path: cli.output.clone(),
-            no_redaction_summary: cli.no_summary,
+            clipboard: opts.clipboard,
+            diff: opts.diff,
+            output_path: opts.output.clone(),
+            no_redaction_summary: opts.no_summary,
             quiet: cli.quiet,
         };
         commands::cleansh::run_cleansh_opts(&*engine, cleansh_options, theme_map)?;
     }
+    
     Ok(())
+}
+
+/// Handler for the `cleansh scan` command.
+fn handle_scan_command(opts: &ScanCommand, theme_map: &ui::theme::ThemeMap, state_path: &Path, app_state: &mut AppState) -> Result<()> {
+    // Check license first before running command logic
+    let token_opt = check_license_for_feature("scan", state_path, app_state, theme_map)?;
+    
+    let engine = create_sanitization_engine(
+        opts.config.as_ref(),
+        opts.profile.as_ref(),
+        &EngineChoice::Regex,
+        &opts.enable,
+        &opts.disable,
+    )?;
+
+    let res = commands::stats::run_stats_command(&opts, theme_map, &*engine);
+    
+    // Consume license only if the command was successful and a token was present
+    if res.is_ok() {
+        if let Some(token) = token_opt {
+            consume_license_post_success(&token, "scan", app_state, state_path, theme_map);
+        }
+    }
+
+    res
+}
+
+/// New helper function to centralize the license check, command execution, and consumption logic.
+fn gated_command<F>(feature: &str, state_path: &Path, app_state: &mut AppState, theme_map: &ui::theme::ThemeMap, f: F) -> Result<()>
+where
+    F: FnOnce(Option<&license_utils::LicenseToken>) -> Result<()>
+{
+    let token_opt = check_license_for_feature(feature, state_path, app_state, theme_map)?;
+
+    let res = f(token_opt.as_ref());
+    
+    if res.is_ok() {
+        if let Some(token) = token_opt {
+            consume_license_post_success(&token, feature, app_state, state_path, theme_map);
+        }
+    }
+    
+    res
+}
+
+/// Handler for the `profiles` command (gated per-subcommand feature keys).
+fn handle_profiles_command(opts: &ProfilesCommand, _cli: &Cli, theme_map: &ui::theme::ThemeMap, state_path: &Path, app_state: &mut AppState) -> Result<()> {
+    match opts {
+        ProfilesCommand::Sign { path, key_file } => {
+            gated_command("profiles:sign", state_path, app_state, theme_map, |token_opt| {
+                if token_opt.is_none() {
+                    // This is the test path, which skips the license check but must still have a valid RSA key to proceed.
+                    // The rest of the logic can assume `Ok(())`.
+                    commands::cleansh::warn_msg("Proceeding with profile signing in test mode. A valid key is still required.", theme_map);
+                }
+                
+                let key_bytes = fs::read(key_file)
+                    .context("Failed to read key file for signing.")?;
+                profiles::sign_profile(path, &key_bytes)?;
+                commands::cleansh::info_msg(format!("Profile '{}' signed successfully.", path.display()), theme_map);
+                Ok(())
+            })
+        },
+        ProfilesCommand::Verify { path: _, pub_key_file: _ } => {
+            gated_command("profiles:verify", state_path, app_state, theme_map, |token_opt| {
+                if token_opt.is_none() {
+                    commands::cleansh::warn_msg("Skipping license validation for 'profiles:verify' in test mode.", theme_map);
+                }
+                commands::cleansh::warn_msg("RSA verification is not yet implemented. This command is gated but unchanged in behavior.", theme_map);
+                Ok(())
+            })
+        },
+        ProfilesCommand::List => {
+            gated_command("profiles:list", state_path, app_state, theme_map, |token_opt| {
+                if token_opt.is_none() {
+                    commands::cleansh::warn_msg("Skipping license validation for 'profiles:list' in test mode.", theme_map);
+                }
+                let available_profiles = profiles::list_available_profiles();
+                commands::cleansh::info_msg("Available Profiles:", theme_map);
+                for profile in available_profiles {
+                    println!("- {}: {} ({})", profile.profile_name, profile.version, profile.display_name.unwrap_or_default());
+                }
+                Ok(())
+            })
+        },
+    }
 }
 
 fn main() -> Result<()> {
     dotenvy::dotenv().ok();
-
     let cli = Cli::parse();
-
+    
     // ── Honor test override for app state path ───────────────────────────────────
     let app_state_path: PathBuf = env::var("CLEANSH_STATE_FILE_OVERRIDE_FOR_TESTS")
         .map(PathBuf::from)
@@ -202,16 +307,15 @@ fn main() -> Result<()> {
             if let Some(dir) = dirs::data_dir() {
                 dir.join("cleansh").join("state.json")
             } else {
-                env::current_dir()
-                    .expect("Failed to get current dir")
-                    .join("cleansh_state.json")
+                env::current_dir().expect("Failed to get current dir").join("cleansh_state.json")
             }
         });
     // ── End override block ─────────────────────────────────────────────────────
-
-    // Determine log level
+    
+    let theme_map = ui::theme::build_theme_map(cli.theme.as_ref())?;
+    
     let effective_log_level = if cli.quiet {
-        Some(LevelFilter::Warn)
+        Some(LevelFilter::Off)
     } else if cli.debug && !cli.disable_debug {
         Some(LevelFilter::Debug)
     } else if cli.disable_debug {
@@ -219,79 +323,33 @@ fn main() -> Result<()> {
     } else {
         None
     };
-
     logger::init_logger(effective_log_level);
     info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
-
+    
     // Load or create the AppState
     let mut app_state = AppState::load(&app_state_path)?;
-    // Fix: Set the donation prompts disabled state after loading, so the value from the CLI
-    // overwrites any previous state.
-    app_state.donation_prompts_disabled = cli.disable_donation_prompts;
-
-    let theme_map = ui::theme::build_theme_map(cli.theme.as_ref())?;
-
-    match cli.command {
-        Some(Commands::Stats(ref stats_opts)) => {
-            let input_content = read_input(&cli.input_file, &theme_map)?;
-            let engine = create_sanitization_engine(
-                cli.config.clone(),
-                cli.engine.clone(),
-                &cli.enable,
-                &cli.disable,
-            )?;
-
-            commands::stats::run_stats_command(
-                &input_content,
-                &*engine,
-                &theme_map,
-                stats_opts,
-            )?;
-
-            // Increment stats-only counter
-            app_state.increment_stats_only_usage();
-
-            // Check and prompt for donation, then save the state.
-            if !app_state.donation_prompts_disabled {
-                if let Err(e) = app_state.check_and_prompt_donation(&theme_map) {
-                    commands::cleansh::error_msg(format!("Failed to handle donation prompt: {}", e), &theme_map);
-                }
-            }
-            app_state.save(&app_state_path)?;
-        }
-        Some(Commands::Uninstall { yes }) => {
-            commands::uninstall::run_uninstall_command(yes, &theme_map)?;
-        }
-        None => {
-            if cli.line_buffered && (cli.diff || cli.clipboard || cli.input_file.is_some()) {
-                commands::cleansh::error_msg(
-                    "Error: --line-buffered is incompatible with --diff, --clipboard, and --input-file.",
-                    &theme_map,
-                );
-                std::process::exit(1);
-            }
-
-            let engine = create_sanitization_engine(
-                cli.config.clone(),
-                cli.engine.clone(),
-                &cli.enable,
-                &cli.disable,
-            )?;
-            handle_main_command(&cli, engine, &theme_map)?;
-
-            // Increment general usage counter
-            app_state.increment_usage();
-
-            // Check and prompt for donation, then save the state.
-            if !app_state.donation_prompts_disabled {
-                if let Err(e) = app_state.check_and_prompt_donation(&theme_map) {
-                    commands::cleansh::error_msg(format!("Failed to handle donation prompt: {}", e), &theme_map);
-                }
-            }
-            app_state.save(&app_state_path)?;
+    // Set donation prompts disabled state after loading, so the CLI overrides previous state.
+    app_state.donation_prompts_disabled = cli.disable_donation_prompts || cli.quiet;
+    
+    // The main dispatch logic now passes state and theme to the new gated_command helper.
+    let result = match cli.command {
+        Commands::Sanitize(ref opts) => handle_sanitize_command(opts, &cli, &theme_map),
+        Commands::Scan(ref opts) => handle_scan_command(opts, &theme_map, &app_state_path, &mut app_state),
+        Commands::Uninstall { yes } => commands::uninstall::run_uninstall_command(yes, &theme_map),
+        Commands::Profiles(ref opts) => handle_profiles_command(opts, &cli, &theme_map, &app_state_path, &mut app_state),
+    };
+    
+    // Donation prompt logic
+    if !app_state.donation_prompts_disabled {
+        if let Err(e) = app_state.check_and_prompt_donation(&theme_map) {
+            commands::cleansh::error_msg(format!("Failed to handle donation prompt: {}", e), &theme_map);
         }
     }
 
-    info!("cleansh finished successfully.");
-    Ok(())
+    // Save app state at exit (ensures non-licensed changes also persist)
+    if let Err(e) = app_state.save(&app_state_path) {
+        commands::cleansh::warn_msg(format!("Failed to save app state: {}", e), &theme_map);
+    }
+    
+    result
 }

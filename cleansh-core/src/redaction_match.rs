@@ -1,68 +1,72 @@
-// cleansh-workspace/cleansh-core/src/redaction_match.rs
 //! Provides core data structures and utility functions for managing redaction matches
-//! and sensitive data logging within the `CleanSH-core` library.
+//! and sensitive data logging within the `cleansh-core` library.
 //!
 //! This module defines `RedactionMatch` for detailed reporting of sanitization
 //! operations and includes helper functions for conditionally redacting
 //! sensitive information in debug logs based on environment variables,
-//! ensuring PII is not accidentally exposed.
+//! ensuring PII is not accidentally exposed. It also defines the `RedactionLog`
+//! for creating an auditable, immutable log of all redaction events.
 //! License: BUSL-1.1
-
 
 use serde::{Serialize, Deserialize};
 use log::debug;
-use std::env;
+use crate::config::RedactionRule;
+
+use lazy_static::lazy_static;
+use sha2::{Sha256, Digest};
+use hex;
+
+lazy_static! {
+    /// A static boolean that is initialized once to determine if PII is allowed in debug logs.
+    /// This improves performance by avoiding repeated environment variable lookups.
+    static ref PII_DEBUG_ALLOWED: bool = {
+        std::env::var("CLEANSH_ALLOW_DEBUG_PII")
+            .map(|s| s.eq_ignore_ascii_case("true"))
+            .unwrap_or(false)
+    };
+}
 
 /// Represents a single instance of a matched and potentially redacted string.
-///
-/// This struct is used to collect granular information about each redaction,
-/// allowing for more detailed summaries and analysis in `--stats-only` mode
-/// or for integration with other reporting systems.
-///
-/// # Fields
-///
-/// * `rule_name`: The name of the redaction rule that was applied (e.g., "email", "ipv4_address").
-/// * `original_string`: The original text that was matched and redacted.
-/// * `sanitized_string`: The string used to replace the original text after redaction.
-/// * `start`: The byte index in the input content where the match begins.
-/// * `end`: The byte index in the input content where the match ends.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RedactionMatch {
     pub rule_name: String,
     pub original_string: String,
     pub sanitized_string: String,
-    pub start: usize,
-    pub end: usize,
+    // Changed to u64 for compatibility with file I/O
+    pub start: u64,
+    pub end: u64,
+    #[serde(default)]
+    pub line_number: Option<u64>, // Changed to u64
+    #[serde(default)]
+    pub sample_hash: Option<String>,
+    #[serde(default)]
+    pub match_context_hash: Option<String>,
+    #[serde(default)]
+    pub timestamp: Option<String>,
+    #[serde(default)]
+    pub rule: RedactionRule,
+    #[serde(default)]
+    pub source_id: String,
+}
+
+/// Represents a single, auditable log entry for a redaction event.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RedactionLog {
+    pub timestamp: String,
+    pub run_id: String,
+    pub file_path: String,
+    pub user_id: String,
+    pub reason_for_redaction: String,
+    pub redaction_outcome: String,
+    pub rule_name: String,
+    pub input_hash: String,
+    pub match_hash: String,
+    // Changed to u64 for compatibility with file I/O
+    pub start: u64,
+    pub end: u64,
 }
 
 /// Redacts sensitive information from a string for logging or display purposes.
-///
-/// This function replaces the content of a string with a placeholder. For short
-/// strings (up to 8 characters), it returns `"[REDACTED]"`. For longer strings,
-/// it includes the character count, e.g., `"[REDACTED: 15 chars]"`.
-///
-/// This is a security-conscious utility to prevent accidental logging or display
-/// of sensitive information during debugging or error reporting. It is publicly
-/// exposed for potential utility in testing or custom logging scenarios where
-/// immediate redaction of a single string is desired.
-///
-/// # Arguments
-///
-/// * `s` - The string slice to redact.
-///
-/// # Returns
-///
-/// A `String` containing the redacted representation.
-///
-/// # Examples
-///
-/// ```rust
-/// use cleansh_core::redaction_match::redact_sensitive;
-///
-/// assert_eq!(redact_sensitive("abc"), "[REDACTED]".to_string());
-/// // The original example asserted against 19 chars, but the string is only 18.
-/// assert_eq!(redact_sensitive("my_secret_password"), "[REDACTED: 18 chars]".to_string());
-/// ```
 pub fn redact_sensitive(s: &str) -> String {
     const MAX_LEN: usize = 8;
     if s.len() <= MAX_LEN {
@@ -72,22 +76,9 @@ pub fn redact_sensitive(s: &str) -> String {
     }
 }
 
-/// Checks if the `CLEANSH_ALLOW_DEBUG_PII` environment variable is set to "true".
-///
-/// This private helper function controls whether original sensitive information
-/// is included in debug logs. When the environment variable is set to "true"
-/// (case-insensitive), PII is allowed in debug logs; otherwise, it is redacted.
-fn is_pii_debug_allowed() -> bool {
-    env::var("CLEANSH_ALLOW_DEBUG_PII")
-        .map(|s| s.eq_ignore_ascii_case("true"))
-        .unwrap_or(false)
-}
-
 /// Private helper to get the appropriate string for logging based on PII permission.
-/// If PII debug is allowed, it returns the original string; otherwise, it returns
-/// the redacted version.
 fn get_loggable_content(sensitive_content: &str) -> String {
-    if is_pii_debug_allowed() {
+    if *PII_DEBUG_ALLOWED {
         sensitive_content.to_string()
     } else {
         redact_sensitive(sensitive_content)
@@ -97,17 +88,6 @@ fn get_loggable_content(sensitive_content: &str) -> String {
 /// Logs a debug message for a `RedactionMatch`, conditionally redacting
 /// the original sensitive content based on the `CLEANSH_ALLOW_DEBUG_PII`
 /// environment variable.
-///
-/// This function is intended for logging the details of a `RedactionMatch`
-/// object, typically when a redaction has been successfully performed.
-/// It integrates with the `log` crate's `debug!` macro.
-///
-/// # Arguments
-///
-/// * `module_path` - A string slice indicating the module or context from which the log is originating (e.g., `"[cleansh::core::sanitizer]"`).
-/// * `rule_name` - The name of the redaction rule that triggered the match.
-/// * `original_sensitive_content` - The actual sensitive string that was matched. This will be redacted if PII debug is not allowed.
-/// * `sanitized_content` - The string used to replace the `original_sensitive_content`. This is always safe to log.
 pub fn log_redaction_match_debug(
     module_path: &str,
     rule_name: &str,
@@ -125,16 +105,6 @@ pub fn log_redaction_match_debug(
 /// Logs a debug message for a 'captured match', conditionally redacting
 /// the original sensitive content based on the `CLEANSH_ALLOW_DEBUG_PII`
 /// environment variable.
-///
-/// This function is intended for logging an intermediate match found by a regex
-/// before a `RedactionMatch` object is fully finalized or validated.
-/// It integrates with the with the `log` crate's `debug!` macro.
-///
-/// # Arguments
-///
-/// * `module_path` - A string slice indicating the module or context.
-/// * `rule_name` - The name of the rule that captured the match.
-/// * `original_sensitive_content` - The string content that was captured by the regex. This will be redacted if PII debug is not allowed.
 pub fn log_captured_match_debug(
     module_path: &str,
     rule_name: &str,
@@ -149,16 +119,6 @@ pub fn log_captured_match_debug(
 
 /// Logs a debug message for a redaction action (i.e., when a replacement occurs),
 /// conditionally redacting the original sensitive content based on `CLEANSH_ALLOW_DEBUG_PII`.
-///
-/// This function provides visibility into the actual transformation of sensitive
-/// data during the sanitization process. It integrates with the `log` crate's `debug!` macro.
-///
-/// # Arguments
-///
-/// * `module_path` - A string slice indicating the module or context.
-/// * `original_sensitive_content` - The original content that was replaced. This will be redacted if PII debug is not allowed.
-/// * `sanitized_replacement` - The string used as the replacement. This is always safe to log.
-/// * `rule_name` - The name of the rule that performed the redaction.
 pub fn log_redaction_action_debug(
     module_path: &str,
     original_sensitive_content: &str,
@@ -174,10 +134,38 @@ pub fn log_redaction_action_debug(
     );
 }
 
+/// Produce a canonical hash for a matched snippet and rule.
+/// Normalizes whitespace and case, includes rule id to avoid cross-rule collisions.
+pub fn canonical_sample_hash(rule_id: &str, snippet: &str) -> String {
+    // Normalization: trim, collapse whitespace to single spaces, lowercase
+    let normalized = snippet
+        .trim()
+        .to_lowercase()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    let mut hasher = Sha256::new();
+    hasher.update(rule_id.as_bytes());
+    hasher.update(b":");
+    hasher.update(normalized.as_bytes());
+    hex::encode(hasher.finalize())
+}
+
+/// Ensure each RedactionMatch has a sample_hash. Populates sample_hash using canonical_sample_hash
+/// if missing. This is safe to call after engine detection and before UI/ignore-store logic.
+pub fn ensure_match_hashes(matches: &mut [RedactionMatch]) {
+    for m in matches.iter_mut() {
+        if m.sample_hash.is_none() {
+            let hash = canonical_sample_hash(&m.rule_name, &m.original_string);
+            m.sample_hash = Some(hash);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
     use test_log::test;
 
     #[test]
@@ -193,51 +181,9 @@ mod tests {
     }
 
     #[test]
-    #[test_log::test]
-    fn test_log_redaction_match_debug_pii_allowed() {
-        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "true"); }
-        log_redaction_match_debug(
-            "[test::redaction]", "email", "test@example.com", "[EMAIL_REDACTED]"
-        );
-        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
-    }
-
-    #[test]
-    #[test_log::test]
-    fn test_log_redaction_match_debug_pii_not_allowed() {
-        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
-        log_redaction_match_debug(
-            "[test::redaction]", "email", "test@example.com", "[EMAIL_REDACTED]"
-        );
-    }
-
-    #[test]
-    #[test_log::test]
-    fn test_log_captured_match_debug_pii_allowed() {
-        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "true"); }
-        log_captured_match_debug("[test::redaction]", "ssn", "123-45-6789");
-        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
-    }
-
-    #[test]
-    #[test_log::test]
-    fn test_log_captured_match_debug_pii_not_allowed() {
-        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
-        log_captured_match_debug("[test::redaction]", "ssn", "123-45-6789");
-    }
-
-    #[test]
-    #[test_log::test]
-    fn test_log_redaction_action_debug_pii_allowed() {
-        unsafe { env::set_var("CLEANSH_ALLOW_DEBUG_PII", "true"); }
-        log_redaction_action_debug("[test::redaction]", "original_token", "REDACTED_TOKEN", "generic_token");
-        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
-    }
-
-    #[test]
-    #[test_log::test]
-    fn test_log_redaction_action_debug_pii_not_allowed() {
-        unsafe { env::remove_var("CLEANSH_ALLOW_DEBUG_PII"); }
-        log_redaction_action_debug("[test::redaction]", "original_token", "REDACTED_TOKEN", "generic_token");
+    fn test_canonical_sample_hash_consistency() {
+        let h1 = canonical_sample_hash("email", "Test@Example.COM ");
+        let h2 = canonical_sample_hash("email", "test@example.com");
+        assert_eq!(h1, h2, "canonical hash should be stable across case/whitespace");
     }
 }

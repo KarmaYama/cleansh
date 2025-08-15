@@ -13,17 +13,22 @@ This release introduces a major architectural refactoring of the core sanitizati
 
 ### Added
 
-* **Engine Abstraction (`SanitizationEngine` Trait):** A new trait, `SanitizationEngine`, has been introduced to define a common interface for different sanitization backends. The existing regex-based logic is now encapsulated in a concrete implementation, `RegexEngine`, which adheres to this trait.
-* **New `engine.rs` Module:** A new module has been created to house the `SanitizationEngine` trait, the `RegexEngine` implementation, and the `SanitizationContext` helper struct. This modular design separates the core sanitization logic from the rule compilation process.
+* **Engine Abstraction (`SanitizationEngine` Trait)::** A new trait, `SanitizationEngine`, has been introduced to define a common interface for different sanitization backends. The existing regex-based logic is now encapsulated in a concrete implementation, `RegexEngine`, which adheres to this trait.
+* **New `engine.rs` Module:** A new module has been created to house the `SanitizationEngine` trait and the `RegexEngine` implementation. This modular design separates the core sanitization logic from the rule compilation process.
+* **New `sanitizers/` Directory:** A new directory has been added to house the `regex_sanitizer.rs` module, which contains the compilation logic for regex-based rules.
 * **`SanitizationContext` Struct:** A new helper struct that centralizes the boilerplate logic for resolving overlapping matches, building the final sanitized string, and generating the summary.
 * **`RedactionMatch` Position Data:** The `RedactionMatch` struct has been enhanced with two new fields, `start` and `end`, to record the byte indices of a match. This is crucial for accurately handling overlapping matches and reconstructing the sanitized string.
 * **`RedactionConfig::set_active_rules` Method:** A new function that allows for explicit, programmatic control over which rules are active by accepting separate lists of rules to enable and disable. This replaces the less flexible "default" and "strict" configurations.
 * **`HashSet` Dependency:** The `std::collections::HashSet` has been added to improve the efficiency of managing and checking rule names.
+* **`profiles.rs` Module:** A new module, `profiles.rs`, has been added to introduce the concept of named redaction profiles. This module provides the core logic for defining, loading, and applying profile-specific settings, including sampling and post-processing configurations.
+* **New `opt_in` Rule Flag:** The `RedactionRule` struct now includes an `opt_in` boolean field. Rules with `opt_in: true` are disabled by default and are only compiled and applied if explicitly enabled.
+* **Credit Card Validator:** Added a new `is_valid_credit_card_programmatically` validator that uses the Luhn algorithm for an additional layer of accuracy in identifying valid credit card numbers.
 
 ### Changed
 
 * **Sanitization Logic Flow:** The core sanitization process has been refactored. The `sanitize_content` function has been removed and its logic is now part of the `SanitizationEngine::sanitize` method and the `SanitizationContext` struct. This moves the match aggregation and string reconstruction logic to a single, centralized location.
-* **Rule Compilation (`compile_rules`):** The signature of `compile_rules` has been simplified to only accept `rules_to_compile`, as the filtering logic for enabling and disabling rules is now handled earlier in the `RedactionConfig` module.
+* **Rule Compilation (`compile_rules`):** The signature of `compile_rules` has been simplified to only accept `rules_to_compile`, as the filtering logic for enabling and disabling rules is now handled earlier in the `RedactionConfig` module. The function has been moved into the new `sanitizers/regex_sanitizer.rs` module.
+* **`validators.rs`:** The validation logic for US Social Security Numbers (`is_valid_ssn_programmatically`) has been corrected to more accurately reflect historical rules, removing an incorrect check for the `700-729` area code range and adding the `800` range as invalid. The UK NINO validation logic was also refactored for clarity, using more readable methods and array lookups.
 * **Core API & `lib.rs`:** The top-level `lib.rs` now re-exports the new `SanitizationEngine` and `RegexEngine` types, which represent the new primary public API. The older, lower-level functions like `sanitize_content` are no longer publicly exposed.
 * **Backreference Handling:** The `replace_all` closure within the regex matching logic has been updated to correctly process replacement strings containing backreferences (e.g., `$1`).
 * **Logging:** Logging statements have been streamlined across the configuration module. Redundant log prefixes have been removed for cleaner output, and the final loaded rule count is now reported at a more appropriate `info!` level.
@@ -35,6 +40,7 @@ This release introduces a major architectural refactoring of the core sanitizati
 
 * **`sanitize_content` Function:** The top-level `sanitize_content` function has been removed. Its core logic has been refactored and integrated into the new `SanitizationEngine` trait and `SanitizationContext` helper struct.
 * **`RedactionConfig::set_active_rules_config` Method:** This method has been removed in favor of the more flexible and explicit `set_active_rules` method.
+* **`sanitizer.rs` Module:** The `sanitizer.rs` module has been removed and its functionality has been moved to the new `sanitizers/regex_sanitizer.rs` module.
 
 ---
 

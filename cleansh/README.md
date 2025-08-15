@@ -2,7 +2,6 @@
 
 [![Downloads from crates.io](https://img.shields.io/crates/d/cleansh.svg?style=for-the-badge&labelColor=334155&color=4FC3F7)](https://crates.io/crates/cleansh) [![CodeQL](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/github-code-scanning/codeql) [![CodeQL Advanced](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/codeql.yml) [![Dependabot Updates](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/dependabot/dependabot-updates) [![Release](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/release.yml) [![Rust CI](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml/badge.svg)](https://github.com/KarmaYama/cleansh/actions/workflows/rust.yml) [![Star](https://img.shields.io/github/stars/KarmaYama/cleansh.svg?style=social)](https://github.com/KarmaYama/cleansh/stargazers)
 
-
 **[Contributing Guidelines](CONTRIBUTING.md)** | **[Code of Conduct](CODE_OF_CONDUCT.md)** | **[Changelog](CHANGELOG.md)** | **[Security Policy](SECURITY.md)** | **[Trademark Policy](TRADEMARK.md)** | **[Command Handbook](COMMANDS.md)**
 
 > CleanSH (clean shell) is a high‑trust, single‑purpose CLI tool designed to sanitize terminal output for safe sharing.
@@ -18,22 +17,16 @@
 | :---------------------------------------------------------------------- |
 | [1. Overview](#1-overview) |
 | [2. Important Note on Licensing](#2-important-note-on-licensing) |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.1. Commercial Use Defined |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.2. Cleansh v0.1.5 - v0.x.x: Evaluation & Trial Period |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.3. Future Enforcement: Cleansh v1.0.0 and Beyond |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.4. How to Obtain a Commercial License |
-| &nbsp;&nbsp;&nbsp;&nbsp;2.5. Violation of Commercial Use Policy |
-| [3. Core Capabilities – Current Version (v0.1.5)](#3-core-capabilities--current-version-v015) |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.1. Enhanced Redaction Categories |
-| &nbsp;&nbsp;&nbsp;&nbsp;3.2. Advanced Features (with flags) |
-| [4. Usage Examples](#4-usage-examples) |
-| [5. Known Issues](#5-known-issues) |
-| [6. Configuration Strategy](#6-configuration-strategy) |
-| [7. Clipboard Support](#7-clipboard-support) |
-| [8. Security by Default Principles](#8-security-by-default-principles) |
-| [9. Future Vision & Roadmap](#9-future-vision--roadmap) |
-| [10. Installation & Getting Started](#10-installation--getting-started) |
-| [11. License](#11-license) |
+| [3. Core Capabilities – Free Tier](#3-core-capabilities--free-tier) |
+| [4. Cleansh Pro Features](#4-cleansh-pro-features) |
+| [5. Usage Examples](#5-usage-examples) |
+| [6. Known Issues](#6-known-issues) |
+| [7. Configuration Strategy](#7-configuration-strategy) |
+| [8. Clipboard Support](#8-clipboard-support) |
+| [9. Security by Default Principles](#9-security-by-default-principles) |
+| [10. Future Vision & Roadmap](#10-future-vision--roadmap) |
+| [11. Installation & Getting Started](#11-installation--getting-started) |
+| [12. License](#12-license) |
 
 ---
 
@@ -48,7 +41,7 @@ Whether you're debugging, collaborating, or sharing logs, `CleanSH` ensures that
 
 ## 2. Important Note on Licensing
 
-As part of `CleanSH`'s commitment to sustainable development and continued innovation, we have shifted our licensing model.
+As part of `CleanSH`'s commitment to sustainable development and continued innovation, we have shifted our licensing model to ensure the project's long-term viability.
 
 | Aspect | Versions (`< v0.1.5`) | Versions (`v0.1.5` and up to v0.x.x) |
 | :---------------- | :----------------------------- | :---------------------------------------------------- |
@@ -59,19 +52,19 @@ As part of `CleanSH`'s commitment to sustainable development and continued innov
 
 Effective with `v0.1.5`, `CleanSH` adopts the **PolyForm Noncommercial License 1.0.0**. For versions `v0.1.5` up to `v0.x.x`, commercial use is permitted for evaluation and trial purposes.
 
-* **Free Use:** `CleanSH` remains **free for personal, academic, research, hobby, and charitable use.**
-* **Commercial Use:** Any use by for-profit entities, government agencies, or in a commercial product/service will strictly require a separate commercial license **from `v1.0.0` onwards**.
+### Free Tier vs. Pro Tier
+CleanSH provides a clear distinction between its free and pro tiers. The **free tier** includes all core sanitization functionality, available to all users under the PolyForm Noncommercial License 1.0.0. The **pro tier**, which includes advanced features for enterprise and commercial use, requires a valid commercial license key. The application will check for a valid license before executing these pro features and will exit with an error if one is not found.
 
 **📢 For Commercial Licenses:**
-Please email us at [licenses@cleansh.tech](mailto:cleansshh@gmail.com) for pricing and terms.
+Please email us at [licenses@obscuratech.tech](mailto:licenses@obscuratech.tech) for pricing and terms.
 
-For detailed definitions of "Commercial Use," information on the evaluation period, and future licensing enforcement (including in-app license key validation from `v1.0.0`), please refer to our dedicated **[License Notes](LICENSE_NOTES.md)**.
+For a detailed breakdown of which features are in each tier, please refer to our dedicated **[License Notes](LICENSE_NOTES.md)**.
 
 ---
 
-## 3. Core Capabilities – Current Version (**v0.1.5**)
+## 3. Core Capabilities – Free Tier
 
-This release represents a significant leap forward in `Cleansh`'s accuracy, security, and testability. Based on our rigorously passing test suite, `Cleansh` accurately masks:
+The core `cleansh` functionality is available to all users for free. This release represents a significant leap forward in `Cleansh`'s accuracy, security, and testability. Based on our rigorously passing test suite, `Cleansh` accurately masks:
 
 ### 3.1. Enhanced Redaction Categories:
 
@@ -80,29 +73,37 @@ This release represents a significant leap forward in `Cleansh`'s accuracy, secu
 * **Emails:** Common email formats (e.g., `user@example.com`).
 * **IP Addresses:** Both **IPv4** (e.g., `192.168.1.1`) and **IPv6** addresses (full uncompressed form, e.g., `2001:0db8:85a3:0000:0000:8a2e:0370:7334`).
 * **Tokens & Secrets:**
-    * **JWTs**
-    * **GitHub PATs** (`ghp_…`)
-    * **GitHub fine‑grained PATs** (`github_pat_…`, 72 characters)
-    * **Stripe keys** (`sk_live_…`, `sk_test_…`, `rk_live_…`)
-    * **AWS Access/Secret Keys**
-    * **GCP API Keys**
-    * **Google OAuth tokens** (`ya29.…`, 20–120 characters)
-    * **SSH private keys**
-    * **Generic Hex Secrets** (32 and 64 characters)
-    * **Generic Tokens**
+    * **JWTs**
+    * **GitHub PATs** (`ghp_…`)
+    * **GitHub fine‑grained PATs** (`github_pat_…`, 72 characters)
+    * **Stripe keys** (`sk_live_…`, `sk_test_…`, `rk_live_…`)
+    * **AWS Access/Secret Keys**
+    * **GCP API Keys**
+    * **Google OAuth tokens** (`ya29.…`, 20–120 characters)
+    * **SSH private keys**
+    * **Generic Hex Secrets** (32 and 64 characters)
+    * **Generic Tokens**
 * **Personal Identifiable Information (PII):**
-    * **Credit Card Numbers**
-    * **US Social Security Numbers (SSN)** (with programmatic validation against invalid patterns like `000-XX-XXXX`, `666-XX-XXXX`, or `9XX-XX-XXXX`).
-    * **UK National Insurance Numbers (NINO)** (with programmatic validation against invalid prefixes and structural rules).
-    * **South African ID Numbers**
+    * **Credit Card Numbers**
+    * **US Social Security Numbers (SSN)** (with programmatic validation against invalid patterns like `000-XX-XXXX`, `666-XX-XXXX`, or `9XX-XX-XXXX`).
+    * **UK National Insurance Numbers (NINO)** (with programmatic validation against invalid prefixes and structural rules).
+    * **South African ID Numbers**
 * **Paths & URLs:**
-    * **Linux/macOS Absolute Paths** (`/home/user/...` → `~/home/user/...`).
-    * **Windows Absolute Paths** (`C:\Users\…`, `\\Server\Share\…`).
-    * **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`)
+    * **Linux/macOS Absolute Paths** (`/home/user/...` → `~/home/user/...`).
+    * **Windows Absolute Paths** (`C:\Users\…`, `\\Server\Share\…`).
+    * **Slack Webhook URLs** (`https://hooks.slack.com/services/T...`)
 * **Authentication Headers:**
-    * **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
+    * **HTTP Basic Auth Headers** (`Authorization: Basic ...`)
 
-### 3.2. Advanced Features (with flags):
+### 3.2. Primary Commands & Options:
+
+The core `cleansh` CLI is organized into powerful subcommands, each with a specific purpose.
+
+* **`cleansh sanitize`:** The primary command for redacting content. It can read from stdin or a file and write to stdout, a file, or the clipboard.
+* **`cleansh uninstall`:** A utility command to safely remove `cleansh` and its associated files from your system.
+* **`cleansh profiles list`:** Lists all available local redaction profiles.
+
+### 3.3. Advanced Flags (within the free tier):
 
 `Cleansh` provides command‑line flags to customize its behavior, all thoroughly tested:
 
@@ -111,96 +112,109 @@ This release represents a significant leap forward in `Cleansh`'s accuracy, secu
 * **Custom Config (`--config <path>`):** Load and merge your YAML redaction rules with built-in defaults.
 * **Output File (`-o <path>`):** Write sanitized content to a file.
 * **Suppress Summary (`--no-redaction-summary`):** Suppress the display of the redaction summary at the end of the output.
-* **Enable Specific Rules (`--enable-rules <names>`):** Explicitly activate opt-in redaction rules by name (comma-separated).
-* **Disable Specific Rules (`--disable-rules <names>`):** Explicitly deactivate any redaction rules by name (comma-separated), overriding defaults or custom enabled rules.
+* **Enable Specific Rules (`--enable <names>`):** Explicitly activate opt-in redaction rules by name (comma-separated).
+* **Disable Specific Rules (`--disable <names>`):** Explicitly deactivate any redaction rules by name (comma-separated), overriding defaults or custom enabled rules.
 * **Select Rule Set (`--rules <name>`):** Apply a predefined rule configuration (e.g., `default` for standard non-opt-in rules, `strict` to enable all rules including opt-in ones).
-* **Statistics Mode (`--stats-only`):** Analyze input for sensitive data and provide a summary without performing redaction.
-* **Export Stats to JSON File (`--stats-json-file <path>`):** When in statistics mode, write the detailed redaction summary to a JSON file.
-* **Export Stats to Stdout (`--export-json-to-stdout`):** When in statistics mode, print the JSON summary directly to `stdout`, suppressing other output.
-* **Sample Matches in Stats (`--sample-matches <count>`):** Include a specified number of unique original match examples for each rule in JSON statistics.
-* **Fail on Threshold (`--fail-over-threshold <count>`):** In statistics mode, exit with an error code if the total number of detections exceeds this count.
 * **Debug Logging (`--debug`):** Enable verbose debug output for troubleshooting.
 * **Suppress Debugging (`--no-debug`):** Disable debug logging.
 * **Quiet Output (`--quiet`):** Suppress all warnings and informational messages, showing only errors.
 
 ---
 
-## 4. Usage Examples
+## 4. Cleansh Pro Features
+
+Cleansh offers powerful features designed for commercial and enterprise use cases, which require a commercial license. These features are intended for team collaboration, policy enforcement, and cryptographic verification of data handling.
+
+**Pro Commands Included:**
+* **`cleansh scan`:** Scans input and provides a detailed redaction summary without altering content. This is ideal for security audits and CI/CD pipelines.
+* **`cleansh profiles sync`:** Synchronize redaction profiles with a central server using an organization ID and API key. This ensures all team members are using the same, up-to-date rules.
+* **`cleansh profiles sign`:** Cryptographically sign a redaction profile for integrity and authenticity.
+* **`cleansh verify-artifact`:** Cryptographically verify the signature of a redaction artifact JSON file using a public key. This provides an auditable, non-repudiable proof that a file was processed correctly and has not been tampered with.
+
+---
+
+## 5. Usage Examples
 
 **Basic Sanitization (stdin):**
 
 ```bash
-echo "My email is test@example.com and my IP is 192.168.1.1." | Cleansh
+echo "My email is test@example.com and my IP is 192.168.1.1." | cleansh sanitize
 ````
+
+**CI/CD Scan (using a fail threshold):**
+
+```bash
+cat build.log | cleansh scan --fail-over-threshold 0
+```
 
 **Docker Logs:**
 
 ```bash
-docker logs my-sensitive-container | cleansh
+docker logs my-sensitive-container | cleansh sanitize
 ```
 
 **Kubectl Logs:**
 
 ```bash
-kubectl logs my-pod-with-secrets | cleansh
+kubectl logs my-pod-with-secrets | cleansh sanitize
 ```
 
 **Clipboard:**
 
 ```bash
-git config --list | cleansh -c
+git config --list | cleansh sanitize -c
 ```
 
 **Diff:**
 
 ```bash
-cat /var/log/app/errors.log | cleansh -d
+cat /var/log/app/errors.log | cleansh sanitize -d
 ```
 
 **Custom Rules:**
 
 ```bash
-cat secrets.txt | cleansh --config ./custom_rules.yaml
+cat secrets.txt | cleansh sanitize --config ./custom_rules.yaml
 ```
 
 **Save to File:**
 
 ```bash
-myscript.sh | cleansh -o safe.log
+myscript.sh | cleansh sanitize -o safe.log
 ```
 
 **File Input:**
 
 ```bash
-cleansh ./raw_log_file.txt
+cleansh sanitize ./raw_log_file.txt
 ```
 
 **Combined:**
 
 ```bash
-mycmd | cleansh -d -o sanitized.txt
+mycmd | cleansh sanitize -d -o sanitized.txt
 ```
 
 **Enable/Disable Specific Rules:**
 
 ```bash
-echo "My Stripe key is sk_live_abc123. Email: user@example.com" | cleansh --enable-rules stripe_secret --disable-rules email
+echo "My Stripe key is sk_live_abc123. Email: user@example.com" | cleansh sanitize --enable stripe_secret --disable email
 ```
 
 -----
 
-## 5\. Known Issues
+## 6\. Known Issues
 
-### 5.1. Custom‑Rule Overrides
+### 6.1. Custom‑Rule Overrides
 
   * **Severity:** Low — Broad “generic token” rules can potentially override more specific custom placeholders if not carefully defined.
-  * **Workaround:** Make your custom patterns more precise or use the `--disable-rules` flag to control which rules are active.
+  * **Workaround:** Make your custom patterns more precise or use the `--disable` flag to control which rules are active.
 
 -----
 
-## 6\. Configuration Strategy
+## 7\. Configuration Strategy
 
-### 6.1. Custom Rules (`--config`)
+### 7.1. Custom Rules (`--config`)
 
 You can define your own custom redaction rules in a YAML file and merge them with Cleansh's built-in defaults:
 
@@ -209,29 +223,35 @@ rules:
   - name: emp_id
     pattern: 'EMP-\d{5}'
     replace_with: '[EMPLOYEE_ID_REDACTED]'
-    multiline: false
+    pattern_type: "regex"
+    version: "0.1.8"
+    author: "Obscura Team"
+    created_at: "2025-06-12T00:00:00Z"
+    updated_at: "2025-08-11T00:00:00Z"
     dot_matches_new_line: false
+    programmatic_validation: false
+    multiline: false
 ```
 
-### 6.2. Rule Enable/Disable (`--enable-rules`, `--disable-rules`)
+### 7.2. Rule Enable/Disable (`--enable`, `--disable`)
 
 You can activate `opt_in` rules or deactivate any rule by name using CLI flags:
 
 ```bash
-cleansh --enable-rules "uk_nino,aws_secret_key"
-cleansh --disable-rules "email,ipv4_address"
+cleansh sanitize --enable "uk_nino,aws_secret_key" 
+cleansh sanitize --disable "email,ipv4_address"
 ```
 
 -----
 
-## 7\. Clipboard Support
+## 8\. Clipboard Support
 
   * **macOS & Windows:** Built‑in.
   * **Linux:** Requires `xclip`, `xsel` or `wl-clipboard`.
 
 -----
 
-## 8\. Security by Default Principles
+## 9\. Security by Default Principles
 
 | Feature | Principle |
 | :-------------------------- | :------------------------------------------------------------------------------- |
@@ -246,7 +266,7 @@ cleansh --disable-rules "email,ipv4_address"
 
 -----
 
-## 9\. Future Vision & Roadmap
+## 10\. Future Vision & Roadmap
 
 CleanSH is charting a course toward adaptive, user-driven enhancements, transforming it into an intelligent, trainable security assistant. Planned areas of exploration include:
 
@@ -262,16 +282,16 @@ These explorations will inform future releases, helping us build the most robust
 
 -----
 
-## 10\. Installation & Getting Started
+## 11\. Installation & Getting Started
 
 ### Prebuilt Binaries (Recommended):
 
-Download the latest prebuilt binaries for your platform from [GitHub](https://github.com/KarmaYama/cleansh/releases).
+Download the latest prebuilt binaries for your platform from [GitHub](https://github.com/KarmaYama/cleansh-workspace/releases).
 
 ### Install Script:
 
 ```bash
-curl -sSf [https://github.com/KarmaYama/cleansh/releases/download/v0.1.5/cleansh-installer.sh](https://github.com/KarmaYama/cleansh/releases/download/v0.1.5/cleansh-installer.sh) | sh
+curl -sSf [https://github.com/KarmaYama/cleansh/releases/download/v0.1.8/cleansh-installer.sh](https://github.com/KarmaYama/cleansh/releases/download/v0.1.8/cleansh-installer.sh) | sh
 ```
 
 ### From crates.io:
@@ -283,15 +303,15 @@ cargo install cleansh # Use `cargo install cleansh --force` to update
 ### From Source:
 
 ```bash
-git clone [https://github.com/KarmaYama/cleansh.git](https://github.com/KarmaYama/cleansh.git)
+git clone [https://github.com/KarmaYama/cleansh-workspace.git](https://github.com/KarmaYama/cleansh-workspace.git)
 cd cleansh
-cargo build --release --features "test-exposed clipboard"
-cargo test --package cleansh --features "test-exposed clipboard"
+cargo build --release
+cargo test --package cleansh
 ```
 
 -----
 
-## 11\. License
+## 12\. License
 
 This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
 
@@ -299,6 +319,4 @@ This project is licensed under the [PolyForm Noncommercial License 1.0.0](https:
 
 **Precision redaction. Local‑only trust. Built for devs.**
 
-
 *Copyright 2025 Obscura Tech.*
-

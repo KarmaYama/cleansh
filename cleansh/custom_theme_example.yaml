@@ -1,0 +1,24 @@
+header:
+  fg: brightwhite
+success:
+  fg: brightgreen
+info:
+  fg: white
+warn:
+  fg: brightyellow
+error:
+  fg: brightred
+redacted_text:
+  fg: magenta
+diff_added:
+  fg: green
+diff_removed:
+  fg: red
+diff_header:
+  fg: brightwhite
+summary_rule_name:
+  fg: brightcyan
+summary_occurrences:
+  fg: white
+prompt:
+  fg: yellow

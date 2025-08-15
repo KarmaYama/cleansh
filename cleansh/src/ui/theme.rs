@@ -245,6 +245,11 @@ impl ThemeStyle {
     /// A `HashMap<ThemeEntry, ThemeStyle>` representing the default theme.
     pub fn default_theme_map() -> ThemeMap { // Use ThemeMap alias
         let mut default_theme = HashMap::new();
+        // Set specific colors for diff-related entries
+        default_theme.insert(ThemeEntry::DiffAdded, ThemeStyle { fg: Some(ThemeColor::Named("green".into())) });
+        default_theme.insert(ThemeEntry::DiffRemoved, ThemeStyle { fg: Some(ThemeColor::Named("red".into())) });
+
+        // Insert all other entries with their default colors (white)
         for entry in [
             ThemeEntry::Header,
             ThemeEntry::Success,
@@ -252,14 +257,13 @@ impl ThemeStyle {
             ThemeEntry::Warn,
             ThemeEntry::Error,
             ThemeEntry::RedactedText,
-            ThemeEntry::DiffAdded,
-            ThemeEntry::DiffRemoved,
             ThemeEntry::DiffHeader,
             ThemeEntry::SummaryRuleName,
-            ThemeEntry::SummaryOccurrences, // And here
+            ThemeEntry::SummaryOccurrences,
             ThemeEntry::Prompt,
         ] {
-            default_theme.insert(entry, ThemeStyle { fg: Some(ThemeColor::Named("white".into())) });
+            // Only insert if it's not already present to avoid overwriting DiffAdded/DiffRemoved
+            default_theme.entry(entry).or_insert_with(|| ThemeStyle { fg: Some(ThemeColor::Named("white".into())) });
         }
         default_theme
     }
