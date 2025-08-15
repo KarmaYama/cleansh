@@ -37,11 +37,13 @@ pub mod ui;
 pub mod utils;
 pub mod logger;
 
-use anyhow::{Result};
+use anyhow::Result;
 use utils::app_state::AppState;
 use utils::license as license_utils;
 use std::path::Path;
 
+#[cfg(not(feature = "test-exposed"))]
+use anyhow::anyhow;
 #[cfg(not(feature = "test-exposed"))]
 use std::env;
 #[cfg(not(feature = "test-exposed"))]
