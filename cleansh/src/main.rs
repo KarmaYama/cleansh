@@ -1,6 +1,6 @@
 //! Cleansh CLI Application
 //!
-//! `cleansh` is the command-line interface application that allows users to
+//! `cleansh` is the command-line interface application that allows users to 
 //! sanitize sensitive information from text content. This crate serves as
 //! the main executable wrapper, orchestrating the parsing of command-line
 //! arguments, managing input and output streams, handling application-specific
@@ -9,18 +9,18 @@
 //!
 //! ## Key Responsibilities of this Crate:
 //! - **Argument Parsing:** Defines and parses all CLI options and subcommands
-//!   using the `clap` crate.
+//!   using the `clap` crate.
 //! - **Input/Output Management:** Handles reading content from stdin or specified
-//!   files, and writing sanitized or statistical output to stdout, files, or
-//!   the system clipboard.
+//!   files, and writing sanitized or statistical output to stdout, files, or
+//!   the system clipboard.
 //! - **Application State:** Manages persistent application state such as usage
-//!   counts and prompt timings, leveraging the `utils::app_state` module.
+//!   counts and prompt timings, leveraging the `utils::app_state` module.
 //! - **User Interface:** Incorporates modules for theming, formatted output,
-//!   redaction summaries, and diff viewing (`ui` module).
+//!   redaction summaries, and diff viewing (`ui` module).
 //! - **Command Execution:** Dispatches to specific command handlers (e.g., `sanitize`,
-//!   `scan`, `uninstall`) based on user input, found within the `commands` module.
+//!   `scan`, `uninstall`) based on user input, found within the `commands` module.
 //! - **Integration:** Acts as the bridge between user commands and the core
-//!   redaction and validation functionalities exposed by `cleansh-core`.
+//!   redaction and validation functionalities exposed by `cleansh-core`.
 //!
 //! ## License
 //!
@@ -300,6 +300,13 @@ fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     let cli = Cli::parse();
     
+    // --- New: Pre-check for uninstall command to bypass AppState loading.
+    if let Some(Commands::Uninstall { yes }) = cli.command {
+        let theme_map = ui::theme::build_theme_map(cli.theme.as_ref())?;
+        commands::uninstall::run_uninstall_command(yes, &theme_map)?;
+        return Ok(());
+    }
+
     // ── Honor test override for app state path ───────────────────────────────────
     let app_state_path: PathBuf = env::var("CLEANSH_STATE_FILE_OVERRIDE_FOR_TESTS")
         .map(PathBuf::from)
@@ -333,10 +340,14 @@ fn main() -> Result<()> {
     
     // The main dispatch logic now passes state and theme to the new gated_command helper.
     let result = match cli.command {
-        Commands::Sanitize(ref opts) => handle_sanitize_command(opts, &cli, &theme_map),
-        Commands::Scan(ref opts) => handle_scan_command(opts, &theme_map, &app_state_path, &mut app_state),
-        Commands::Uninstall { yes } => commands::uninstall::run_uninstall_command(yes, &theme_map),
-        Commands::Profiles(ref opts) => handle_profiles_command(opts, &cli, &theme_map, &app_state_path, &mut app_state),
+        Some(Commands::Sanitize(ref opts)) => handle_sanitize_command(opts, &cli, &theme_map),
+        Some(Commands::Scan(ref opts)) => handle_scan_command(opts, &theme_map, &app_state_path, &mut app_state),
+        Some(Commands::Uninstall { yes: _ }) => {
+            // This case is handled by the early exit above.
+            Ok(())
+        },
+        Some(Commands::Profiles(ref opts)) => handle_profiles_command(opts, &cli, &theme_map, &app_state_path, &mut app_state),
+        None => handle_sanitize_command(&cli.sanitize_opts, &cli, &theme_map),
     };
     
     // Donation prompt logic
