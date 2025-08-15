@@ -242,7 +242,7 @@ pub mod test_exposed {
         // Updated to reflect the refactoring in cleansh/src/commands/cleansh.rs
         pub use crate::commands::cleansh::{run_cleansh_opts, sanitize_single_line};
         pub use crate::commands::stats::run_stats_command;
-        pub use crate::commands::uninstall::run_uninstall_command;
+        pub use crate::commands::uninstall::elevate_and_run_uninstall;
     }
 
     /// CLI UI modules for testing

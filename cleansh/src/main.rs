@@ -296,8 +296,10 @@ fn handle_profiles_command(opts: &ProfilesCommand, _cli: &Cli, theme_map: &ui::t
     }
 }
 
+
 fn main() -> Result<()> {
     dotenvy::dotenv().ok();
+    
     let cli = Cli::parse();
     
     // ── Honor test override for app state path ───────────────────────────────────
@@ -326,11 +328,10 @@ fn main() -> Result<()> {
     logger::init_logger(effective_log_level);
     info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
     
-    // Now we use a single match statement to handle all commands, including `uninstall`.
     // We only load the app state if the command is not `uninstall`.
     let mut app_state;
     let result = match cli.command {
-        Commands::Uninstall { yes } => commands::uninstall::run_uninstall_command(yes, &theme_map),
+        Commands::Uninstall { yes } => commands::uninstall::elevate_and_run_uninstall(yes, &theme_map),
         ref opts @ _ => {
             // Load or create the AppState for all other commands
             app_state = AppState::load(&app_state_path)?;
@@ -342,8 +343,6 @@ fn main() -> Result<()> {
                 Commands::Scan(scan_opts) => handle_scan_command(scan_opts, &theme_map, &app_state_path, &mut app_state),
                 Commands::Profiles(profile_opts) => handle_profiles_command(profile_opts, &cli, &theme_map, &app_state_path, &mut app_state),
                 Commands::Uninstall { yes: _ } => {
-                    // This case is caught by the outer match, so this branch is unreachable.
-                    // This is good, as it prevents app_state from being loaded for uninstall.
                     unreachable!()
                 }
             };

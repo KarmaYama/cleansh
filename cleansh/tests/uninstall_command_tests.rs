@@ -1,4 +1,3 @@
-// tests/uninstall_command_tests.rs
 //! Integration tests for the `cleansh uninstall` command.
 
 use anyhow::Result;
@@ -9,17 +8,14 @@ use tempfile::tempdir;
 use test_log::test; // For integrating with `env_logger` in tests
 use assert_cmd::Command; // For robust CLI command testing
 
-// Correct and direct import paths (removed unused AppState import)
-use cleansh::commands::uninstall::run_uninstall_command;
+// Correct and direct import paths
+use cleansh::commands::uninstall::elevate_and_run_uninstall;
 use cleansh::ui::theme;
 
 
 /// Helper to get a temporary config directory path.
 /// This function sets the appropriate environment variable for `dirs::config_dir()`
 /// to point to a temporary location, allowing isolated testing of app state management.
-///
-/// FIX: Returns both the PathBuf and the TempDir guard to prevent premature cleanup,
-/// addressing the deprecated `into_path()` warning.
 fn get_temp_config_dir() -> (PathBuf, tempfile::TempDir) {
     let temp_dir = tempdir().expect("Failed to create temporary directory");
     let temp_path = temp_dir.path().to_path_buf();
@@ -51,7 +47,6 @@ fn get_temp_config_dir() -> (PathBuf, tempfile::TempDir) {
 #[test(should_panic(expected = "exit code: 0"))] // Expect the process to exit with code 0
 fn test_uninstall_command_success_with_confirmation() {
     // Set up a temporary config directory for the test
-    // FIX: Destructure the tuple returned by get_temp_config_dir
     let (temp_config_root, _temp_dir_guard) = get_temp_config_dir();
     let cleansh_config_dir = temp_config_root.join("cleansh");
     let app_state_file = cleansh_config_dir.join("app_state.json");
@@ -70,9 +65,9 @@ fn test_uninstall_command_success_with_confirmation() {
 
     // Call the uninstall command with the --yes flag
     // The `should_panic` attribute handles the `std::process::exit(0)` call.
-    let result = run_uninstall_command(true, &theme_map); // `true` for `yes_flag`
+    let result = elevate_and_run_uninstall(true, &theme_map); // `true` for `yes_flag`
 
-    // This line will only be reached if run_uninstall_command *doesn't* exit.
+    // This line will only be reached if elevate_and_run_uninstall *doesn't* exit.
     assert!(result.is_ok(), "Uninstall command should return Ok() before exiting.");
 }
 
@@ -81,7 +76,6 @@ fn test_uninstall_command_success_with_confirmation() {
 #[test]
 fn test_uninstall_command_cancellation() -> Result<()> {
     // Set up a temporary config directory for the test
-    // FIX: Destructure the tuple returned by get_temp_config_dir
     let (temp_config_root, _temp_dir_guard) = get_temp_config_dir();
     let cleansh_config_dir = temp_config_root.join("cleansh");
     let app_state_file = cleansh_config_dir.join("app_state.json");
@@ -105,7 +99,6 @@ fn test_uninstall_command_cancellation() -> Result<()> {
 
     // Assert that the command runs successfully (exits with code 0)
     // and that the output indicates cancellation (optional, but good for robust testing)
-    // FIX: Prefix with underscore to mark as intentionally unused
     let _assert = cmd.assert().success();
 
     // Verify that the files were NOT removed
