@@ -12,10 +12,14 @@
 //! ## Modules
 //!
 //! * `config`: Defines `RedactionRule`s and `RedactionConfig` for specifying sensitive patterns.
-//! * `sanitizer`: Implements the core logic for compiling rules and applying them.
+//! * `sanitizers`: Contains engine-specific logic for compiling rules, such as `regex_sanitizer`.
 //! * `validators`: Provides programmatic validation for specific data types.
 //! * `redaction_match`: Defines data structures for detailed reporting of redaction events.
 //! * `engine`: Defines the `SanitizationEngine` trait, enabling a modular design.
+//! * `profiles`: Defines data structures for user-specified profiles and post-processing.
+//! * `audit_log`: Defines the structure and logic for writing redaction events to a log file.
+//! * `engines`: Contains concrete implementations of the `SanitizationEngine` trait.
+//! * `headless`: Convenience wrappers for using core engines in a non-interactive mode.
 //!
 //! ## Public API
 //!
@@ -32,44 +36,48 @@
 //!
 //! **Sanitization Engine**
 //!
-//! * [`SanitizationEngine`]: A trait for pluggable sanitization methods. `RegexEngine` is the default implementation.
+//! * [`SanitizationEngine`]: A trait for pluggable sanitization methods.
 //! * [`RegexEngine`]: The concrete implementation of `SanitizationEngine` that uses regular expressions.
+//!
+//! **Headless Mode**
+//!
+//! * [`headless_sanitize_string`]: A convenience function for a full, one-shot sanitization.
 //!
 //! **Redaction Reporting**
 //!
 //! * [`RedactionMatch`]: A detailed record of a single matched and redacted item, including its location.
 //! * [`RedactionSummaryItem`]: A summary of all matches for a specific rule.
 //!
+//! **Audit Logging**
+//!
+//! * [`AuditLog`]: Provides a high-level API for creating and writing structured redaction logs.
+//!
 //! ## Usage Example
 //!
 //! ```rust
-//! use cleansh_core::{RedactionConfig, SanitizationEngine, RegexEngine, RedactionSummaryItem};
+//! use cleansh_core::{RedactionConfig, headless_sanitize_string, EngineOptions};
 //! use anyhow::Result;
 //!
 //! fn main() -> Result<()> {
-//!     // 1. Load default redaction rules and prepare the engine configuration.
+//!     // 1. Load default redaction rules.
 //!     let default_config = RedactionConfig::load_default_rules()?;
 //!
-//!     // 2. Create the sanitization engine (using the RegexEngine implementation).
-//!     //    This compiles all non-opt-in default rules.
-//!     let engine: Box<dyn SanitizationEngine> = Box::new(RegexEngine::new(default_config)?);
-//!     println!("Successfully initialized the sanitization engine with {} rules.", engine.get_rules().rules.len());
-//!
-//!     // 3. Prepare some content to sanitize.
+//!     // 2. Prepare some content to sanitize.
 //!     let input = "My email is test@example.com and my SSN is 123-45-6789. Another email: user@domain.org.";
 //!     println!("\nOriginal Input:\n{}", input);
 //!
-//!     // 4. Sanitize the content using the engine's `sanitize` method.
-//!     let (sanitized_output, summary) = engine.sanitize(input)?;
-//!     println!("\nSanitized Output:\n{}", sanitized_output);
+//!     // 3. Configure engine options.
+//!     let options = EngineOptions::default();
+//!     let source_id = "test_document.txt";
 //!
-//!     // 5. Print the collected redaction summary.
-//!     println!("\n--- Redaction Summary ---");
-//!     for item in summary {
-//!         println!(" Rule: '{}', Occurrences: {}", item.rule_name, item.occurrences);
-//!         println!("   - Original (unique): {:?}", item.original_texts);
-//!         println!("   - Sanitized (unique): {:?}", item.sanitized_texts);
-//!     }
+//!     // 4. Sanitize the content in a single, headless function call.
+//!     let sanitized_output = headless_sanitize_string(
+//!         default_config,
+//!         options,
+//!         input,
+//!         source_id,
+//!     )?;
+//!     println!("\nSanitized Output:\n{}", sanitized_output);
 //!
 //!     Ok(())
 //! }
@@ -83,22 +91,31 @@
 //! ## Design Principles
 //!
 //! * **Pluggable Architecture:** The `SanitizationEngine` trait allows for different
-//!    sanitization methods (e.g., regex, entropy) to be swapped out seamlessly.
+//!   sanitization methods (e.g., regex, entropy) to be swapped out seamlessly.
 //! * **Stateless:** The core library does not maintain application state.
 //! * **Testable:** Logic is easily unit-testable in isolation.
 //! * **Extensible:** The design supports adding new rule types or engines with minimal
-//!    changes to the core application logic.
+//!   changes to the core application logic.
 //!
 //! ---
 //! License: BUSL-1.1
 
+// All modules must be declared before they can be used.
+pub mod audit_log;
 pub mod config;
-pub mod sanitizer;
-pub mod validators;
-pub mod redaction_match;
 pub mod engine;
+pub mod engines;
+pub mod headless;
+pub mod profiles;
+pub mod redaction_match;
+pub mod sanitizers;
+pub mod validators;
+pub mod errors;
 
-// Re-export key types and functions from the config module
+// Correctly re-exporting modules and types from their canonical locations.
+// This ensures the public API is clean and well-defined.
+
+/// Re-exports the public configuration types and functions for managing redaction rules.
 pub use config::{
     merge_rules,
     RedactionConfig,
@@ -108,21 +125,43 @@ pub use config::{
     MAX_PATTERN_LENGTH,
 };
 
-// Re-export key types and functions from the sanitizer module
-pub use sanitizer::{
-    compile_rules,
-    CompiledRule,
-    CompiledRules,
+/// Re-exports the custom error type for clear error reporting.
+pub use errors::CleanshError;
+
+/// Re-exports types related to the core sanitization engine trait.
+pub use engine::SanitizationEngine;
+
+/// Re-exports the concrete `RegexEngine` implementation from its new location.
+pub use engines::regex_engine::RegexEngine;
+
+/// Re-exports types for detailed redaction matches and sensitive data reporting.
+pub use redaction_match::{RedactionLog, RedactionMatch, redact_sensitive};
+
+/// Re-exports types related to profile configuration, which allows for custom
+/// redaction behavior and reporting.
+pub use profiles::{
+    apply_profile_to_config,
+    compute_run_seed,
+    DedupeConfig,
+    EngineOptions,
+    format_token,
+    load_profile_by_name,
+    PostProcessingConfig,
+    ProfileConfig,
+    ProfileRule,
+    profile_candidate_paths,
+    ReportingConfig,
+    SamplesConfig,
+    sample_score_hex,
+    select_samples_for_rule,
 };
 
-// Re-export key types from the redaction_match module
-pub use redaction_match::{
-    RedactionMatch,
-    redact_sensitive,
-};
+/// Re-exports the AuditLog type for handling redaction event logging.
+pub use audit_log::AuditLog;
 
-// Re-export key types from the engine module
-pub use engine::{
-    SanitizationEngine,
-    RegexEngine, // Re-export the concrete implementation once.
-};
+/// Re-exports types and functions for one-shot, non-interactive use.
+pub use headless::headless_sanitize_string;
+
+// Re-export key types from the sanitizers::compiler module for advanced usage.
+// This is the correct path for `CompiledRule` and `CompiledRules`.
+pub use sanitizers::compiler::{compile_rules, CompiledRule, CompiledRules};

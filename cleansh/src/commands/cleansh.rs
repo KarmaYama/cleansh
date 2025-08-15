@@ -26,10 +26,6 @@ use crate::ui::theme::{ThemeMap};
 use crate::utils::clipboard::copy_to_clipboard;
 use is_terminal::IsTerminal;
 
-/// This trait combines the required traits into a single type.
-trait OutputWriter: Write + IsTerminal + Send + Sync {}
-impl<T: Write + IsTerminal + Send + Sync> OutputWriter for T {}
-
 /// Grouped options for the new ergonomic API
 pub struct CleanshOptions {
     pub input: String,
@@ -64,42 +60,40 @@ fn handle_primary_output(
     sanitized_content: &str,
     theme_map: &ThemeMap,
 ) -> Result<()> {
-    let (mut writer, output_supports_color): (Box<dyn OutputWriter>, bool) = if let Some(path) = opts.output_path.clone() {
+    if let Some(path) = opts.output_path.clone() {
         info_msg(format!("Writing sanitized content to file: {}", path.display()), theme_map);
         debug!("[cleansh::commands::cleansh] Outputting to file: {}", path.display());
-        (
-            Box::new(
-                fs::File::create(&path)
-                    .with_context(|| format!("Failed to create output file: {}", path.display()))?,
-            ),
-            false,
-        )
+        let mut file = fs::File::create(&path)
+            .with_context(|| format!("Failed to create output file: {}", path.display()))?;
+        
+        if opts.diff {
+            debug!("Generating and displaying diff.");
+            diff_viewer::print_diff(&opts.input, sanitized_content, &mut file, theme_map, false)?;
+        } else {
+            writeln!(file, "{}", sanitized_content)
+                .context("Failed to write sanitized content")?;
+        }
     } else {
         info_msg("Writing sanitized content to stdout.", theme_map);
         debug!("[cleansh::commands::cleansh] Outputting to stdout.");
         let stdout = io::stdout();
+        let mut writer = stdout.lock();
         let supports_color = stdout.is_terminal();
-        (Box::new(stdout), supports_color)
+        
+        if opts.diff {
+            debug!("Generating and displaying diff.");
+            diff_viewer::print_diff(&opts.input, sanitized_content, &mut writer, theme_map, supports_color)?;
+        } else {
+            writeln!(writer, "{}", sanitized_content)
+                .context("Failed to write sanitized content")?;
+        }
     };
-
-    if opts.diff {
-        debug!("Generating and displaying diff.");
-        info_msg("Generating and displaying diff.", theme_map);
-        debug!("[cleansh::commands::cleansh] Diff enabled.");
-        diff_viewer::print_diff(&opts.input, sanitized_content, &mut writer, theme_map, output_supports_color)?;
-    } else {
-        debug!("Printing sanitized content.");
-        debug!("[cleansh::commands::cleansh] Diff disabled, printing sanitized content.");
-        writeln!(writer, "{}", sanitized_content)
-            .context("Failed to write sanitized content")?;
-    }
     Ok(())
 }
 
 /// Handles copying sanitized content to the clipboard.
 fn handle_clipboard_output(sanitized_content: &str, theme_map: &ThemeMap) {
     debug!("Attempting to copy sanitized content to clipboard.");
-    debug!("[cleansh::commands::cleansh] Clipboard enabled.");
     match copy_to_clipboard(sanitized_content) {
         Ok(_) => {
             info!("Sanitized content copied to clipboard successfully.");
@@ -119,15 +113,11 @@ fn handle_redaction_summary(
     theme_map: &ThemeMap,
 ) -> Result<()> {
     if !opts.no_redaction_summary && !opts.quiet {
-        debug!("Displaying redaction summary.");
-        info_msg("Displaying redaction summary.", theme_map);
-        debug!("[cleansh::commands::cleansh] Redaction summary enabled.");
+        info!("Displaying redaction summary.");
         let stderr_supports_color = io::stderr().is_terminal();
         redaction_summary::print_summary(&summary, &mut io::stderr(), theme_map, stderr_supports_color)?;
     } else {
-        debug!("Redaction summary display skipped per user request.");
-        info_msg("Redaction summary display skipped per user request.", theme_map);
-        debug!("[cleansh::commands::cleansh] Redaction summary skipped.");
+        info!("Redaction summary display skipped per user request.");
     }
     Ok(())
 }
@@ -140,10 +130,18 @@ pub fn run_cleansh_opts(
     theme_map: &ThemeMap,
 ) -> Result<()> {
     info!("Starting cleansh operation.");
-    debug!("[cleansh::commands::cleansh] Starting cleansh operation.");
 
-    let (sanitized_content, summary) = engine.sanitize(&opts.input)
-        .context("Sanitization failed")?;
+    let (sanitized_content, summary) = engine.sanitize(
+        &opts.input,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        None,
+    )
+    .context("Sanitization failed")?;
 
     debug!(
         "Content sanitized. Original length: {}, Sanitized length: {}",
@@ -151,7 +149,6 @@ pub fn run_cleansh_opts(
         sanitized_content.len()
     );
     
-    // Use the new helper functions to orchestrate the process.
     handle_primary_output(&opts, &sanitized_content, theme_map)?;
 
     if opts.clipboard {
@@ -161,7 +158,6 @@ pub fn run_cleansh_opts(
     handle_redaction_summary(&summary, &opts, theme_map)?;
     
     info!("Cleansh operation completed.");
-    debug!("[cleansh::commands::cleansh] Cleansh operation completed.");
     Ok(())
 }
 
@@ -184,7 +180,17 @@ pub fn sanitize_single_line_with_count(
     line: &str,
     engine: &dyn SanitizationEngine,
 ) -> (String, HashMap<String, usize>) {
-    let (sanitized_content, summary) = engine.sanitize(line).unwrap_or_else(|_| (line.to_string(), Vec::new()));
+    let (sanitized_content, summary) = engine.sanitize(
+        line,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        None,
+    )
+    .unwrap_or_else(|_| (line.to_string(), Vec::new()));
     let mut counts: HashMap<String, usize> = HashMap::new();
     for item in summary {
         *counts.entry(item.rule_name).or_insert(0) += 1;
@@ -209,6 +215,16 @@ pub fn sanitize_single_line(
     line: &str,
     engine: &dyn SanitizationEngine,
 ) -> String {
-    let (sanitized_content, _) = engine.sanitize(line).unwrap_or_else(|_| (line.to_string(), Vec::new()));
+    let (sanitized_content, _) = engine.sanitize(
+        line,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        None,
+    )
+    .unwrap_or_else(|_| (line.to_string(), Vec::new()));
     sanitized_content
 }

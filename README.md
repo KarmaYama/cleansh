@@ -24,6 +24,17 @@ This repository (`cleansh-workspace`) is a **Rust monorepo** designed for the se
 
 ---
 
+### Licensing and Commercial Use
+
+As part of our commitment to sustainable development, the `cleansh` project has adopted the **PolyForm Noncommercial License 1.0.0**.
+
+* The **free tier** includes all core sanitization functionality, such as `cleansh sanitize`, and is available for all noncommercial uses.
+* The **pro tier** includes advanced features designed for commercial and enterprise workflows, such as `cleansh scan`, which are now gated and require a commercial license key.
+
+For a detailed breakdown of which features are in each tier and a full explanation of the licensing policy, please refer to the main `CleanSH` CLI [README](./cleansh/README.md) and [License Notes](./cleansh/LICENSE_NOTES.md).
+
+---
+
 ### Getting Started
 
 To explore or contribute to the `CleanSH` project:
@@ -31,19 +42,19 @@ To explore or contribute to the `CleanSH` project:
 1.  **Clone the Repository:**
     ```bash
     git clone [https://github.com/KarmaYama/cleansh-workspace.git](https://github.com/KarmaYama/cleansh-workspace.git)
-    cd cleansh-workspace 
+    cd cleansh-workspace
     ```
 
 2.  **Build the Workspace:**
     The project is a Rust workspace, so you can build all components from the root:
     ```bash
-    cargo build --release --features "test-exposed clipboard"
+    cargo build --release
     ```
 
 3.  **Run Tests:**
     Ensure everything is functioning correctly by running the full test suite:
     ```bash
-    cargo test --package cleansh --features "test-exposed clipboard"
+    cargo test --package cleansh
     ```
 ---
 
@@ -53,14 +64,6 @@ To explore or contribute to the `CleanSH` project:
 
 * **Ask a Question or Share an Idea:** Our **[GitHub Discussions](https://github.com/KarmaYama/cleansh-workspace/discussions)** page is the best place to connect with us directly.
 * **Report a Bug:** Please open an issue on the **[Issues page](https://github.com/KarmaYama/cleansh-workspace/issues)**. We appreciate detailed bug reports!
-
----
-
-## License Notes
-
-Please check our [`License Notes`](./cleansh/LICENSE_NOTES.md) for more information.
-
-The overall `CleanSH` project, the `CleanSH` CLI application specifically, is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). Please refer to the specific license notes within the `CleanSH` directory for full details on commercial use.
 
 ---
 

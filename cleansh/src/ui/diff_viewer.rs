@@ -1,17 +1,14 @@
-// cleansh-workspace/cleansh/src/ui/diff_viewer.rs
 //! Module for displaying differences between original and sanitized content.
 //!
 //! This module provides functionality to generate and print a human-readable
 //! diff view, highlighting added and removed lines, typically used to show
 //! the changes made by the redaction process. It leverages the `diffy` crate
-//! for patch generation and `owo-colors` for colored terminal output.
+//! for patch generation and a custom styling helper for colored terminal output.
 
-// Updated import: Removed ThemeStyle and HasIsTerminal, kept ThemeEntry and ThemeMap
 use crate::ui::theme::{ThemeEntry, ThemeMap};
-use std::io::{self, Write};
+use std::io::Write;
 use anyhow::Result;
 use diffy::{create_patch, Line};
-use owo_colors::OwoColorize;
 
 // Import get_styled_text from output_format
 use crate::ui::output_format::get_styled_text;
@@ -43,18 +40,15 @@ use crate::ui::output_format::get_styled_text;
 ///
 /// A `Result` indicating `Ok(())` on successful write operations or an `Err`
 /// if any writing to the `writer` fails.
-pub fn print_diff<W: Write>( // <--- Trait bound changed to just `Write`
+pub fn print_diff<W: Write>(
     original_content: &str,
     sanitized_content: &str,
     writer: &mut W,
-    theme_map: &ThemeMap, // Use ThemeMap alias
-    enable_colors: bool, // <--- New `enable_colors` argument
+    theme_map: &ThemeMap,
+    enable_colors: bool,
 ) -> Result<()> {
-    // Determine enable_colors is now handled by the passed argument
-
-    // Print diff header to stderr as per existing logic, assuming it's for user info.
     let diff_header = get_styled_text("\n--- Diff View ---", ThemeEntry::DiffHeader, theme_map, enable_colors);
-    writeln!(io::stderr(), "{}", diff_header)?;
+    writeln!(writer, "{}", diff_header)?;
 
     let patch = create_patch(original_content, sanitized_content);
 
@@ -69,22 +63,25 @@ pub fn print_diff<W: Write>( // <--- Trait bound changed to just `Write`
             // `diffy` might escape newlines as `\n` in content; replace them back to actual newlines
             let s_with_actual_newlines = content_str.replace("\\n", "\n");
 
-            // Iterate over lines within a segment to handle multi-line segments correctly
             for segment in s_with_actual_newlines.lines() {
                 match line_change {
                     Line::Delete(_) => {
-                        if enable_colors {
-                            writeln!(writer, "{}{}", "-".red(), segment.red())?;
-                        } else {
-                            writeln!(writer, "-{}", segment)?;
-                        }
+                        let styled_line = get_styled_text(
+                            &format!("-{}", segment),
+                            ThemeEntry::DiffRemoved,
+                            theme_map,
+                            enable_colors,
+                        );
+                        writeln!(writer, "{}", styled_line)?;
                     }
                     Line::Insert(_) => {
-                        if enable_colors {
-                            writeln!(writer, "{}{}", "+".green(), segment.green())?;
-                        } else {
-                            writeln!(writer, "+{}", segment)?;
-                        }
+                        let styled_line = get_styled_text(
+                            &format!("+{}", segment),
+                            ThemeEntry::DiffAdded,
+                            theme_map,
+                            enable_colors,
+                        );
+                        writeln!(writer, "{}", styled_line)?;
                     }
                     Line::Context(_) => {
                         // Context lines are prefixed with a space for alignment with diff output
@@ -94,7 +91,7 @@ pub fn print_diff<W: Write>( // <--- Trait bound changed to just `Write`
             }
         }
     }
-    // Print diff footer to stderr.
-    writeln!(io::stderr(), "{}", get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map, enable_colors))?;
+    let diff_footer = get_styled_text("-----------------", ThemeEntry::DiffHeader, theme_map, enable_colors);
+    writeln!(writer, "{}", diff_footer)?;
     Ok(())
 }
