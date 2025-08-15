@@ -1,5 +1,3 @@
-// cleansh-workspace/cleansh/src/commands/uninstall.rs
-
 //! Cleansh Uninstallation Command (`uninstall`).
 //!
 //! This module implements the `cleansh uninstall` command, providing a mechanism
@@ -15,12 +13,10 @@ use std::env;
 use std::thread;
 use std::time::Duration;
 use log::{info, debug};
-use is_terminal::IsTerminal; // Keep IsTerminal to determine coloring for stderr
-
+use is_terminal::IsTerminal;
 use crate::ui::{output_format, theme};
-use crate::commands::cleansh::info_msg; // Import the info_msg helper
-// Updated import: Removed HasIsTerminal as it's no longer defined in theme.rs
-use crate::ui::theme::ThemeMap; // Import ThemeMap only
+use crate::commands::cleansh::info_msg;
+use crate::ui::theme::ThemeMap;
 
 /// Runs the uninstallation logic for the cleansh application.
 ///
@@ -46,22 +42,64 @@ use crate::ui::theme::ThemeMap; // Import ThemeMap only
 /// The function exits the process upon successful initiation of uninstallation.
 pub fn run_uninstall_command(
     yes_flag: bool,
-    theme_map: &ThemeMap, // Use ThemeMap alias
+    theme_map: &ThemeMap,
 ) -> Result<()> {
     info!("Starting cleansh uninstall operation.");
     debug!("[uninstall.rs] Uninstall command initiated.");
 
-    let stderr_supports_color = io::stderr().is_terminal(); // Determine color support for stderr
+    let stderr_supports_color = io::stderr().is_terminal();
+
+    // --- NEW: Check for uninstaller ready flag to prevent infinite elevation ---
+    // This flag is set when we relaunch with `RunAs`
+    let is_uninstaller_ready = std::env::args().any(|arg| arg == "--uninstaller-ready");
+    
+    // --- NEW: Relaunch with administrative privileges if not already elevated ---
+    #[cfg(target_os = "windows")]
+    if !is_uninstaller_ready {
+        debug!("[uninstall.rs] Not in uninstaller-ready mode. Relaunching with administrative privileges.");
+        
+        let mut command = Command::new("powershell.exe");
+        let current_exe_path = env::current_exe()
+            .context("Failed to determine current executable path for relaunch.")?;
+        
+        // Pass the original command line arguments, plus the new ready flag
+        let mut args: Vec<String> = env::args().collect();
+        args.push("--uninstaller-ready".to_string());
+        
+        let args_str = args.join(" ");
+
+        let script = format!(
+            r#"Start-Process -Verb RunAs -FilePath '{}' -ArgumentList '{}'"#,
+            current_exe_path.to_string_lossy(),
+            args_str
+        );
+
+        command.arg("-NoProfile")
+            .arg("-NonInteractive")
+            .arg("-Command")
+            .arg(&script)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::inherit()); // Inherit stderr to see if Start-Process fails
+
+        let child = command.spawn().context("Failed to spawn PowerShell process for elevation.")?;
+        debug!("[uninstall.rs] PowerShell helper for elevation spawned with PID: {}", child.id());
+
+        // Wait a moment for the new process to start and then exit the current process
+        thread::sleep(Duration::from_millis(500));
+        std::process::exit(0);
+    }
+
 
     // --- 1. User Confirmation ---
     if !yes_flag {
-        info_msg("WARNING: This will uninstall Cleansh and remove its associated data.", theme_map); // Updated
-        output_format::print_message( // This is a specific prompt, not a standard info message
+        info_msg("WARNING: This will uninstall Cleansh and remove its associated data.", theme_map);
+        output_format::print_message(
             &mut io::stderr(),
             "Are you sure you want to proceed? (y/N): ",
             theme_map,
             Some(theme::ThemeEntry::Prompt),
-            stderr_supports_color, // <--- Added enable_colors argument
+            stderr_supports_color,
         )?;
         io::stderr().flush()?;
 
@@ -70,7 +108,7 @@ pub fn run_uninstall_command(
             .context("Failed to read confirmation input.")?;
 
         if confirmation.trim().to_lowercase() != "y" {
-            info_msg("Uninstallation cancelled.", theme_map); // Updated
+            info_msg("Uninstallation cancelled.", theme_map);
             return Ok(());
         }
     }
@@ -99,10 +137,11 @@ pub fn run_uninstall_command(
     debug!("[uninstall.rs] App state directory: {:?}", app_state_dir);
 
     // --- 3. Spawn Platform-Specific Helper for Self-Deletion ---
-    info_msg("Initiating self-deletion process...", theme_map); // Updated
+    info_msg("Initiating self-deletion process...", theme_map);
 
     #[cfg(target_os = "windows")]
     {
+        // Re-use the existing PowerShell script, no changes needed here.
         let powershell_script = format!(
             r#"
             Start-Sleep -Seconds 1
@@ -157,12 +196,12 @@ pub fn run_uninstall_command(
 
         let mut command = Command::new("powershell.exe");
         command.arg("-NoProfile")
-                .arg("-NonInteractive")
-                .arg("-Command")
-                .arg(&powershell_script)
-                .stdin(Stdio::null())
-                .stdout(Stdio::null())
-                .stderr(Stdio::null());
+            .arg("-NonInteractive")
+            .arg("-Command")
+            .arg(&powershell_script)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::inherit()); // Change back to Stdio::null() when done debugging.
 
         let child = command.spawn()
             .context("Failed to spawn PowerShell process for uninstallation.")?;
@@ -226,7 +265,7 @@ pub fn run_uninstall_command(
                 .arg(&bash_script)
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
-                .stderr(Stdio::null());
+                .stderr(Stdio::inherit()); // Change back to Stdio::null() when done debugging.
 
         let child = command.spawn()
             .context("Failed to spawn bash process for uninstallation.")?;
@@ -236,7 +275,7 @@ pub fn run_uninstall_command(
     // Give the helper process a moment to detach before the main process exits
     thread::sleep(Duration::from_millis(100));
 
-    info_msg("Cleansh is being uninstalled. You can close this terminal.", theme_map); // Updated
+    info_msg("Cleansh is being uninstalled. You can close this terminal.", theme_map);
 
     // Exit the current process immediately so the helper can delete the executable
     std::process::exit(0);
