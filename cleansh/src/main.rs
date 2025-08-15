@@ -1,6 +1,6 @@
 //! Cleansh CLI Application
 //!
-//! `cleansh` is the command-line interface application that allows users to 
+//! `cleansh` is the command-line interface application that allows users to
 //! sanitize sensitive information from text content. This crate serves as
 //! the main executable wrapper, orchestrating the parsing of command-line
 //! arguments, managing input and output streams, handling application-specific
@@ -300,13 +300,6 @@ fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     let cli = Cli::parse();
     
-    // --- New: Pre-check for uninstall command to bypass AppState loading.
-    if let Some(Commands::Uninstall { yes }) = cli.command {
-        let theme_map = ui::theme::build_theme_map(cli.theme.as_ref())?;
-        commands::uninstall::run_uninstall_command(yes, &theme_map)?;
-        return Ok(());
-    }
-
     // ── Honor test override for app state path ───────────────────────────────────
     let app_state_path: PathBuf = env::var("CLEANSH_STATE_FILE_OVERRIDE_FOR_TESTS")
         .map(PathBuf::from)
@@ -333,34 +326,43 @@ fn main() -> Result<()> {
     logger::init_logger(effective_log_level);
     info!("cleansh started. Version: {}", env!("CARGO_PKG_VERSION"));
     
-    // Load or create the AppState
-    let mut app_state = AppState::load(&app_state_path)?;
-    // Set donation prompts disabled state after loading, so the CLI overrides previous state.
-    app_state.donation_prompts_disabled = cli.disable_donation_prompts || cli.quiet;
-    
-    // The main dispatch logic now passes state and theme to the new gated_command helper.
+    // Now we use a single match statement to handle all commands, including `uninstall`.
+    // We only load the app state if the command is not `uninstall`.
+    let mut app_state;
     let result = match cli.command {
-        Some(Commands::Sanitize(ref opts)) => handle_sanitize_command(opts, &cli, &theme_map),
-        Some(Commands::Scan(ref opts)) => handle_scan_command(opts, &theme_map, &app_state_path, &mut app_state),
-        Some(Commands::Uninstall { yes: _ }) => {
-            // This case is handled by the early exit above.
-            Ok(())
-        },
-        Some(Commands::Profiles(ref opts)) => handle_profiles_command(opts, &cli, &theme_map, &app_state_path, &mut app_state),
-        None => handle_sanitize_command(&cli.sanitize_opts, &cli, &theme_map),
-    };
-    
-    // Donation prompt logic
-    if !app_state.donation_prompts_disabled {
-        if let Err(e) = app_state.check_and_prompt_donation(&theme_map) {
-            commands::cleansh::error_msg(format!("Failed to handle donation prompt: {}", e), &theme_map);
-        }
-    }
+        Commands::Uninstall { yes } => commands::uninstall::run_uninstall_command(yes, &theme_map),
+        ref opts @ _ => {
+            // Load or create the AppState for all other commands
+            app_state = AppState::load(&app_state_path)?;
+            // Set donation prompts disabled state after loading, so the CLI overrides previous state.
+            app_state.donation_prompts_disabled = cli.disable_donation_prompts || cli.quiet;
 
-    // Save app state at exit (ensures non-licensed changes also persist)
-    if let Err(e) = app_state.save(&app_state_path) {
-        commands::cleansh::warn_msg(format!("Failed to save app state: {}", e), &theme_map);
-    }
+            let command_result = match opts {
+                Commands::Sanitize(sanitize_opts) => handle_sanitize_command(sanitize_opts, &cli, &theme_map),
+                Commands::Scan(scan_opts) => handle_scan_command(scan_opts, &theme_map, &app_state_path, &mut app_state),
+                Commands::Profiles(profile_opts) => handle_profiles_command(profile_opts, &cli, &theme_map, &app_state_path, &mut app_state),
+                Commands::Uninstall { yes: _ } => {
+                    // This case is caught by the outer match, so this branch is unreachable.
+                    // This is good, as it prevents app_state from being loaded for uninstall.
+                    unreachable!()
+                }
+            };
+
+            // Donation prompt logic
+            if !app_state.donation_prompts_disabled {
+                if let Err(e) = app_state.check_and_prompt_donation(&theme_map) {
+                    commands::cleansh::error_msg(format!("Failed to handle donation prompt: {}", e), &theme_map);
+                }
+            }
+
+            // Save app state at exit (ensures non-licensed changes also persist)
+            if let Err(e) = app_state.save(&app_state_path) {
+                commands::cleansh::warn_msg(format!("Failed to save app state: {}", e), &theme_map);
+            }
+
+            command_result
+        }
+    };
     
     result
 }
